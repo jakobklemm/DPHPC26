@@ -53,6 +53,10 @@ class PerformanceModel:
         X = self._encode(table.rename(columns=strip)[self.hw_features + self.options], fit=True)
         y = np.log(table["relative"])
         self.regressor = make_regressor().fit(X, y)
+
+        # How well the model fits
+        self.r2 = self.regressor.score(X, y)
+        self.noise = np.exp(np.sqrt(1 / self.regressor.alpha_)) - 1
         return self
 
     def _encode(self, data, fit=False):
@@ -112,10 +116,42 @@ class PerformanceModel:
         order = np.argsort(-(mean + spread))[:n]
         return [(self._add_rule_options(untested[i], hardware), float(mean[i]), float(spread[i])) for i in order]
 
-    # effect of each input on the performance, e.g. GGML_CUDA_FA_ON: +0.13 = 13 % faster than the reference (OFF)
-    def effects(self):
-        effect = pd.Series(np.exp(self.regressor.coef_) - 1, index=self.regressor.feature_names_in_)
-        return effect.reindex(effect.abs().sort_values(ascending=False).index)
+    # What each decision costs on this machine, only for printing.
+    #   value        the option's value in the best build
+    #   alternative  the other value
+    #   also         other options that have to change with it to give a valid build
+    #   cost         predicted change in performance, e.g. -0.03 = 3 % slower
+    #   uncertainty  standard deviation of the cost
+    def decisions(self, hardware):
+        candidates = self.candidates(hardware)
+        predicted = self.predict_performance(hardware, candidates)[0]
+        best = candidates[int(np.argmax(predicted))]
+        rows = []
+        for option in self.options:
+            for value in self.values[option]:
+                if value == best[option]:
+                    continue
+                # the valid build with this value that differs least from the best one (then: predicted best)
+                with_value = [(sum(c[o] != best[o] for o in self.options), -p, i)
+                              for i, (c, p) in enumerate(zip(candidates, predicted)) if c[option] == value]
+                if not with_value:
+                    continue  # this value cannot be built on this machine
+                variant = candidates[min(with_value)[2]]
+                rows.append({"option": option, "value": best[option], "alternative": value,
+                             "also": {o: variant[o] for o in self.options if o != option and variant[o] != best[o]},
+                             "variant": variant})
+        if not rows:
+            return pd.DataFrame(rows)
+
+        builds = pd.DataFrame([{**hardware, **c} for c in [best] + [r.pop("variant") for r in rows]])
+        X = self._encode(builds[self.hw_features + self.options]).to_numpy()
+        diff = X[1:] - X[0]
+        log_change = diff @ self.regressor.coef_
+        log_std = np.sqrt(np.einsum("ij,jk,ik->i", diff, self.regressor.sigma_, diff))
+        result = pd.DataFrame(rows)
+        result["cost"] = np.exp(log_change) - 1
+        result["uncertainty"] = np.exp(log_std) - 1
+        return result
 
     def save(self, path):
         joblib.dump(self, path)

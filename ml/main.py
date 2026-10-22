@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 
 from .evaluate import leave_one_platform_out #, leave_one_build_out
-from .load import CFG, app_options, columns, describe, hardware_features, load_table, platform_name, strip
+from .load import CFG, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 from .model import PerformanceModel
 
 
@@ -55,13 +55,28 @@ def train(args):
         print(f"== {app}: {runs['runs'].sum()} runs of {len(runs)} distinct builds "
               f"on {runs['platform'].nunique()} platform(s) "
               f"-> {model_path(args.models, app)}")
+        
         # Only the options that differ between runs, the rest is the same everywhere.
-        varying = [c for c in columns(runs, CFG) if runs[c].nunique() > 1]
-        print(runs[["platform"] + varying + ["runs", "performance", "relative"]]
-              .rename(columns=strip).sort_values("relative", ascending=False)
-              .round(3).to_string(index=False))
-        print("\neffects learned by the model (vs. the reference value of each option):")
-        print(model.effects().head(10).map("{:+.1%}".format).to_string(), end="\n\n")
+        # varying = [c for c in columns(runs, CFG) if runs[c].nunique() > 1]
+        # print(runs[["platform"] + varying + ["runs", "performance", "relative"]].rename(columns=strip).sort_values("relative", ascending=False).round(3).to_string(index=False))
+        
+        # what the model learned
+        print(f"model fit on the training data: explains {model.r2:.0%} of the measured performance differences, "
+              f"estimated noise ±{model.noise:.1%}")
+        print("\nper machine and option: the value the model picks, then what each other value costs")
+        for platform, machine in runs.groupby("platform"):
+            hardware = {strip(c): machine[c].iloc[0] for c in columns(machine, HW)}
+            decisions = model.decisions(hardware)
+            print(f"\n  {platform}  ({len(machine)} builds measured)")
+            # options with the most expensive wrong choice first
+            order = decisions.groupby("option")["cost"].min().sort_values().index
+            for option in order:
+                rows = decisions[decisions["option"] == option].sort_values("cost", ascending=False)
+                print(f"    {option:20s} {rows['value'].iloc[0]}")
+                for _, d in rows.iterrows():
+                    also = "".join(f"  (with {o}={v})" for o, v in d["also"].items())
+                    print(f"      {'':18s} {d['alternative']:16s} {d['cost']:+5.0%} ±{d['uncertainty']:.0%}{also}")
+        print()
 
 
 def predict(args):
