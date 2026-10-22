@@ -13,6 +13,7 @@ import os
 import re
 import select
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -25,11 +26,118 @@ import yaml
 from xaas.source.system_discovery import discover_system
 
 
+SPACK_REF = "v1.0.0"
+SPACK_PACKAGES_REF = "v2026.03.0"
+HPCTOOLKIT_VERSION = "2025.1.2"
+GPU_EVENTS = ("-e", "gpu=cuda")
+SCRIPTS_DIR = Path(__file__).resolve().parent
+
+
+def hpctoolkit_stage(cuda_image, cuda_version):
+    # Keep this stage independent of the llama.cpp source and CMake flags so
+    # Docker can reuse the (expensive) Spack installation between builds.
+    spec = f"hpctoolkit@{HPCTOOLKIT_VERSION}+cuda~viewer ^cuda@{cuda_version}"
+    return f"""FROM docker.io/{cuda_image} AS hpctoolkit-layer
+RUN apt-get update && apt-get install -y --no-install-recommends \\
+    build-essential bzip2 ca-certificates curl file git gzip patch python3 tar unzip xz-utils \\
+    && rm -rf /var/lib/apt/lists/*
+RUN git clone --depth 1 --branch {SPACK_REF} https://github.com/spack/spack.git /opt/spack
+RUN git clone --depth 1 --branch {SPACK_PACKAGES_REF} https://github.com/spack/spack-packages.git /opt/spack-packages \\
+    && /opt/spack/bin/spack repo set --destination /opt/spack-packages builtin
+RUN /opt/spack/bin/spack compiler find \\
+    && /opt/spack/bin/spack external find cuda \\
+    && /opt/spack/bin/spack config add 'packages:cuda:buildable:false' \\
+    && /opt/spack/bin/spack spec '{spec}' \\
+    && /opt/spack/bin/spack install '{spec}' \\
+    && ln -s "$(/opt/spack/bin/spack location -i hpctoolkit@{HPCTOOLKIT_VERSION})" /opt/spack/hpctoolkit
+"""
+
+
+def benchmark_args(args, repetitions):
+    return [
+        "/source/build/bin/llama-bench", "-m", "/models/model.gguf",
+        "-ngl", str(args.gpu_layers), "-p", str(args.prompt),
+        "-n", str(args.generate), "-r", str(repetitions), "-o", "json",
+    ]
+
+
+def profile_runs(args, output_dir, run_image, model):
+    gpu_dir = output_dir / "profiles" / "gpu-operations"
+    cpu_dir = output_dir / "profiles" / "cpu"
+    gpu_dir.mkdir(parents=True)
+    cpu_dir.mkdir(parents=True)
+    container_options = [
+        "--user", f"{os.getuid()}:{os.getgid()}", "--env", "HOME=/tmp",
+        "--mount", f"type=bind,source={output_dir},target=/results",
+    ]
+    model_mount = ["--mount", f"type=bind,source={model},target=/models/model.gguf,readonly"]
+    gpu_container = ["docker", "run", "--rm", "--gpus", "all", *container_options]
+    measurements = "/results/profiles/gpu-operations/measurements"
+    database = "/results/profiles/gpu-operations/database"
+    gpu = {
+        "name": "gpu-operations", "events": list(GPU_EVENTS),
+        "repetitions": args.profile_repetitions,
+        "command": [*gpu_container, *model_mount, run_image, "hpcrun", "-o", measurements,
+                    *GPU_EVENTS, *benchmark_args(args, args.profile_repetitions)],
+        "benchmark_file": str(gpu_dir / "benchmark.json"),
+        "log": str(gpu_dir / "benchmark.log"),
+        "analysis_log": str(gpu_dir / "analysis.log"),
+        "measurements": str(gpu_dir / "measurements"),
+        "database": str(gpu_dir / "database"),
+        "metrics_file": str(output_dir / "gpu-metrics.json"),
+        "analysis_commands": [
+            # The NVIDIA runtime supplies libcuda.so from the host. hpcstruct
+            # must see it at the same path as hpcrun did during measurement.
+            [*gpu_container, run_image, "hpcstruct", "-j", str(args.workers), measurements],
+            [*gpu_container, run_image, "hpcprof", "-o", database, measurements],
+        ],
+    }
+    # Docker's default seccomp policy commonly blocks perf_event_open even for
+    # users allowed to collect user-space events by perf_event_paranoid.
+    cpu_container = ["docker", "run", "--rm", "--gpus", "all",
+                     "--security-opt", "seccomp=unconfined", "--cap-add", "PERFMON",
+                     *container_options]
+    cpu = {
+        "name": "cpu", "tool": "perf stat", "repetitions": args.profile_repetitions,
+        "benchmark_file": str(cpu_dir / "benchmark.json"),
+        "log": str(cpu_dir / "benchmark.log"),
+        "metrics_file": str(output_dir / "cpu-metrics.json"),
+        "command": [*cpu_container, *model_mount, run_image, "python3",
+                    "/results/collect_cpu_metrics.py", "-o", "/results/cpu-metrics.json",
+                    "--benchmark-output", "/results/profiles/cpu/benchmark.json",
+                    "--log", "/results/profiles/cpu/benchmark.log", "--",
+                    *benchmark_args(args, args.profile_repetitions)],
+    }
+    return gpu, cpu
+
+
+def cleanup_hpctoolkit_dumps(profile):
+    """Keep the extracted GPU metrics, but discard the large raw HPCToolkit data."""
+    if profile["status"] != "completed":
+        raise ValueError("Cannot remove HPCToolkit data before GPU metrics extraction")
+    metrics = json.loads(Path(profile["metrics_file"]).read_text())
+    if not isinstance(metrics, dict) or not metrics:
+        raise ValueError("GPU metrics output is empty; keeping HPCToolkit data")
+    for name in ("measurements", "database"):
+        shutil.rmtree(profile[name])
+    profile["raw_hpctoolkit_dumps_removed"] = True
+
+
 def positive_int(value):
     number = int(value)
     if number <= 0:
         raise argparse.ArgumentTypeError("must be positive")
     return number
+
+
+def release_compiler_args(flags):
+    if not flags:
+        return []
+    release_flags = "-O3 -DNDEBUG " + " ".join(flags)
+    return [
+        "CMAKE_C_FLAGS_RELEASE=" + release_flags,
+        "CMAKE_CXX_FLAGS_RELEASE=" + release_flags,
+    ]
 
 
 def print_config(label, path):
@@ -55,11 +163,21 @@ def git_state(directory):
         return None
     if revision.returncode:
         return None
-    changes = subprocess.run(
-        ["git", "-C", str(directory), "status", "--porcelain", "--untracked-files=no"],
+    toplevel = subprocess.run(
+        ["git", "-C", str(directory), "rev-parse", "--show-toplevel"],
         capture_output=True, text=True, check=True,
     )
-    return {"commit": revision.stdout.strip(), "modified_tracked_files": bool(changes.stdout.strip())}
+    # `git -C subdirectory` otherwise silently reports the parent checkout.
+    if Path(toplevel.stdout.strip()).resolve() != directory.resolve():
+        return None
+    changes = subprocess.run(
+        ["git", "-C", str(directory), "status", "--porcelain", "--untracked-files=normal"],
+        capture_output=True, text=True, check=True,
+    )
+    lines = changes.stdout.splitlines()
+    return {"commit": revision.stdout.strip(),
+            "modified_tracked_files": any(not line.startswith("??") for line in lines),
+            "untracked_files": any(line.startswith("??") for line in lines)}
 
 
 def image_id(image):
@@ -93,10 +211,18 @@ def main():
         help="NVIDIA CUDA devel image with matching toolkit version",
     )
     parser.add_argument("--cmake-arg", action="append", default=[], metavar="NAME=VALUE")
+    parser.add_argument(
+        "--compiler-flag", action="append", default=[], metavar="FLAG",
+        help="C/C++ Release optimization flag (repeat for multiple flags)",
+    )
     parser.add_argument("--workers", type=positive_int, default=4)
     parser.add_argument("--prompt", type=positive_int, default=512)
     parser.add_argument("--generate", type=positive_int, default=128)
     parser.add_argument("--repetitions", type=positive_int, default=3)
+    parser.add_argument(
+        "--profile-repetitions", type=positive_int, default=1,
+        help="llama-bench repetitions per profiling run (default: 1; timing uses --repetitions)",
+    )
     parser.add_argument("--gpu-layers", type=int, default=99)
     args = parser.parse_args()
 
@@ -115,6 +241,9 @@ def main():
     for arg in args.cmake_arg:
         if not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*=[^\r\n]*", arg):
             parser.error(f"--cmake-arg must be NAME=VALUE: {arg!r}")
+    for flag in args.compiler_flag:
+        if not re.fullmatch(r"-[^\s]+", flag):
+            parser.error(f"--compiler-flag must be a single compiler switch: {flag!r}")
 
     # XaaS interprets source_directory and working_directory relative to its
     # process cwd, and uses that directory as the source Docker build context.
@@ -173,11 +302,12 @@ def main():
 
     log = output_dir / "build.log"
 
-    def run_logged(label, command, dockerfile_path=None):
+    def run_logged(label, command, dockerfile_path=None, log_path=None):
         command_line = shlex.join(str(part) for part in command)
         start = time.monotonic()
+        capture_log = log_path or log
         with ExitStack() as stack:
-            stream = stack.enter_context(log.open("a"))
+            stream = stack.enter_context(capture_log.open("a"))
             build_input = (
                 stack.enter_context(dockerfile_path.open("rb"))
                 if dockerfile_path is not None else None
@@ -202,7 +332,7 @@ def main():
                     now = time.monotonic()
                     report(
                         f"\n[{label}] still running ({int(now - start)}s elapsed; "
-                        f"no output for {int(now - last_output)}s). Log: {log}\n"
+                        f"no output for {int(now - last_output)}s). Log: {capture_log}\n"
                     )
                     continue
                 chunk = os.read(process.stdout.fileno(), 65536)
@@ -256,7 +386,11 @@ def main():
 
         # Inject extra -D definitions at the end of the generated llama.cpp
         # configure invocation, so explicit settings override discovered ones.
-        cmake_args = ["CMAKE_BUILD_TYPE=Release", *args.cmake_arg]
+        cmake_args = [
+            "CMAKE_BUILD_TYPE=Release", "CMAKE_C_FLAGS=-g", "CMAKE_CXX_FLAGS=-g",
+            "CMAKE_CUDA_FLAGS=-lineinfo", *args.cmake_arg,
+            *release_compiler_args(args.compiler_flag),
+        ]
         cmake_flags = " ".join(shlex.quote("-D" + arg) for arg in cmake_args)
         dockerfile, count = re.subn(
             r"(cmake -B build[^\n]*?)(\s*\\\s*\n\s*&& cmake --build build)",
@@ -268,6 +402,18 @@ def main():
         if dockerfile.count("-j $(nproc)") != 1:
             raise RuntimeError("Could not locate llama.cpp parallel build setting")
         dockerfile = dockerfile.replace("-j $(nproc)", "-j ${nproc}")
+        dockerfile = (
+            hpctoolkit_stage(args.cuda_image, args.cuda_version) + "\n" + dockerfile
+            + "\nCOPY --from=hpctoolkit-layer /opt/spack /opt/spack\n"
+            + "ENV HPCTOOLKIT=/opt/spack/hpctoolkit\n"
+            + 'ENV PATH="/opt/spack/hpctoolkit/bin:${PATH}"\n'
+            # Install perf in the workload image: measuring `docker run` on the
+            # host only measures the Docker client, not its containerized child.
+            + "RUN apt-get update && apt-get install -y --no-install-recommends "
+            + "linux-tools-generic python3 && rm -rf /var/lib/apt/lists/* "
+            + '&& ln -s "$(ls /usr/lib/linux-tools/*/perf | sort -V | tail -1)" '
+            + "/usr/local/bin/perf\n"
+        )
         build_config = output_dir / "Dockerfile"
         build_config.write_text(dockerfile)
         print_config("Generated build Dockerfile (effective)", build_config)
@@ -299,10 +445,12 @@ def main():
         bench_command = [
             "docker", "run", "--rm", "--gpus", "all", "--mount",
             f"type=bind,source={model},target=/models/model.gguf,readonly",
-            run_image, "/source/build/bin/llama-bench", "-m", "/models/model.gguf",
-            "-ngl", str(args.gpu_layers), "-p", str(args.prompt),
-            "-n", str(args.generate), "-r", str(args.repetitions), "-o", "json",
+            run_image, *benchmark_args(args, args.repetitions),
         ]
+        gpu_profile, cpu_profile = profile_runs(args, output_dir, run_image, model)
+        profile_specs = [gpu_profile, cpu_profile]
+        for name in ("extract_gpu_metrics.py", "collect_cpu_metrics.py"):
+            (output_dir / name).write_bytes((SCRIPTS_DIR / name).read_bytes())
         benchmark_file = output_dir / "benchmark.json"
         build_file = output_dir / f"build-{run_id}.json"
         print("Hashing the model for reproducibility...", flush=True)
@@ -322,6 +470,8 @@ def main():
             "build_dockerfile": str(build_config),
             "build_dockerfile_sha256": sha256_file(build_config),
             "script_sha256": sha256_file(Path(__file__).resolve()),
+            "gpu_extractor_sha256": sha256_file(output_dir / "extract_gpu_metrics.py"),
+            "cpu_collector_sha256": sha256_file(output_dir / "collect_cpu_metrics.py"),
             "xaas_git": git_state(root),
             "llama_cpp_git": git_state((root / source["source_directory"]).resolve()),
             "source_image": source_image,
@@ -331,7 +481,11 @@ def main():
             "image_id": built_image_id,
             "cuda_image": args.cuda_image,
             "cuda_version": args.cuda_version,
+            "hpctoolkit_version": HPCTOOLKIT_VERSION,
+            "spack_ref": SPACK_REF,
+            "spack_packages_ref": SPACK_PACKAGES_REF,
             "requested_cmake_args": args.cmake_arg,
+            "requested_compiler_flags": args.compiler_flag,
             "cmake_configure_command": configure_command,
             "cmake_definitions_in_order": cmake_definitions,
             "docker_build_command": build_command,
@@ -346,9 +500,12 @@ def main():
             "model_sha256": model_sha256,
             "gpu_description": smi.stdout.strip(),
             "benchmark_command": bench_command,
+            "benchmark_repetitions": args.repetitions,
+            "profiles": profile_specs,
         }
         build_file.write_text(json.dumps(build_record, indent=2) + "\n")
         print("+", shlex.join(bench_command), flush=True)
+        timing_start = time.monotonic()
         with benchmark_file.open("w") as out, (
             output_dir / "benchmark.log"
         ).open("w") as err:
@@ -357,8 +514,62 @@ def main():
         data = json.loads(benchmark_file.read_text())
         if not data or not all("CUDA" in row.get("backends", "") for row in data):
             raise RuntimeError("Benchmark did not report CUDA for every result; see benchmark.log")
+        build_record["benchmark_wall_seconds"] = round(time.monotonic() - timing_start, 3)
+        build_file.write_text(json.dumps(build_record, indent=2) + "\n")
+        for profile in profile_specs:
+            print("+", shlex.join(profile["command"]), flush=True)
+            profile_start = time.monotonic()
+            if profile is gpu_profile:
+                with open(profile["benchmark_file"], "w") as out, open(profile["log"], "w") as err:
+                    subprocess.run(profile["command"], cwd=cwd, stdout=out, stderr=err, check=True)
+            else:
+                run_logged("CPU perf", profile["command"], log_path=output_dir / "cpu-perf.log")
+            profiled_data = json.loads(Path(profile["benchmark_file"]).read_text())
+            if not profiled_data or not all("CUDA" in row.get("backends", "") for row in profiled_data):
+                raise RuntimeError(f"{profile['name']} did not report CUDA; see {profile['log']}")
+            profile["measurement_seconds"] = round(time.monotonic() - profile_start, 3)
+            profile["status"] = "measured" if profile is gpu_profile else "completed"
+            build_file.write_text(json.dumps(build_record, indent=2) + "\n")
+
+        analysis_errors = []
+        for profile in (gpu_profile,):
+            analysis_start = time.monotonic()
+            try:
+                for analysis_command in profile["analysis_commands"]:
+                    run_logged(
+                        f"HPCToolkit {profile['name']} analysis", analysis_command,
+                        log_path=Path(profile["analysis_log"]),
+                    )
+            except (OSError, subprocess.CalledProcessError) as error:
+                profile["status"] = "analysis_failed"
+                profile["analysis_error"] = str(error)
+                analysis_errors.append(profile["name"])
+            else:
+                try:
+                    run_logged("GPU metrics extraction", [
+                        sys.executable, str(output_dir / "extract_gpu_metrics.py"),
+                        profile["database"], "-o", profile["metrics_file"],
+                    ], log_path=Path(profile["analysis_log"]))
+                except (OSError, subprocess.CalledProcessError) as error:
+                    profile["status"] = "extraction_failed"
+                    profile["analysis_error"] = str(error)
+                    analysis_errors.append(profile["name"])
+                else:
+                    profile["status"] = "completed"
+                    print(f"{profile['name']} metrics: {profile['metrics_file']}")
+            profile["analysis_seconds"] = round(time.monotonic() - analysis_start, 3)
+            build_file.write_text(json.dumps(build_record, indent=2) + "\n")
+        if analysis_errors:
+            raise RuntimeError(
+                "HPCToolkit analysis failed for " + ", ".join(analysis_errors)
+                + "; see the per-profile analysis.log files"
+            )
+        cleanup_hpctoolkit_dumps(gpu_profile)
+        build_file.write_text(json.dumps(build_record, indent=2) + "\n")
+        print("Removed raw HPCToolkit measurements and database after GPU metrics extraction")
         print(f"Results: {benchmark_file}")
         print(f"Build record: {build_file}")
+        print(f"CPU metrics: {cpu_profile['metrics_file']}")
         print(f"Image: {run_image} ({built_image_id})")
     except (OSError, subprocess.CalledProcessError, RuntimeError, ValueError) as error:
         print(f"Failed: {error}\nLogs and generated files: {output_dir}", file=sys.stderr)
