@@ -18,7 +18,7 @@ import argparse
 import json
 from pathlib import Path
 
-# from .evaluate import leave_one_build_out, leave_one_platform_out
+from .evaluate import leave_one_platform_out #, leave_one_build_out
 from .load import CFG, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 from .model import PerformanceModel
 
@@ -86,21 +86,20 @@ def suggest(args):
         print(f"predicted {mean:.3f} ± {spread:.3f}:  {describe(args.app, config)}")
 
 
-# def evaluate(args):
-#     table = load_table(args.data, args.app)
-#
-#     print("== leave one build out: predict each build without having seen it")
-#     result = leave_one_build_out(table)
-#     print(result.round(3).to_string(index=False))
-#     print("\naverage:", result[["error", "guess"]].mean().round(3).to_dict(), end="\n\n")
-#
-#     print("== leave one platform out: predict each machine without having seen it")
-#     if table["platform"].nunique() < 2:
-#         print("needs runs from at least 2 platforms; found only:", *table["platform"].unique())
-#         return
-#     result = leave_one_platform_out(table)
-#     print(result.round(3).to_string(index=False))
-#     print("\naverage:", result[["error", "model", "baseline"]].mean().round(3).to_dict())
+def evaluate(args):
+    table = load_table(args.data, args.app)
+    # print("== leave one build out: predict each build without having seen it")
+    # result = leave_one_build_out(table)
+    # print(result.round(3).to_string(index=False))
+    # print("\naverage:", result[["error", "guess"]].mean().round(3).to_dict(), end="\n\n")
+
+    print("== leave one platform out: predict each machine without having seen it")
+    if table["platform"].nunique() < 2:
+        print("needs runs from at least 2 platforms; found only:", *table["platform"].unique())
+        return
+    result = leave_one_platform_out(table)
+    print(result.round(3).to_string(index=False))
+    print("\naverage:", result[["error", "model", "baseline"]].mean().round(3).to_dict())
 
 
 def main():
@@ -124,10 +123,10 @@ def main():
     p.add_argument("-n", type=int, default=5, help="number of configurations to suggest")
     p.set_defaults(func=suggest)
 
-    # p = sub.add_parser("evaluate")
-    # p.add_argument("--app", required=True)
-    # p.add_argument("--data", nargs="+", required=True)
-    # p.set_defaults(func=evaluate)
+    p = sub.add_parser("evaluate")
+    p.add_argument("--app", required=True)
+    p.add_argument("--data", nargs="+", required=True)
+    p.set_defaults(func=evaluate)
 
     args = parser.parse_args()
     args.func(args)
