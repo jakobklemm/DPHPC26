@@ -133,7 +133,12 @@ def positive_int(value):
 def release_compiler_args(flags):
     if not flags:
         return []
-    release_flags = "-O3 -DNDEBUG " + " ".join(flags)
+    # ggml's CPU code needs non-finite values even when fast-math is requested.
+    # Both -Ofast and -ffast-math enable -ffinite-math-only in GCC/Clang.
+    effective_flags = list(flags)
+    if any(flag in {"-Ofast", "-ffast-math"} for flag in flags):
+        effective_flags.append("-fno-finite-math-only")
+    release_flags = "-O3 -DNDEBUG " + " ".join(effective_flags)
     return [
         "CMAKE_C_FLAGS_RELEASE=" + release_flags,
         "CMAKE_CXX_FLAGS_RELEASE=" + release_flags,

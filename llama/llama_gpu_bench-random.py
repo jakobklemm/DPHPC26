@@ -27,6 +27,12 @@ GENERATE = 1024
 REPETITIONS = 5
 
 
+class BenchmarkFailed(subprocess.CalledProcessError):
+    def __init__(self, returncode, command, results_directory):
+        super().__init__(returncode, command)
+        self.results_directory = results_directory
+
+
 def valid(cmake, rules):
     return not any(
         all(cmake.get(name) == value for name, value in rule.items())
@@ -104,14 +110,17 @@ def load_records(path, plan):
         if (not isinstance(record, dict) or record.get("config") != plan[index]["config"]
                 or not isinstance(record.get("results_directory"), str)
                 or not record["results_directory"]
-                or not isinstance(record.get("elapsed_seconds"), (int, float))):
+                or not isinstance(record.get("elapsed_seconds"), (int, float))
+                or (record.get("status", "completed") not in {"completed", "failed"})
+                or (record.get("status") == "failed" and
+                    (not isinstance(record.get("exit_code"), int) or record["exit_code"] <= 0))):
             raise ValueError(f"Execution {index + 1} in {path} differs from the generated plan")
     return records
 
 
 def save_records(path, records):
     path.parent.mkdir(parents=True, exist_ok=True)
-    # A crash during a write must leave the previous completed runs intact.
+    # A crash during a write must leave the previous recorded runs intact.
     with tempfile.NamedTemporaryFile(
         mode="w", encoding="utf-8", dir=path.parent, prefix=f".{path.name}.",
         delete=False,
@@ -124,13 +133,19 @@ def save_records(path, records):
 
 def run_benchmark(command, results_dir):
     benchmark_file = None
+    failure_dir = None
     with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           text=True, bufsize=1) as process:
         for line in process.stdout:
             print(line, end="", flush=True)
             if line.startswith("Results: "):
                 benchmark_file = Path(line.removeprefix("Results: ").strip())
+            if line.startswith("Logs and generated files: "):
+                failure_dir = Path(line.removeprefix("Logs and generated files: ").strip())
         if process.wait():
+            if (failure_dir is not None and failure_dir.is_dir()
+                    and failure_dir.parent.resolve() == results_dir.resolve()):
+                raise BenchmarkFailed(process.returncode, command, failure_dir.name)
             raise subprocess.CalledProcessError(process.returncode, command)
     if (benchmark_file is None or benchmark_file.name != "benchmark.json"
             or not benchmark_file.is_file()
@@ -183,7 +198,9 @@ def main():
             plan = execution_plan(json.load(source))
 
     records = load_records(record_file, plan)
-    print(f"Plan: {len(plan)} executions (seed {SEED}); {len(records)} completed", flush=True)
+    failures = sum(record.get("status") == "failed" for record in records)
+    print(f"Plan: {len(plan)} executions (seed {SEED}); "
+          f"{len(records) - failures} completed, {failures} failed", flush=True)
     if args.dry_run:
         print(json.dumps(plan, indent=2))
         return
@@ -194,7 +211,15 @@ def main():
               f"{json.dumps(config)}", flush=True)
         print(shlex.join(command), flush=True)
         start = time.monotonic()
-        directory = run_benchmark(command, results_dir)
+        try:
+            directory = run_benchmark(command, results_dir)
+        except BenchmarkFailed as error:
+            records.append({"config": config, "results_directory": error.results_directory,
+                            "elapsed_seconds": round(time.monotonic() - start, 3),
+                            "status": "failed", "exit_code": error.returncode})
+            save_records(record_file, records)
+            print(f"Recorded failed execution {index + 1} in {record_file}; continuing", flush=True)
+            continue
         records.append({"config": config, "results_directory": directory,
                         "elapsed_seconds": round(time.monotonic() - start, 3)})
         save_records(record_file, records)
