@@ -8,6 +8,10 @@ pip install -r ml/requirements.txt
 for each new terminal just do:
 source .venv/bin/activate
 
+applications: llama.cpp (load_llama.py) and gromacs (load_gromacs.py); the common reading is in load.py.
+the folder can hold runs of both (e.g. the llama zips and gromacs_xaas_<date>.zip), train makes one model per application.
+for predict/suggest pass --app llama.cpp or --app gromacs.
+
 to look at the data as a dataframe:
 python -m ml.load path/to/folder/with/jakobs/zip_files
 

@@ -23,13 +23,8 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import BayesianRidge
 
-from .load import CFG, DEFAULT, HW, columns, strip
-
-# Options whose value follows from the hardware, as {option: rule(hardware) -> value}, learning them would not work
-HARDWARE_DETERMINED = {
-    "CMAKE_CUDA_ARCHITECTURES":
-        lambda hw: str(round(hw["gpu_compute_capability"] * 10)) if hw["n_gpus"] else DEFAULT,
-}
+# HARDWARE_DETERMINED and valid are defined per application in load_<app>.py
+from .load import CFG, DEFAULT, HARDWARE_DETERMINED, HW, columns, strip, valid
 
 
 # Bayesian ridge regression: a linear model that keeps the effects small unless the data clearly supports
@@ -91,13 +86,15 @@ class PerformanceModel:
         mean = np.exp(log_mean)
         return mean, mean * log_std
 
-    # returns all combinations of the option values seen in training
-    def candidates(self):
-        return [dict(zip(self.options, values)) for values in itertools.product(*(self.values[o] for o in self.options))]
+    # returns all combinations of the option values seen in training that are valid builds for the hardware
+    def candidates(self, hardware):
+        combinations = itertools.product(*(self.values[o] for o in self.options))
+        configs = (dict(zip(self.options, values)) for values in combinations)
+        return [c for c in configs if valid(c, hardware)]
 
     # returns for a given hardware the config with the highest predicted performance, and the predicted performance too
     def predict(self, hardware):
-        candidates = self.candidates()
+        candidates = self.candidates(hardware)
         mean, _ = self.predict_performance(hardware, candidates)
         best = int(np.argmax(mean))
         return self._add_rule_options(candidates[best], hardware), float(mean[best])
@@ -108,7 +105,7 @@ class PerformanceModel:
     # get the n most promising builds not yet measured on this machine, ranked by prediction + uncertainty
     def suggest(self, hardware, measured, n=5):
         measured = {tuple(c.get(o) for o in self.options) for c in measured}
-        untested = [c for c in self.candidates() if tuple(c.values()) not in measured]
+        untested = [c for c in self.candidates(hardware) if tuple(c.values()) not in measured]
         if not untested:
             return []
         mean, spread = self.predict_performance(hardware, untested)

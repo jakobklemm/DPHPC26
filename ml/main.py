@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 
 # from .evaluate import leave_one_build_out, leave_one_platform_out
-from .load import CFG, columns, hardware_features, load_table, platform_name, strip
+from .load import CFG, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 from .model import PerformanceModel
 
 
@@ -45,7 +45,7 @@ def train(args):
     
     for app, runs in table.groupby("application"): # for each application (e.g. llama)
         # removes build options that don't belong to the application being trained
-        runs = runs.loc[:, (runs != "default").any() | ~runs.columns.str.startswith(CFG)]
+        runs = app_options(runs)
         
         # train the model
         model = PerformanceModel().fit(runs)
@@ -68,15 +68,14 @@ def predict(args):
     model = PerformanceModel.load(model_path(args.models, args.app))
     _, hardware = read_hardware(args.system)
     config, predicted = model.predict(hardware)
-    # Printed as CMake arguments; options left at "default" are not passed.
-    for option, value in config.items():
-        if value != "default":
-            print(f"-D{option}={value}")
+    # Printed as build arguments (e.g. -DGGML_LTO=ON); options left at "default" are not passed.
+    for argument in describe(args.app, config).split(" "):
+        print(argument)
     print(f"# predicted performance: {predicted:.3f} of the best build on this machine")
 
 
 def suggest(args):
-    table = load_table(args.data, args.app)
+    table = app_options(load_table(args.data, args.app))
     model = PerformanceModel().fit(table)
     platform, hardware = read_hardware(args.system)
     measured = configs(table[table["platform"] == platform])
@@ -84,8 +83,7 @@ def suggest(args):
     if not suggestions:
         print("every combination of the option values seen so far is already measured on this machine")
     for config, mean, spread in suggestions:
-        flags = " ".join(f"-D{o}={v}" for o, v in config.items() if v != "default")
-        print(f"predicted {mean:.3f} ± {spread:.3f}:  {flags}")
+        print(f"predicted {mean:.3f} ± {spread:.3f}:  {describe(args.app, config)}")
 
 
 # def evaluate(args):
