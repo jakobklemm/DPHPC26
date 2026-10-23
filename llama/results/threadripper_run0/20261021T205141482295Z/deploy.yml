@@ -1,0 +1,19 @@
+source_container: local/xaas:llama.cpp-source-x86_64
+working_directory: build-work
+project_name: llama.cpp
+language: cxx
+docker_repository: local/xaas
+system:
+  name: rocky-cpu
+  cpu_architecture: x86_64
+  system_discovery: /home/pub/DPHPC26/results-many/20261021T205141482295Z/system.json
+mode:
+  mode: predefined
+  predefined_config:
+    vectorization_flags: null
+    gpu_backends: CUDA
+    parallel_libraries:
+    - OpenMP
+    fft_libraries: []
+    linear_algebra_libraries: null
+    compiler: g++

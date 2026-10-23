@@ -1,0 +1,5 @@
+[CPU perf] + docker run --rm --gpus all --security-opt seccomp=unconfined --cap-add PERFMON --user 1000:1000 --env HOME=/tmp --mount type=bind,source=/home/pub/DPHPC26/results-many/20261021T190726860698Z,target=/results --mount type=bind,source=/home/pub/xaas-models/qwen2.5-3b-instruct-q4_k_m.gguf,target=/models/model.gguf,readonly local/xaas:llama.cpp-source-deploy-rocky-cpu-20261021t190726860698z python3 /results/collect_cpu_metrics.py -o /results/cpu-metrics.json --benchmark-output /results/profiles/cpu/benchmark.json --log /results/profiles/cpu/benchmark.log -- /source/build/bin/llama-bench -m /models/model.gguf -ngl 99 -p 512 -n 1024 -r 1 -o json
+
+[CPU perf] still running (30s elapsed; no output for 30s). Log: /home/pub/DPHPC26/results-many/20261021T190726860698Z/cpu-perf.log
+
+[CPU perf] finished in 43s (exit 0)
