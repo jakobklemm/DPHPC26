@@ -6,6 +6,9 @@ Runs come from llama_gpu_bench.py:
     benchmark.json       llama-bench output         -> performance (tokens per second)
 """
 
+from .validation import (BOOL, COMMON_SCHEMA, cuda_errors, enabled,
+                         isa_errors, require, schema_errors, toolchain_errors, value)
+
 APPLICATION = "llama.cpp"  # project_name in source.yml
 
 # The default value CMake uses for an option when the build does not pass it.
@@ -15,13 +18,73 @@ CMAKE_DEFAULTS = {"GGML_LTO": "OFF", "GGML_OPENMP": "ON", "GGML_CUDA_FA": "ON"}
 # Options whose value follows from the hardware, {option: rule(hardware) -> value or None if not passed}
 HARDWARE_DETERMINED = {
     "CMAKE_CUDA_ARCHITECTURES":
-        lambda hw: str(round(hw["gpu_compute_capability"] * 10)) if hw["n_gpus"] else None,
+        lambda hw: str(round(hw["gpu_compute_capability"] * 10))
+        if hw.get("n_gpus", 0) > 0 and hw.get("gpu_compute_capability", 0) > 0 else None,
 }
 
 
-# can this configuration be built and run on this hardware? (no restrictions known yet)
+# Supported prediction profile: the repository's flags.json plus the build
+# arguments emitted by the harness. Extend this schema when adding new options.
+# Sources: https://github.com/ggml-org/llama.cpp/blob/master/ggml/CMakeLists.txt
+# https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-cpu/CMakeLists.txt
+CPU_FEATURES = {
+    "GGML_SSE42": ("sse42",), "GGML_AVX": ("avx",), "GGML_AVX2": ("avx2",),
+    "GGML_FMA": ("fma",), "GGML_F16C": ("f16c",), "GGML_BMI2": ("bmi2",),
+    "GGML_AVX_VNNI": ("avx_vnni",),
+    "GGML_AVX512": ("avx512", "avx512bw", "avx512dq", "avx512vl", "avx512cd"),
+    "GGML_AVX512_VBMI": ("avx512", "avx512_vbmi"),
+    "GGML_AVX512_VNNI": ("avx512", "avx512_vnni"),
+    "GGML_AVX512_BF16": ("avx512", "avx512_bf16"),
+}
+BOOLEAN_OPTIONS = set(CPU_FEATURES) | {
+    "GGML_CUDA", "GGML_NATIVE", "GGML_LTO", "GGML_CPU", "GGML_CPU_REPACK",
+    "GGML_LLAMAFILE", "GGML_OPENMP", "GGML_CUDA_FORCE_MMQ", "GGML_CUDA_FORCE_CUBLAS",
+    "GGML_CUDA_NO_VMM", "GGML_CUDA_FA", "GGML_CUDA_FA_ALL_QUANTS", "GGML_CUDA_GRAPHS",
+    "GGML_CUDA_NO_PEER_COPY", "GGML_CUDA_F16", "GGML_HIP", "GGML_SYCL", "GGML_VULKAN",
+    "GGML_METAL", "GGML_BLAS", "GGML_BACKEND_DL", "LLAMA_CURL",
+}
+SCHEMA = {**COMMON_SCHEMA, **dict.fromkeys(BOOLEAN_OPTIONS, BOOL),
+          "GGML_BLAS_VENDOR": {"Generic", "OpenBLAS", "FLAME", "Intel10_64lp", "Apple", "All"}}
+
+
+def validation_errors(config, hardware):
+    errors = schema_errors(config, SCHEMA)
+    if errors:
+        return errors
+    # CUDA tuning constraints only with an active CUDA backend
+    if enabled(config, "GGML_CUDA"):
+        errors.extend(cuda_errors(config, hardware, "GGML_CUDA"))
+        if enabled(config, "GGML_CUDA_FORCE_MMQ") and enabled(config, "GGML_CUDA_FORCE_CUBLAS"):
+            errors.append("dependencies: CUDA FORCE_MMQ and FORCE_CUBLAS are mutually exclusive")
+    if enabled(config, "GGML_BACKEND_DL") and not enabled(config, "BUILD_SHARED_LIBS", True):
+        errors.append("dependencies: GGML_BACKEND_DL requires BUILD_SHARED_LIBS")
+    # Native CPU tuning bypassing individual x86 instruction switches
+    arch = str(hardware.get("cpu_arch", "unknown")).lower()
+    x86 = arch in {"x86_64", "amd64", "x86", "i686"}
+    if (x86 or arch == "unknown") and enabled(config, "GGML_CPU", True) and not enabled(config, "GGML_NATIVE", True):
+        # Implicit x86 instruction defaults with native tuning disabled
+        default_isa = {"GGML_SSE42", "GGML_AVX", "GGML_AVX2", "GGML_FMA", "GGML_F16C", "GGML_BMI2"}
+        for option, features in CPU_FEATURES.items():
+            if enabled(config, option, x86 and option in default_isa):
+                errors.extend(isa_errors(hardware, features, option))
+    for option, feature in {"GGML_HIP": "hip", "GGML_SYCL": "sycl", "GGML_VULKAN": "vulkan",
+                            "GGML_METAL": "metal"}.items():
+        if enabled(config, option):
+            require(errors, hardware, feature, f"toolchain: {option} requires {feature} support")
+    if enabled(config, "GGML_BLAS"):
+        # Selected BLAS vendor → required library
+        vendor = value(config, "GGML_BLAS_VENDOR", "Generic")
+        feature = {"OpenBLAS": "openblas", "Intel10_64lp": "mkl", "Apple": "accelerate"}.get(vendor, "blas")
+        require(errors, hardware, feature, f"toolchain: GGML_BLAS requires {vendor} BLAS")
+    if enabled(config, "LLAMA_CURL"):
+        require(errors, hardware, "curl", "toolchain: LLAMA_CURL requires libcurl")
+    errors.extend(toolchain_errors(config, hardware, openmp=enabled(config, "GGML_OPENMP", True),
+                                   lto=enabled(config, "GGML_LTO")))
+    return list(dict.fromkeys(errors))
+
+
 def valid(config, hardware):
-    return True
+    return not validation_errors(config, hardware)
 
 
 # extract build config from build-<run>.json

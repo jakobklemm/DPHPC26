@@ -100,9 +100,75 @@ existing validity rules and use option values seen in the training fold. A
 platform with no eligible builds reports `runs=0` and missing scores. The
 normalizing best measurement is still the best across all measured builds on
 that platform. This evaluates ranking of measured builds; use `predict` and
-benchmark its output to evaluate new combinations. Validity checks are the
-existing application rules, not a configure/build/run check; llama.cpp currently
-has no rejection rules, while GROMACS checks SIMD support and FFT consistency.
+benchmark its output to evaluate new combinations.
+
+Build validity remains a boolean, independent of whether a machine or complete
+configuration has appeared in training. Prediction and suggestions still combine
+individual option values seen during training, including combinations never
+measured together. Validation does not require a previous successful build.
+
+Static validity checks apply to the complete output, including hardware-derived
+CUDA architecture, in the hardware model and both baselines. Evaluation uses the
+same checks. The two application profiles implement:
+
+| Check | llama.cpp | GROMACS |
+| --- | --- | --- |
+| Option schema | Boolean performance switches from the repository's flag catalog, BLAS vendor, harness CMake arguments | Harness compiler/optimization settings, SIMD, FFT and GPU choices, supported boolean options |
+| Dependencies | Conflicting active CUDA MMQ/cuBLAS requests; dynamic backends require shared libraries | External MPI versus explicit thread-MPI; bundled FFTW only with FFTW; GPU acceleration versus double precision |
+| Hardware | Active CPU ISA switches and compiler ISA flags; CUDA GPU and architecture compatibility | SIMD architecture/instruction support; compiler ISA flags; CUDA GPU and architecture compatibility |
+| Toolchain | Selected C/C++ compilers, backend/BLAS/libcurl availability, known incompatible compiler flags, explicit OpenMP/LTO capabilities | Selected C/C++ compilers, backend/FFT/MPI/BLAS/LAPACK availability, compiler flags, explicit OpenMP/LTO capabilities; bundled FFTW versus Ninja |
+
+The schemas live in `load_llama.py`, `load_gromacs.py` and `validation.py`. They
+describe our supported harness options, not every option in every upstream
+release. Extend the relevant schema and tests when changing the harness or
+upstream version. Unsupported names/values are rejected, even if present in
+training. Shared CMake options are checked for the selected application.
+
+`valid(config, hardware, app=None)` returns `True` or `False`.
+`validation_errors(config, hardware, app=None)` returns a list of reasons prefixed
+with `schema:`, `dependencies:`, `hardware:` or `toolchain:`. Supplying `app` is
+recommended; without it, the application is inferred from option names.
+
+Discovery uses `system.json` CPU features, GPU backends, compiler inventory and
+positive library discoveries. Unavailable compilers and explicitly unavailable
+backends reject dependent configurations. Missing metadata does not reject a
+configuration. XaaS's vectorization subset omits features such as FMA and BMI2;
+their absence is not inferred from that subset. An optional full CPU feature list
+can be supplied as `CPU Info.Flags` (a list or space-separated string).
+
+Runtime library discovery does not establish development-package availability
+or FFTW precision. Optional explicit build-environment facts can be supplied in
+`system.json`, for example:
+
+```json
+{
+  "Build Capabilities": {
+    "gcc_openmp": true,
+    "gcc_lto": false,
+    "fftw_single": true,
+    "fftw_double": false,
+    "mkl": false
+  }
+}
+```
+
+Recognized capability keys are `<gcc|clang|icx|icc>_<openmp|lto>`, `fftw`,
+`fftw_single`, `fftw_double`, `mkl`, `blas`, `openblas`, `lapack`, `mpi`, `curl`,
+`hwloc`, and `accelerate`. Describe the intended build environment (including
+container-provided tools), rather than an unrelated host installation. We do not
+probe the prediction host, require compile/run verification, or introduce
+verified/unverified states. Static checks reject known incompatibilities; they
+do not guarantee compilation with every compiler/toolkit/upstream version.
+
+The rules follow the upstream [GROMACS installation guide](https://manual.gromacs.org/documentation/current/install-guide/index.html),
+[GROMACS build options](https://github.com/gromacs/gromacs/blob/main/CMakeLists.txt),
+[ggml build options](https://github.com/ggml-org/llama.cpp/blob/master/ggml/CMakeLists.txt),
+[ggml CPU configuration](https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-cpu/CMakeLists.txt),
+and [Clang flag reference](https://clang.llvm.org/docs/ClangCommandLineReference.html).
+
+Retrain saved models to include the added discovery features. Previously saved
+models still use the new validity functions, with missing features treated as
+unspecified.
 
 Optional `--app` selects one application. `--data` replaces Polybox with local
 folders, ZIP files, other public share URLs, or a mixture:

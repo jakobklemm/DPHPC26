@@ -32,7 +32,7 @@ performance of unmeasured combinations in the full candidate space.
 import numpy as np
 import pandas as pd
 
-from .load import CFG, HW, columns, strip, valid
+from .load import CFG, HW, columns, strip
 from .baseline_models import NoHardwareModel, RandomBaseline, baseline_pick
 from .model import PerformanceModel
 
@@ -89,7 +89,7 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
         no_hardware = NoHardwareModel().fit(train)
         random.fit(train)
         eligible = [
-            all(c.get(o) in model.values[o] for o in model.options) and valid(c, hardware)
+            all(c.get(o) in model.values[o] for o in model.options) and model._valid(c, hardware)
             for c in configs(test)
         ]
         test = test.loc[eligible]

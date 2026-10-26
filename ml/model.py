@@ -39,6 +39,10 @@ class PerformanceModel:
 
     # train on all builds of an application (one row per build and machine, repeated runs already averaged)
     def _fit_options(self, table):
+        applications = table["application"].unique() if "application" in table else []
+        if len(applications) > 1:
+            raise ValueError("train one application at a time")
+        self.application = applications[0] if len(applications) else None
         options = [strip(c) for c in columns(table, CFG)]
         self.rule_options = [o for o in options if o in HARDWARE_DETERMINED]
         self.options = [o for o in options if o not in HARDWARE_DETERMINED]
@@ -100,7 +104,11 @@ class PerformanceModel:
     def candidates(self, hardware):
         combinations = itertools.product(*(self.values[o] for o in self.options))
         configs = (dict(zip(self.options, values)) for values in combinations)
-        return [c for c in configs if valid(c, hardware)]
+        return [c for c in configs if self._valid(c, hardware)]
+
+    def _valid(self, config, hardware):
+        # Complete output validation, including derived CUDA architecture
+        return valid(self._add_rule_options(config, hardware), hardware, getattr(self, "application", None))
 
     # returns for a given hardware the config with the highest predicted performance, and the predicted performance too
     def predict(self, hardware):

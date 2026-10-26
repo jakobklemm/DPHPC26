@@ -6,7 +6,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from .load import CFG, HW, columns, valid
+from .load import CFG, HW, columns
 from .model import PerformanceModel
 
 
@@ -58,7 +58,7 @@ class NoHardwareModel(PerformanceModel):
         while queue:
             _, indices = heapq.heappop(queue)
             config = {o: values[i][1] for o, values, i in zip(self.options, ranked, indices)}
-            if valid(config, hardware):
+            if self._valid(config, hardware):
                 mean, _ = self.predict_performance(hardware, [config])
                 return self._add_rule_options(config, hardware), float(mean[0])
             for dimension, values in enumerate(ranked):
@@ -89,7 +89,7 @@ class RandomBaseline(PerformanceModel):
         # Random order without replacement gives a uniform valid choice and
         # terminates even when every candidate is invalid.
         for i in self.rng.permutation(len(configs)):
-            if valid(configs[i], hardware):
+            if self._valid(configs[i], hardware):
                 return int(i)
         raise ValueError("no valid build configurations for this hardware")
 
@@ -109,6 +109,6 @@ class RandomBaseline(PerformanceModel):
                 index, value = divmod(index, size)
                 config[option] = self.values[option][value]
             config = {o: config[o] for o in self.options}
-            if valid(config, hardware):
+            if self._valid(config, hardware):
                 return self._add_rule_options(config, hardware), None
         raise ValueError("no valid build configurations for this hardware")

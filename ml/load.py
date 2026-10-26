@@ -29,6 +29,7 @@ from pathlib import Path
 import pandas as pd
 
 from . import load_gromacs, load_llama
+from .validation import COMMON_SCHEMA, discovery_features, schema_errors, toolchain_errors
 from .polybox import DEFAULT_SHARE, RemoteZip, archives
 
 HW = "hw."
@@ -47,9 +48,30 @@ HARDWARE_DETERMINED = {
 
 
 # Can a configuration be built and run on this hardware? Excludes e.g. GMX_SIMD=AVX_512 on an ARM CPU.
-# Every application checks only its own options, so this works without knowing the application.
-def valid(config, hardware):
-    return all(app.valid(config, hardware) for app in APPS.values())
+# Models pass their application; direct callers can infer it from option names.
+def validation_errors(config, hardware, app=None):
+    # Omitted cross-application columns excluded from validation
+    config = {k: v for k, v in config.items() if v != DEFAULT}
+    if app is None:
+        applications = set()
+        for option in config:
+            if option.startswith(("GGML_", "LLAMA_")):
+                applications.add("llama.cpp")
+            elif option.startswith("GMX_") or option in load_gromacs.HARNESS_OPTIONS:
+                applications.add("gromacs")
+        if len(applications) > 1:
+            return ["schema: configuration mixes options from different applications"]
+        app = next(iter(applications), None)
+    if app is None:
+        # Shared CMake checks for configurations without application-specific options
+        return schema_errors(config, COMMON_SCHEMA) + toolchain_errors(config, hardware)
+    if app not in APPS:
+        return [f"schema: unsupported application {app}"]
+    return APPS[app].validation_errors(config, hardware)
+
+
+def valid(config, hardware, app=None):
+    return not validation_errors(config, hardware, app)
 
 
 # files to analyze
@@ -124,23 +146,26 @@ def _accelerators(system):
 # extract hardware features from system.json
 def hardware_features(system):
     cpu = system.get("CPU Info", {})
-    vectorization = set(cpu.get("Supported Vectorizations", []))
+    flags = cpu.get("Flags", cpu.get("Supported Vectorizations", []))
+    vectorization = set(flags.split() if isinstance(flags, str) else flags)
+    cpu_features_known = "Flags" in cpu or "Supported Vectorizations" in cpu
     model_name = cpu.get("Model Name", "")
     nvidia_gpus = _accelerators(system).get("nvidia", [])
     backends = system.get("GPU Backends", {})
 
     def backend_available(name):
-        return bool(backends.get(name, {}).get("version"))
+        return bool(backends[name].get("version")) if name in backends else "unknown"
 
     return {
+        **discovery_features(system),
         "cpu_arch": cpu.get("Architecture", "unknown"),
         "cpu_vendor": ("AMD" if "AMD" in model_name else "Intel" if "Intel" in model_name
                        else "Apple" if "Apple" in model_name else "other"),
-        "avx2": "avx2" in vectorization,
-        "avx512": any(v.startswith("avx512") for v in vectorization),
-        "sve": "sve" in vectorization,
-        "neon": "neon" in vectorization or "asimd" in vectorization,
-        "n_gpus": len(nvidia_gpus),
+        "avx2": "avx2" in vectorization if cpu_features_known else "unknown",
+        "avx512": ("avx512f" in vectorization or "avx512" in vectorization) if cpu_features_known else "unknown",
+        "sve": "sve" in vectorization if cpu_features_known else "unknown",
+        "neon": ("neon" in vectorization or "asimd" in vectorization) if cpu_features_known else "unknown",
+        "n_gpus": len(nvidia_gpus) if "Accelerators" in system else -1,
         "gpu_vendor": "nvidia" if nvidia_gpus else "none",
         "gpu_compute_capability": float(nvidia_gpus[0]["compute_cap"]) if nvidia_gpus else 0.0,
         "cuda": backend_available("CUDA"),
