@@ -19,13 +19,20 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
+
 from .evaluate import leave_one_platform_out #, leave_one_build_out
 from .load import APPS, CFG, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
+from .baseline_models import NoHardwareModel, RandomBaseline
 from .model import PerformanceModel
 
 
-def model_path(models, app):
-    return Path(models) / f"{app}.joblib"
+MODEL_TYPES = {"hardware": PerformanceModel, "no-hardware": NoHardwareModel, "random": RandomBaseline}
+
+
+def model_path(models, app, kind="hardware"):
+    suffix = "" if kind == "hardware" else f".{kind}"
+    return Path(models) / f"{app}{suffix}.joblib"
 
 
 # the configs in `table` as plain dicts {option: value}
@@ -49,13 +56,16 @@ def train(args):
         runs = app_options(runs)
         
         # train the model
-        model = PerformanceModel().fit(runs)
-        model.save(model_path(args.models, app))
+        model = MODEL_TYPES[args.model]().fit(runs)
+        model.save(model_path(args.models, app, args.model))
 
         # print summary
         print(f"== {app}: {runs['runs'].sum()} runs of {len(runs)} distinct builds "
               f"on {runs['platform'].nunique()} platform(s) "
-              f"-> {model_path(args.models, app)}")
+              f"-> {model_path(args.models, app, args.model)}")
+        if isinstance(model, RandomBaseline):
+            print("random baseline: recorded option values; no performance model fitted\n")
+            continue
         
         # Only the options that differ between runs, the rest is the same everywhere.
         # varying = [c for c in columns(runs, CFG) if runs[c].nunique() > 1]
@@ -64,6 +74,11 @@ def train(args):
         # what the model learned
         print(f"model fit on the training data: explains {model.r2:.0%} of the measured performance differences, "
               f"estimated noise ±{model.noise:.1%}")
+        if isinstance(model, NoHardwareModel):
+            # The option-only fit is identical for every machine. Avoid the
+            # full candidate-space enumeration used by the decision report.
+            print()
+            continue
         print("\nper machine and option: the value the model picks, then what each other value costs")
         for platform, machine in runs.groupby("platform"):
             hardware = {strip(c): machine[c].iloc[0] for c in columns(machine, HW)}
@@ -86,16 +101,20 @@ def train(args):
 def predict(args):
     _, hardware = read_hardware(args.system)
     # One selected application or all saved models
-    apps = [args.app] if args.app else [app for app in APPS if model_path(args.models, app).is_file()]
+    apps = [args.app] if args.app else [app for app in APPS if model_path(args.models, app, args.model).is_file()]
     if not apps:
         raise ValueError("no trained models found; run python -m ml.main train first")
     for app in apps:
-        model = PerformanceModel.load(model_path(args.models, app))
+        model = PerformanceModel.load(model_path(args.models, app, args.model))
+        if isinstance(model, RandomBaseline):
+            # A fresh generator avoids replaying the state saved during training.
+            model.rng = np.random.default_rng(args.seed)
         config, predicted = model.predict(hardware)
         print(f"== {app}")
         for argument in describe(app, config).split(" "):
             print(argument)
-        print(f"# predicted performance: {predicted:.3f} of the best build on this machine")
+        if predicted is not None:
+            print(f"# predicted performance: {predicted:.3f} of the best build on this machine")
 
 
 def suggest(args):
@@ -128,9 +147,9 @@ def evaluate(args):
         if runs["platform"].nunique() < 2:
             print("needs runs from at least 2 platforms; found only:", *runs["platform"].unique())
             continue
-        result = leave_one_platform_out(runs)
+        result = leave_one_platform_out(runs, random_trials=args.random_trials, seed=args.seed)
         print(result.round(3).to_string(index=False))
-        print("\naverage:", result[["error", "model", "baseline"]].mean().round(3).to_dict())
+        print("\naverage:", result[["error", "model", "baseline", "no_hardware", "random"]].mean().round(3).to_dict())
 
 
 def main():
@@ -139,11 +158,14 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("train")
+    p.add_argument("--model", choices=MODEL_TYPES, default="hardware", help="model to train; baseline files are saved separately")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs or share URLs; defaults to project Polybox")
     p.add_argument("--app", choices=sorted(APPS), help="train only this application; default: all discovered applications")
     p.set_defaults(func=train)
 
     p = sub.add_parser("predict")
+    p.add_argument("--model", choices=MODEL_TYPES, default="hardware", help="saved model to use")
+    p.add_argument("--seed", type=int, help="reproducible random baseline selection")
     p.add_argument("--app", choices=sorted(APPS), help="default: all available trained applications")
     p.add_argument("--system", required=True, help="system.json of the target machine")
     p.set_defaults(func=predict)
@@ -156,6 +178,8 @@ def main():
     p.set_defaults(func=suggest)
 
     p = sub.add_parser("evaluate")
+    p.add_argument("--random-trials", type=int, default=1000, help="random selections per held-out platform (default: 1000)")
+    p.add_argument("--seed", type=int, default=0, help="random evaluation seed (default: 0)")
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs or share URLs; defaults to project Polybox")
     p.set_defaults(func=evaluate)

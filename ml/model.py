@@ -38,8 +38,7 @@ class PerformanceModel:
     # --- Training ----------------------------------------------------------------
 
     # train on all builds of an application (one row per build and machine, repeated runs already averaged)
-    def fit(self, table):
-        self.hw_features = [strip(c) for c in columns(table, HW)]
+    def _fit_options(self, table):
         options = [strip(c) for c in columns(table, CFG)]
         self.rule_options = [o for o in options if o in HARDWARE_DETERMINED]
         self.options = [o for o in options if o not in HARDWARE_DETERMINED]
@@ -47,6 +46,10 @@ class PerformanceModel:
         # Every value seen for each option. All combinations of them are the
         # candidate builds that `predict` and `suggest` choose from.
         self.values = {o: sorted(table[CFG + o].unique()) for o in self.options}
+
+    def fit(self, table):
+        self.hw_features = [strip(c) for c in columns(table, HW)]
+        self._fit_options(table)
 
         # Input: hardware features + build options of every build. Output: the log of its relative performance,
         # so that effects multiply: -0.12 in log space is about 12 % slower, whatever the base performance.
@@ -78,6 +81,9 @@ class PerformanceModel:
         for o in self.option_columns:
             for h in self.hw_columns:
                 X[f"{o} x {h}"] = X[o] * X[h]
+        if X.shape[1] == 0:
+            # A baseline may have no varying options and no hardware features.
+            X["constant"] = 1.0
         return X
 
     # --- Using the model ---------------------------------------------------------
@@ -99,6 +105,8 @@ class PerformanceModel:
     # returns for a given hardware the config with the highest predicted performance, and the predicted performance too
     def predict(self, hardware):
         candidates = self.candidates(hardware)
+        if not candidates:
+            raise ValueError("no valid build configurations for this hardware")
         mean, _ = self.predict_performance(hardware, candidates)
         best = int(np.argmax(mean))
         return self._add_rule_options(candidates[best], hardware), float(mean[best])

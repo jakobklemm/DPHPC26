@@ -18,14 +18,22 @@ Reported per platform:
   error     how far the predicted relative performance is from the measured
             one, on average over the measured builds
   model     measured relative performance of the build the model rates best
-  baseline  the same for the build that was best on average on the other
-            platforms, i.e. a choice that ignores the hardware
+  baseline  selected build's performance using the best mean relative
+            performance of complete configurations on training platforms
+  no_hardware  selected build's performance using an option-only regression
+  random       mean selected performance over repeated random choices
+  random_std   standard deviation of those random choices
+
+All methods choose from the same valid, measured builds, restricted to option
+values seen in training. This evaluates ranking on measured builds, not the
+performance of unmeasured combinations in the full candidate space.
 """
 
 import numpy as np
 import pandas as pd
 
-from .load import CFG, HW, columns, strip
+from .load import CFG, HW, columns, strip, valid
+from .baseline_models import NoHardwareModel, RandomBaseline, baseline_pick
 from .model import PerformanceModel
 
 
@@ -67,26 +75,36 @@ def configs(table):
 #     return table
 
 
-def baseline_pick(train, test, options):
-    """Among the builds measured in `test`, the one with the best average on the training platforms """
-    keys = [CFG + o for o in options]
-    average = train.groupby(keys)["relative"].mean().rename("average").reset_index()
-    candidates = test.merge(average, on=keys)
-    if candidates.empty:
-        return float("nan")
-    return candidates.sort_values("average", ascending=False)["relative"].iloc[0]
-
-
-def leave_one_platform_out(table):
+def leave_one_platform_out(table, random_trials=1000, seed=0):
+    if random_trials < 1:
+        raise ValueError("random_trials must be at least 1")
     rows = []
+    random = RandomBaseline(seed=seed)
     for platform in sorted(table["platform"].unique()):
         train = table[table["platform"] != platform]
         test = table[table["platform"] == platform]
         hardware = {strip(c): test[c].iloc[0] for c in columns(test, HW)}
 
         model = PerformanceModel().fit(train)
-        predicted, _ = model.predict_performance(hardware, configs(test))
+        no_hardware = NoHardwareModel().fit(train)
+        random.fit(train)
+        eligible = [
+            all(c.get(o) in model.values[o] for o in model.options) and valid(c, hardware)
+            for c in configs(test)
+        ]
+        test = test.loc[eligible]
+        if test.empty:
+            rows.append({"platform": platform, "runs": 0, "error": np.nan,
+                         "model": np.nan, "baseline": np.nan, "no_hardware": np.nan,
+                         "random": np.nan, "random_std": np.nan})
+            continue
+        candidates = configs(test)
+        predicted, _ = model.predict_performance(hardware, candidates)
+        option_predicted, _ = no_hardware.predict_performance(hardware, candidates)
         measured = test["relative"].to_numpy()
+        random_performance = np.array([
+            measured[random.choose_index(hardware, candidates)] for _ in range(random_trials)
+        ])
 
         rows.append({
             "platform": platform,
@@ -94,5 +112,8 @@ def leave_one_platform_out(table):
             "error": float(np.mean(np.abs(predicted - measured))),
             "model": measured[int(np.argmax(predicted))],
             "baseline": baseline_pick(train, test, model.options),
+            "no_hardware": measured[int(np.argmax(option_predicted))],
+            "random": float(random_performance.mean()),
+            "random_std": float(random_performance.std()),
         })
     return pd.DataFrame(rows)
