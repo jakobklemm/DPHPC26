@@ -29,6 +29,7 @@ from pathlib import Path
 import pandas as pd
 
 from . import load_gromacs, load_llama
+from .polybox import DEFAULT_SHARE, RemoteZip, archives
 
 HW = "hw."
 CFG = "cfg."
@@ -61,7 +62,14 @@ RUN_FILES = ["source.yml", "system.json", "build.json", "benchmark.json"]
 # each run is a dict {"source.yml": text, "system.json": text, "build.json": text, "benchmark.json": text}
 # is a generator! hands out one run at a time
 def read_runs(paths):
-    for path in map(Path, paths):
+    for source in paths:
+        if str(source).startswith("https://"):
+            # Remote ZIP metadata; no artifact extraction
+            for url, size, headers in archives(str(source)):
+                with RemoteZip(url, size, headers) as remote:
+                    yield from _runs_in_zip(remote)
+            continue
+        path = Path(source)
         if path.suffix == ".zip":
             yield from _runs_in_zip(path)
         else:
@@ -95,7 +103,8 @@ def _runs_in_zip(path):
             top_level = {n[len(prefix):]: n for n in names
                          if n.startswith(prefix) and "/" not in n[len(prefix):]}
             top_level["build.json"] = next(
-                (n for name, n in top_level.items() if re.fullmatch(r"build-.*\.json", name)), None)
+                (n for name, n in top_level.items() if re.fullmatch(r"build-.*\.json", name)),
+                top_level.get("build.json"))
             if all(top_level.get(name) for name in RUN_FILES):
                 yield {name: z.read(top_level[name]).decode() for name in RUN_FILES}
 
@@ -168,7 +177,7 @@ def parse_run(files):
 # --- The table -------------------------------------------------------------------
 
 # reads all runs (optionally only of one application) into a dataframe
-def load_table(paths, app=None):
+def load_table(paths=None, app=None):
     """
     The same build measured more than once on a platform becomes one row with
     the mean performance; `runs` says how many measurements it is based on.
@@ -178,6 +187,8 @@ def load_table(paths, app=None):
     0.9 is 10 % slower.
 
     """
+    # Polybox by default; explicit paths as override
+    paths = paths or [DEFAULT_SHARE]
     rows = [parse_run(files) for files in read_runs(paths)]
     rows = [r for r in rows if r and (app is None or r["application"] == app)]
     if not rows:
@@ -185,7 +196,7 @@ def load_table(paths, app=None):
     table = pd.DataFrame(rows)
 
     # The same run can be found twice, e.g. as a zip and as its extracted folder.
-    table = table.drop_duplicates("run_id")
+    table = table.drop_duplicates(["application", "platform", "run_id"])
 
     # An option missing from a run was not passed, so CMake used its default.
     # (Options of other applications are "default" everywhere and dropped before training.)
@@ -227,7 +238,7 @@ def describe(app, config):
 if __name__ == "__main__":
     import sys
 
-    table = load_table(sys.argv[1:] or ["../download"])
+    table = load_table(sys.argv[1:])
     for app, runs in table.groupby("application"):
         runs = app_options(runs)
         print(f"== {app}: {len(runs)} rows (one per distinct build and platform), "

@@ -5,12 +5,13 @@ Command line interface. Run from the repository root.
   predict   build configuration for a machine, given its system.json
   suggest   configurations worth benchmarking next on a machine
 
---data takes run folders, folders containing run folders, and/or the run .zip files.
+Data defaults to the project Polybox share. --data overrides it with local
+folders, ZIP files, or public share URLs. --app optionally selects one application.
 
 Examples:
-  python -m ml.main train    --data runs/
-  python -m ml.main predict  --app llama.cpp --system system.json
-  python -m ml.main suggest  --app llama.cpp --system system.json --data runs/
+  python -m ml.main train
+  python -m ml.main predict --system system.json
+  python -m ml.main suggest --system system.json
   
 """
 
@@ -19,7 +20,7 @@ import json
 from pathlib import Path
 
 from .evaluate import leave_one_platform_out #, leave_one_build_out
-from .load import CFG, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
+from .load import APPS, CFG, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 from .model import PerformanceModel
 
 
@@ -40,7 +41,7 @@ def read_hardware(path):
 
 
 def train(args):
-    table = load_table(args.data) # load all available runs
+    table = load_table(args.data, args.app)
     Path(args.models).mkdir(parents=True, exist_ok=True) # create a models folder
     
     for app, runs in table.groupby("application"): # for each application (e.g. llama)
@@ -68,6 +69,9 @@ def train(args):
             hardware = {strip(c): machine[c].iloc[0] for c in columns(machine, HW)}
             decisions = model.decisions(hardware)
             print(f"\n  {platform}  ({len(machine)} builds measured)")
+            if decisions.empty:
+                print("    no alternative option values available")
+                continue
             # options with the most expensive wrong choice first
             order = decisions.groupby("option")["cost"].min().sort_values().index
             for option in order:
@@ -80,25 +84,34 @@ def train(args):
 
 
 def predict(args):
-    model = PerformanceModel.load(model_path(args.models, args.app))
     _, hardware = read_hardware(args.system)
-    config, predicted = model.predict(hardware)
-    # Printed as build arguments (e.g. -DGGML_LTO=ON); options left at "default" are not passed.
-    for argument in describe(args.app, config).split(" "):
-        print(argument)
-    print(f"# predicted performance: {predicted:.3f} of the best build on this machine")
+    # One selected application or all saved models
+    apps = [args.app] if args.app else [app for app in APPS if model_path(args.models, app).is_file()]
+    if not apps:
+        raise ValueError("no trained models found; run python -m ml.main train first")
+    for app in apps:
+        model = PerformanceModel.load(model_path(args.models, app))
+        config, predicted = model.predict(hardware)
+        print(f"== {app}")
+        for argument in describe(app, config).split(" "):
+            print(argument)
+        print(f"# predicted performance: {predicted:.3f} of the best build on this machine")
 
 
 def suggest(args):
-    table = app_options(load_table(args.data, args.app))
-    model = PerformanceModel().fit(table)
+    table = load_table(args.data, args.app)
     platform, hardware = read_hardware(args.system)
-    measured = configs(table[table["platform"] == platform])
-    suggestions = model.suggest(hardware, measured, n=args.n)
-    if not suggestions:
-        print("every combination of the option values seen so far is already measured on this machine")
-    for config, mean, spread in suggestions:
-        print(f"predicted {mean:.3f} ± {spread:.3f}:  {describe(args.app, config)}")
+    # Fresh model and measured builds per application
+    for app, runs in table.groupby("application"):
+        runs = app_options(runs)
+        model = PerformanceModel().fit(runs)
+        measured = configs(runs[runs["platform"] == platform])
+        suggestions = model.suggest(hardware, measured, n=args.n)
+        print(f"== {app}")
+        if not suggestions:
+            print("every combination of the option values seen so far is already measured on this machine")
+        for config, mean, spread in suggestions:
+            print(f"predicted {mean:.3f} ± {spread:.3f}:  {describe(app, config)}")
 
 
 def evaluate(args):
@@ -108,13 +121,16 @@ def evaluate(args):
     # print(result.round(3).to_string(index=False))
     # print("\naverage:", result[["error", "guess"]].mean().round(3).to_dict(), end="\n\n")
 
-    print("== leave one platform out: predict each machine without having seen it")
-    if table["platform"].nunique() < 2:
-        print("needs runs from at least 2 platforms; found only:", *table["platform"].unique())
-        return
-    result = leave_one_platform_out(table)
-    print(result.round(3).to_string(index=False))
-    print("\naverage:", result[["error", "model", "baseline"]].mean().round(3).to_dict())
+    # Separate validation per application
+    for app, runs in table.groupby("application"):
+        runs = app_options(runs)
+        print(f"== {app}: leave one platform out")
+        if runs["platform"].nunique() < 2:
+            print("needs runs from at least 2 platforms; found only:", *runs["platform"].unique())
+            continue
+        result = leave_one_platform_out(runs)
+        print(result.round(3).to_string(index=False))
+        print("\naverage:", result[["error", "model", "baseline"]].mean().round(3).to_dict())
 
 
 def main():
@@ -123,24 +139,25 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("train")
-    p.add_argument("--data", nargs="+", required=True)
+    p.add_argument("--data", nargs="+", help="local folders/ZIPs or share URLs; defaults to project Polybox")
+    p.add_argument("--app", choices=sorted(APPS), help="train only this application; default: all discovered applications")
     p.set_defaults(func=train)
 
     p = sub.add_parser("predict")
-    p.add_argument("--app", required=True)
+    p.add_argument("--app", choices=sorted(APPS), help="default: all available trained applications")
     p.add_argument("--system", required=True, help="system.json of the target machine")
     p.set_defaults(func=predict)
 
     p = sub.add_parser("suggest")
-    p.add_argument("--app", required=True)
+    p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
     p.add_argument("--system", required=True, help="system.json of the target machine")
-    p.add_argument("--data", nargs="+", required=True)
+    p.add_argument("--data", nargs="+", help="local folders/ZIPs or share URLs; defaults to project Polybox")
     p.add_argument("-n", type=int, default=5, help="number of configurations to suggest")
     p.set_defaults(func=suggest)
 
     p = sub.add_parser("evaluate")
-    p.add_argument("--app", required=True)
-    p.add_argument("--data", nargs="+", required=True)
+    p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
+    p.add_argument("--data", nargs="+", help="local folders/ZIPs or share URLs; defaults to project Polybox")
     p.set_defaults(func=evaluate)
 
     args = parser.parse_args()
