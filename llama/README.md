@@ -31,16 +31,18 @@ python3 llama/llama_gpu_bench-random.py subset \
   --source /path/to/llama.cpp --model /path/to/model.gguf --device cpu \
   --count 50 --flags-per-build 7
 
-# GPU examples:
+# CUDA example:
 python3 llama/llama_gpu_bench-random.py subset \
   --source /path/to/llama.cpp --model /path/to/model.gguf \
   --device cuda --cuda-arch 86 --count 5
-python3 llama/llama_gpu_bench-random.py sweep \
-  --source /path/to/llama.cpp --model /path/to/model.gguf --device vulkan
 ```
 
 `--cuda-arch` is mandatory with CUDA and forbidden with other devices. The
 backend choice is fixed per invocation, not counted toward the N tuning flags.
+Vulkan configurations can be inspected with `--dry-run`, but execution is
+rejected until a Vulkan GPU metrics collector is available; HPCToolkit's
+`gpu=cuda` event source cannot profile Vulkan. CPU-only runs require timing
+and CPU profiling; CUDA runs require all three measurement stages.
 Use `--dry-run` to print all configurations before building. The root
 `llama/flags.json` is the canonical flag catalog. Supply a different catalog
 with `--flags-file /path/to/flags.json`; the same path is passed to each build
@@ -49,7 +51,9 @@ for invalid-combination checks. A host-filtered catalog can be saved with
 line are resolved against the shell's current directory.
 
 Every configuration specifies each eligible CMake, clang, and Vulkan runtime
-flag explicitly. Unsupported CPU flags are explicitly OFF. Vulkan's
+flag explicitly. Unsupported CPU flags are explicitly OFF. The optimization
+level defaults to `-O3` for Release builds; `-O0` is not sampled because it
+produces an unoptimized benchmark. Vulkan's
 `GGML_VK_DISABLE_*` flags are runtime environment settings (`0` or `1`), not
 CMake definitions. Invalid combinations are skipped before a build: for
 example, CUDA's mutually exclusive FORCE_MMQ/FORCE_CUBLAS options and
@@ -63,7 +67,9 @@ host snapshot, and model hash are calculated once per invocation. Results are
 in `llama/bench-results/` by default: `<mode>-plan.json` contains **all**
 planned configurations and `<mode>-executions.json` records their results,
 including failures. Each run directory has `build.json`, `benchmark.json`,
-logs, and system metadata. Re-running the same mode and results directory
+logs, and system metadata. A completed CPU run has `benchmark.json` and
+`cpu-metrics.json`; a completed CUDA run also has `gpu-metrics.json`.
+`build.json` records each stage's status. Re-running the same mode and results directory
 resumes the recorded plan; `<mode>-settings.json` prevents accidentally resuming
 with a different model or benchmark workload. Use a new results directory for
 different settings. `--build-dir` and `--results-dir` can be set independently.
@@ -94,16 +100,25 @@ Use a toolkit version compatible with your installed NVIDIA driver and host
 Clang. The CUDA 12.8 guide does not list Rocky 10 as supported; NVIDIA's
 current Linux installation guide does. For CUDA architecture 75, check that
 `nvcc --list-gpu-arch` includes `compute_75`. Then rerun the original `sweep`
-or `subset` invocation; the runner retries failed configurations. Profiling
-is optional and additionally requires `perf` and, for CUDA GPU counters,
-HPCToolkit installed on the host.
+or `subset` invocation; the runner retries failed configurations. Both `perf`
+and CUDA-enabled HPCToolkit must be installed on the host for CUDA runs.
 
-Timing runs require no performance-counter permissions. To also collect CPU
-`perf stat` counters, pass `--profile` (requires accessible hardware counters).
-CUDA profiling additionally requires host-installed HPCToolkit (`hpcrun`,
-`hpcstruct`, `hpcprof`); CPU/Vulkan profiling does not use HPCToolkit's
-CUDA-only GPU event source. Use small `--prompt`, `--generate`, `--count`, and
-`--repetitions` settings when testing on a laptop.
+Profiling is mandatory. The runner checks that `perf` and (for CUDA) the three
+HPCToolkit tools (`hpcrun`, `hpcstruct`, `hpcprof`) are on `PATH`, and checks that
+`perf stat` can access CPU counters before building. Loading HPCToolkit via
+Spack does not install the separate `perf` command. On Rocky Linux, install
+it with `sudo dnf install perf` and verify access with
+`perf stat -e cycles:u,instructions:u -- true`. GPU profiling also needs a
+CUDA-enabled host HPCToolkit installation in the same shell as the runner.
+Use small `--prompt`, `--generate`, `--count`, and `--repetitions` settings when
+testing on a laptop. Use a **new** `--results-dir` for an old timing-only plan:
+
+```sh
+python3 llama/llama_gpu_bench-random.py subset \
+  --source /path/to/llama.cpp --model /path/to/model.gguf \
+  --device cuda --cuda-arch 75 --count 1 \
+  --results-dir /path/to/bench-results-profiled
+```
 
 Small local checks (including a tiny direct clang/CMake build):
 

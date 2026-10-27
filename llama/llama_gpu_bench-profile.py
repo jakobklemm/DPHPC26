@@ -15,7 +15,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from filter_llama_performance_flags import find_cuda_compiler
+from filter_llama_performance_flags import find_cuda_compiler, profile_prerequisite_error
 
 
 ROOT = Path(__file__).resolve().parent
@@ -58,6 +58,22 @@ def benchmark_args(binary, model, args, repetitions):
             "-r", str(repetitions), "-o", "json"]
 
 
+def verify_benchmark(path, device):
+    data = json.loads(path.read_text())
+    if not isinstance(data, list) or not data or not all(
+        isinstance(row, dict) and device.lower() in row.get("backends", "").lower()
+        for row in data
+    ):
+        raise RuntimeError(f"Benchmark did not report {device} for every result; see {path}")
+
+
+def verify_metrics(path, required=()):
+    metrics = json.loads(path.read_text())
+    if (not isinstance(metrics, dict) or not metrics
+            or any(name not in metrics for name in required)):
+        raise RuntimeError(f"Missing required metrics in {path}")
+
+
 def positive_int(value):
     number = int(value)
     if number <= 0:
@@ -84,6 +100,7 @@ def main():
     parser.add_argument("--results-dir", type=Path, default=ROOT / "bench-results")
     parser.add_argument("--device", required=True, choices=("cpu", "cuda", "vulkan"))
     parser.add_argument("--model-sha256", help="Precomputed model hash for repeated runs")
+    parser.add_argument("--preflight-done", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--system-info", type=Path, help="Host snapshot prepared once by the runner")
     parser.add_argument("--cmake-arg", action="append", default=[])
     parser.add_argument("--runtime-arg", action="append", default=[])
@@ -94,7 +111,6 @@ def main():
     parser.add_argument("--repetitions", type=positive_int, default=3)
     parser.add_argument("--gpu-layers", type=int,
                         help="Defaults to 0 on CPU, 99 on GPU")
-    parser.add_argument("--profile", action="store_true")
     args = parser.parse_args()
     if args.gpu_layers is None:
         args.gpu_layers = 0 if args.device == "cpu" else 99
@@ -117,8 +133,8 @@ def main():
         parser.error("CPU runs require --gpu-layers 0")
     if any(not re.fullmatch(r"-[^\s]+", flag) for flag in args.compiler_flag):
         parser.error("--compiler-flag must be a single compiler switch")
-    if any(flag in {"-Ofast", "-ffast-math"} for flag in args.compiler_flag):
-        parser.error("fast-math/Ofast conflicts with ggml non-finite arithmetic")
+    if any(flag in {"-O0", "-Ofast", "-ffast-math"} for flag in args.compiler_flag):
+        parser.error("-O0 is unoptimized; fast-math/Ofast conflicts with ggml non-finite arithmetic")
     if any(not name.startswith("GGML_VK_") for name in runtime):
         parser.error("--runtime-arg only accepts GGML_VK_* settings")
     flags_file = args.flags_file.expanduser().resolve()
@@ -133,6 +149,10 @@ def main():
     if args.device == "cuda" and not find_cuda_compiler():
         parser.error("CUDA builds require nvcc on PATH or CUDACXX=/absolute/path/to/nvcc; "
                      "install the CUDA development toolkit on this host")
+    if not args.preflight_done:
+        problem = profile_prerequisite_error(args.device)
+        if problem:
+            parser.error(problem)
     if args.model_sha256 and not re.fullmatch(r"[0-9a-f]{64}", args.model_sha256):
         parser.error("--model-sha256 must be a SHA-256 hex digest")
 
@@ -156,6 +176,9 @@ def main():
               "run_id": output.name,
               "cmake_definitions_in_order": ["-D" + arg for arg in args.cmake_arg],
               "cmake": cmake, "runtime": runtime, "compiler_flags": args.compiler_flag,
+              "profiling": {"cpu_perf": True, "gpu_hpctoolkit": args.device == "cuda"},
+              "stages": {"benchmark": "pending", "cpu_perf": "pending",
+                         "gpu_hpctoolkit": "pending" if args.device == "cuda" else "not_applicable"},
               "script_sha256": sha256_file(Path(__file__).resolve())}
     record_file = output / "build.json"
 
@@ -164,7 +187,8 @@ def main():
 
     save()
     try:
-        flags = ["-g", "-DNDEBUG", *args.compiler_flag]
+        optimization = [] if any(flag.startswith("-O") for flag in args.compiler_flag) else ["-O3"]
+        flags = ["-g", "-DNDEBUG", *optimization, *args.compiler_flag]
         configure = ["cmake", "-S", str(source), "-B", str(build),
                      "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_C_COMPILER=clang",
                      "-DCMAKE_CXX_COMPILER=clang++", "-DCMAKE_C_FLAGS_RELEASE=" + " ".join(flags),
@@ -196,13 +220,14 @@ def main():
         with benchmark_file.open("w") as stdout, (output / "benchmark.log").open("w") as stderr:
             start = time.monotonic()
             subprocess.run(bench, env=env, stdout=stdout, stderr=stderr, check=True)
-        data = json.loads(benchmark_file.read_text())
-        expected = {"cpu": "CPU", "cuda": "CUDA", "vulkan": "Vulkan"}[args.device]
-        if not data or not all(expected.lower() in row.get("backends", "").lower() for row in data):
-            raise RuntimeError(f"Benchmark did not report {expected}; see benchmark.log")
+        verify_benchmark(benchmark_file, args.device)
         record["benchmark_wall_seconds"] = round(time.monotonic() - start, 3)
-        if args.profile:
-            profile(args, output, env, bench)
+        record["stages"]["benchmark"] = "completed"
+        save()
+        profile(args, output, env, bench, record, save)
+        print(f"CPU metrics: {output / 'cpu-metrics.json'}", flush=True)
+        if args.device == "cuda":
+            print(f"GPU metrics: {output / 'gpu-metrics.json'}", flush=True)
         record["status"] = "completed"
         save()
         print(f"Results: {benchmark_file}", flush=True)
@@ -215,7 +240,7 @@ def main():
     return 0
 
 
-def profile(args, output, env, bench):
+def profile(args, output, env, bench, record, save):
     cpu_dir = output / "profiles" / "cpu"
     cpu_dir.mkdir(parents=True)
     run_logged([sys.executable, str(ROOT / "collect_cpu_metrics.py"),
@@ -223,8 +248,10 @@ def profile(args, output, env, bench):
                 "--benchmark-output", str(cpu_dir / "benchmark.json"),
                 "--log", str(cpu_dir / "benchmark.log"), "--", *bench],
                output / "cpu-perf.log", env=env)
-    # HPCToolkit's gpu=cuda event source is CUDA-specific; Vulkan and CPU still
-    # get timing and CPU counters, without requiring a CUDA installation.
+    verify_benchmark(cpu_dir / "benchmark.json", args.device)
+    verify_metrics(output / "cpu-metrics.json", ("cycles", "instructions"))
+    record["stages"]["cpu_perf"] = "completed"
+    save()
     if args.device != "cuda":
         return
     gpu_dir = output / "profiles" / "gpu-operations"
@@ -235,11 +262,15 @@ def profile(args, output, env, bench):
         gpu_dir / "benchmark.log").open("w") as stderr:
         subprocess.run(["hpcrun", "-o", str(measurements), "-e", "gpu=cuda", *bench],
                        env=env, stdout=stdout, stderr=stderr, check=True)
+    verify_benchmark(gpu_dir / "benchmark.json", "cuda")
     run_logged(["hpcstruct", "-j", str(args.workers), str(measurements)],
                gpu_dir / "analysis.log")
     run_logged(["hpcprof", "-o", str(database), str(measurements)], gpu_dir / "analysis.log")
     run_logged([sys.executable, str(ROOT / "extract_gpu_metrics.py"), str(database),
                 "-o", str(output / "gpu-metrics.json")], gpu_dir / "analysis.log")
+    verify_metrics(output / "gpu-metrics.json")
+    record["stages"]["gpu_hpctoolkit"] = "completed"
+    save()
     shutil.rmtree(measurements)
     shutil.rmtree(database)
 

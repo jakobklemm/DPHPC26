@@ -14,7 +14,8 @@ import tempfile
 import time
 from pathlib import Path
 
-from filter_llama_performance_flags import cpu_info, filter_catalog, find_cuda_compiler, off_value
+from filter_llama_performance_flags import (cpu_info, filter_catalog, find_cuda_compiler,
+                                            off_value, profile_prerequisite_error)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -190,7 +191,6 @@ def main():
     common.add_argument("--generate", type=positive_int, default=128)
     common.add_argument("--repetitions", type=positive_int, default=3)
     common.add_argument("--gpu-layers", type=int, default=99)
-    common.add_argument("--profile", action="store_true", help="Collect perf counters and GPU HPCToolkit metrics")
     common.add_argument("--dry-run", action="store_true")
     commands.add_parser("sweep", parents=[common], help="One hot: enable each flag once")
     subset = commands.add_parser("subset", parents=[common], help="Random N-flag subsets")
@@ -239,6 +239,11 @@ def main():
     if args.device == "cuda" and plan and not find_cuda_compiler():
         parser.error("CUDA builds require nvcc on PATH or CUDACXX=/absolute/path/to/nvcc; "
                      "install the CUDA development toolkit on this host")
+    problem = profile_prerequisite_error(args.device)
+    if problem:
+        parser.error(problem)
+    print("Required stages: benchmark, CPU perf" + (", CUDA HPCToolkit" if args.device == "cuda" else ""),
+          flush=True)
     system_file = results / f"host-system-{args.device}{('-' + args.cuda_arch.replace(';', '-')) if args.cuda_arch else ''}.json"
     # The model is immutable for this run list; hash it only once, not once per build.
     from hashlib import sha256
@@ -252,7 +257,7 @@ def main():
                 "prompt": args.prompt, "generate": args.generate,
                 "repetitions": args.repetitions,
                 "gpu_layers": 0 if args.device == "cpu" else args.gpu_layers,
-                "profile": args.profile, "build_dir": str(build)}
+                "profile": True, "build_dir": str(build)}
     settings_file = results / f"{args.mode}-settings.json"
     if settings_file.exists() and json.loads(settings_file.read_text()) != settings:
         parser.error(f"Run settings changed: use a different --results-dir or remove {settings_file}")
@@ -276,6 +281,14 @@ def main():
         save_json(system_file, system)
     for index in range(len(plan)):
         if index < len(records) and records[index]["status"] == "completed":
+            directory = results / records[index]["results_directory"]
+            required = ["benchmark.json", "cpu-metrics.json", "build.json"]
+            if args.device == "cuda":
+                required.append("gpu-metrics.json")
+            missing = [name for name in required if not (directory / name).is_file()]
+            if missing:
+                parser.error(f"Execution {index + 1} was recorded as completed but lacks "
+                             f"{', '.join(missing)} in {directory}")
             continue
         previous = records[index] if index < len(records) else None
         config = plan[index]["config"]
@@ -284,12 +297,11 @@ def main():
                    "--results-dir", str(results), "--device", args.device,
                    "--flags-file", str(flags_file),
                    "--model-sha256", model_hash,
+                   "--preflight-done",
                    "--system-info", str(system_file),
                    "--workers", str(args.workers), "--prompt", str(args.prompt),
                    "--generate", str(args.generate), "--repetitions", str(args.repetitions),
                    "--gpu-layers", str(0 if args.device == "cpu" else args.gpu_layers)]
-        if args.profile:
-            command.append("--profile")
         for name, value in config["cmake"].items():
             command.extend(["--cmake-arg", f"{name}={value}"])
         for name, value in config["runtime"].items():
@@ -308,7 +320,10 @@ def main():
                     directory = Path(line.removeprefix("Run directory: ").strip())
             code = process.wait()
         if directory is None or directory.parent != results:
-            raise RuntimeError("Benchmark did not report a run directory")
+            print(f"Execution {index + 1} exited {code} without reporting a run directory; "
+                  "see the error above. No execution was recorded; rerun after fixing it.",
+                  file=sys.stderr, flush=True)
+            return 1
         record = {"phase": args.mode, "config": config,
                   "results_directory": directory.name,
                   "elapsed_seconds": round(time.monotonic() - start, 3),
