@@ -5,8 +5,9 @@ Command line interface. Run from the repository root.
   predict   build configuration for a machine, given its system.json
   suggest   configurations worth benchmarking next on a machine
 
-Data defaults to the project Polybox share. --data overrides it with local
-folders, ZIP files, or public share URLs. --app optionally selects one application.
+Data defaults to each application's local results folder (llama/results or
+gromacs/results). --data overrides it with local folders or ZIP files.
+--app optionally selects one application.
 
 Examples:
   python -m ml.main train
@@ -159,7 +160,7 @@ def main():
 
     p = sub.add_parser("train")
     p.add_argument("--model", choices=MODEL_TYPES, default="hardware", help="model to train; baseline files are saved separately")
-    p.add_argument("--data", nargs="+", help="local folders/ZIPs or share URLs; defaults to project Polybox")
+    p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.add_argument("--app", choices=sorted(APPS), help="train only this application; default: all discovered applications")
     p.set_defaults(func=train)
 
@@ -173,7 +174,7 @@ def main():
     p = sub.add_parser("suggest")
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
     p.add_argument("--system", required=True, help="system.json of the target machine")
-    p.add_argument("--data", nargs="+", help="local folders/ZIPs or share URLs; defaults to project Polybox")
+    p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.add_argument("-n", type=int, default=5, help="number of configurations to suggest")
     p.set_defaults(func=suggest)
 
@@ -181,7 +182,7 @@ def main():
     p.add_argument("--random-trials", type=int, default=1000, help="random selections per held-out platform (default: 1000)")
     p.add_argument("--seed", type=int, default=0, help="random evaluation seed (default: 0)")
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
-    p.add_argument("--data", nargs="+", help="local folders/ZIPs or share URLs; defaults to project Polybox")
+    p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.set_defaults(func=evaluate)
 
     args = parser.parse_args()

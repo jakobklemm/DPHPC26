@@ -30,7 +30,6 @@ import pandas as pd
 
 from . import load_gromacs, load_llama
 from .validation import COMMON_SCHEMA, discovery_features, schema_errors, toolchain_errors
-from .polybox import DEFAULT_SHARE, RemoteZip, archives
 
 HW = "hw."
 CFG = "cfg."
@@ -38,6 +37,13 @@ DEFAULT = "default"
 
 # project_name in source.yml -> module that knows how to read that application
 APPS = {app.APPLICATION: app for app in [load_llama, load_gromacs]}
+
+# Resolve default data folders relative to the repository, not the working directory.
+REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_RESULTS = {
+    "llama.cpp": REPOSITORY_ROOT / "llama" / "results",
+    "gromacs": REPOSITORY_ROOT / "gromacs" / "results",
+}
 
 # Options whose value follows from the hardware, as {option: rule(hardware) -> value}, learning them would not work.
 # A rule returning None means the option is not passed.
@@ -85,12 +91,6 @@ RUN_FILES = ["source.yml", "system.json", "build.json", "benchmark.json"]
 # is a generator! hands out one run at a time
 def read_runs(paths):
     for source in paths:
-        if str(source).startswith("https://"):
-            # Remote ZIP metadata; no artifact extraction
-            for url, size, headers in archives(str(source)):
-                with RemoteZip(url, size, headers) as remote:
-                    yield from _runs_in_zip(remote)
-            continue
         path = Path(source)
         if path.suffix == ".zip":
             yield from _runs_in_zip(path)
@@ -212,8 +212,8 @@ def load_table(paths=None, app=None):
     0.9 is 10 % slower.
 
     """
-    # Polybox by default; explicit paths as override
-    paths = paths or [DEFAULT_SHARE]
+    # Read each application's local results by default; explicit paths override them.
+    paths = paths or ([DEFAULT_RESULTS[app]] if app else list(DEFAULT_RESULTS.values()))
     rows = [parse_run(files) for files in read_runs(paths)]
     rows = [r for r in rows if r and (app is None or r["application"] == app)]
     if not rows:
