@@ -21,6 +21,9 @@ Reported per platform:
   baseline  selected build's performance using the best mean relative
             performance of complete configurations on training platforms
   no_hardware  selected build's performance using an option-only regression
+  interactions  selected build's performance using option-pair ridge regression
+  error_interactions  mean absolute prediction error of option-pair ridge
+  no_hardware_interactions  option-pair regression without hardware inputs
   random       mean selected performance over repeated random choices
   random_std   standard deviation of those random choices
 
@@ -32,14 +35,12 @@ performance of unmeasured combinations in the full candidate space.
 import numpy as np
 import pandas as pd
 
-from .load import CFG, HW, columns, strip
-from .baseline_models import NoHardwareModel, RandomBaseline, baseline_pick
-from .model import PerformanceModel
-
-
-def configs(table):
-    cols = columns(table, CFG)
-    return [{strip(c): row[c] for c in cols} for _, row in table[cols].iterrows()]
+from .load import HW, columns, strip
+from .models.baseline_models import (NoHardwareInteractionModel, NoHardwareModel,
+                                     RandomBaseline, baseline_pick)
+from .models.ridge_regression import PerformanceModel
+from .models.ridge_regression_interactions import InteractionPerformanceModel
+from .models.common import configs
 
 
 # def leave_one_build_out(table):
@@ -87,6 +88,8 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
 
         model = PerformanceModel().fit(train)
         no_hardware = NoHardwareModel().fit(train)
+        interactions = InteractionPerformanceModel().fit(train)
+        no_hardware_interactions = NoHardwareInteractionModel().fit(train)
         random.fit(train)
         eligible = [
             all(c.get(o) in model.values[o] for o in model.options) and model._valid(c, hardware)
@@ -96,11 +99,15 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
         if test.empty:
             rows.append({"platform": platform, "runs": 0, "error": np.nan,
                          "model": np.nan, "baseline": np.nan, "no_hardware": np.nan,
+                         "interactions": np.nan, "error_interactions": np.nan,
+                         "no_hardware_interactions": np.nan,
                          "random": np.nan, "random_std": np.nan})
             continue
         candidates = configs(test)
         predicted, _ = model.predict_performance(hardware, candidates)
         option_predicted, _ = no_hardware.predict_performance(hardware, candidates)
+        pair_predicted, _ = interactions.predict_performance(hardware, candidates)
+        pair_option_predicted, _ = no_hardware_interactions.predict_performance(hardware, candidates)
         measured = test["relative"].to_numpy()
         random_performance = np.array([
             measured[random.choose_index(hardware, candidates)] for _ in range(random_trials)
@@ -113,6 +120,9 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
             "model": measured[int(np.argmax(predicted))],
             "baseline": baseline_pick(train, test, model.options),
             "no_hardware": measured[int(np.argmax(option_predicted))],
+            "interactions": measured[int(np.argmax(pair_predicted))],
+            "error_interactions": float(np.mean(np.abs(pair_predicted - measured))),
+            "no_hardware_interactions": measured[int(np.argmax(pair_option_predicted))],
             "random": float(random_performance.mean()),
             "random_std": float(random_performance.std()),
         })
