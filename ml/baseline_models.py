@@ -1,4 +1,36 @@
-"""Option-only and random baselines for build configuration selection."""
+"""
+Baselines: does learning hardware-specific option effects improve build choices?
+
+Compare the hardware-aware model with three simpler selection methods:
+
+  baseline     best-on-average complete configuration (baseline_pick)
+               Rank configurations by mean relative performance on training
+               platforms, then choose the highest-ranked one measured on the
+               held-out platform. Return its measured relative performance,
+               or NaN if no configuration matches. Hardware-determined options
+               are excluded from matching by the caller.
+
+  no_hardware  option-only regression (NoHardwareModel)
+               Learn individual option effects with Bayesian ridge regression,
+               without hardware features or hardware-option interactions.
+               Search combinations in predicted score order and return the
+               first valid build with its predicted relative performance.
+
+  random       uniform random selection (RandomBaseline)
+               Record option values seen in training without learning from
+               performance. Try combinations in random order without replacement
+               until a valid build is found. Return the build and None, since
+               there is no performance prediction. A seed makes choices repeatable.
+
+For prediction, no_hardware and random combine option values seen in training,
+including combinations never measured together. Both search lazily, use hardware
+only for validity checks and hardware-determined settings, and raise ValueError
+if no valid build exists.
+
+Evaluation instead restricts all methods to the same valid, measured candidates.
+It reports the selected build's measured performance relative to the platform's
+best measured build (1.0 is best), averaging repeated choices for random.
+"""
 
 import heapq
 import math
