@@ -4,6 +4,7 @@ from .baseline_models import NoHardwareInteractionModel, NoHardwareModel, Random
 from .common import BaseModel
 from .ridge_regression import PerformanceModel
 from .ridge_regression_interactions import InteractionPerformanceModel
+from .ridge_regression_three_way import ThreeWayPerformanceModel
 
-__all__ = ["BaseModel", "PerformanceModel", "InteractionPerformanceModel",
+__all__ = ["BaseModel", "PerformanceModel", "InteractionPerformanceModel", "ThreeWayPerformanceModel",
            "NoHardwareModel", "NoHardwareInteractionModel", "RandomBaseline"]

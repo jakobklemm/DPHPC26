@@ -24,6 +24,8 @@ Reported per platform:
   interactions  selected build's performance using option-pair ridge regression
   error_interactions  mean absolute prediction error of option-pair ridge
   no_hardware_interactions  option-pair regression without hardware inputs
+  three_way  option-pair × hardware ridge selection score
+  error_three_way  mean absolute prediction error of three-way ridge
   random       mean selected performance over repeated random choices
   random_std   standard deviation of those random choices
 
@@ -40,6 +42,7 @@ from .models.baseline_models import (NoHardwareInteractionModel, NoHardwareModel
                                      RandomBaseline, baseline_pick)
 from .models.ridge_regression import PerformanceModel
 from .models.ridge_regression_interactions import InteractionPerformanceModel
+from .models.ridge_regression_three_way import ThreeWayPerformanceModel
 from .models.common import configs
 
 
@@ -90,6 +93,7 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
         no_hardware = NoHardwareModel().fit(train)
         interactions = InteractionPerformanceModel().fit(train)
         no_hardware_interactions = NoHardwareInteractionModel().fit(train)
+        three_way = ThreeWayPerformanceModel().fit(train)
         random.fit(train)
         eligible = [
             all(c.get(o) in model.values[o] for o in model.options) and model._valid(c, hardware)
@@ -101,6 +105,7 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
                          "model": np.nan, "baseline": np.nan, "no_hardware": np.nan,
                          "interactions": np.nan, "error_interactions": np.nan,
                          "no_hardware_interactions": np.nan,
+                         "three_way": np.nan, "error_three_way": np.nan,
                          "random": np.nan, "random_std": np.nan})
             continue
         candidates = configs(test)
@@ -108,6 +113,7 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
         option_predicted, _ = no_hardware.predict_performance(hardware, candidates)
         pair_predicted, _ = interactions.predict_performance(hardware, candidates)
         pair_option_predicted, _ = no_hardware_interactions.predict_performance(hardware, candidates)
+        three_way_predicted, _ = three_way.predict_performance(hardware, candidates)
         measured = test["relative"].to_numpy()
         random_performance = np.array([
             measured[random.choose_index(hardware, candidates)] for _ in range(random_trials)
@@ -123,6 +129,8 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
             "interactions": measured[int(np.argmax(pair_predicted))],
             "error_interactions": float(np.mean(np.abs(pair_predicted - measured))),
             "no_hardware_interactions": measured[int(np.argmax(pair_option_predicted))],
+            "three_way": measured[int(np.argmax(three_way_predicted))],
+            "error_three_way": float(np.mean(np.abs(three_way_predicted - measured))),
             "random": float(random_performance.mean()),
             "random_std": float(random_performance.std()),
         })

@@ -43,8 +43,8 @@ import math
 import numpy as np
 import pandas as pd
 
-from ..load import CFG, HW, columns
-from .common import BaseModel
+from ..load import CFG
+from .common import BaseModel, NoHardwareMixin
 from .ridge_regression import PerformanceModel
 from .ridge_regression_interactions import InteractionPerformanceModel
 
@@ -69,13 +69,10 @@ def baseline_pick(train, test, options):
     return float(candidates.sort_values("average", ascending=False, kind="stable")["relative"].iloc[0])
 
 
-class NoHardwareModel(PerformanceModel):
+class NoHardwareModel(NoHardwareMixin, PerformanceModel):
     """Learn option effects only; hardware is used solely for build feasibility
     and to restore hardware-determined settings, never as a regression input.
     """
-
-    def fit(self, table):
-        return super().fit(table.drop(columns=columns(table, HW)))
 
     def predict(self, hardware):
         # With no hardware interactions, option effects add in log space.
@@ -109,15 +106,12 @@ class NoHardwareModel(PerformanceModel):
         raise ValueError("no valid build configurations for this hardware")
 
 
-class NoHardwareInteractionModel(InteractionPerformanceModel):
+class NoHardwareInteractionModel(NoHardwareMixin, InteractionPerformanceModel):
     """Option-pair ridge baseline; hardware is used only for build validity.
 
     Inherit exhaustive selection from BaseModel rather than the additive-only
     search in NoHardwareModel, because the best choice depends on flag pairs.
     """
-
-    def fit(self, table):
-        return super().fit(table.drop(columns=columns(table, HW)))
 
 
 class RandomBaseline(BaseModel):

@@ -28,74 +28,75 @@ Evaluation holds out one platform at a time and needs at least two per applicati
 Selection scores show performance relative to the platform's best measured build
 (1.0 = best); `error` is mean absolute prediction error.
 
-Optional: select an application or data source, or train and use a baseline:
+Use `--app llama.cpp` or `--app gromacs` to select an application, and
+`--data path/to/runs.zip` to use other benchmark folders or ZIPs. Both work with
+`train`, `suggest`, and `evaluate`; `predict` supports `--app`.
+
+## Ridge Regression models
+
+Ridge regression predicts a target as a weighted sum of input features while
+shrinking coefficients to reduce overfitting. Here, Bayesian ridge predicts log
+relative performance and estimates uncertainty. The variants add different
+interaction features:
+
+| `--model` | Individual options | Option × hardware | Option × option | Option × option × hardware |
+| --- | --- | --- | --- | --- |
+| `hardware` (default) | Yes | Yes | No | No |
+| `hardware-interactions` | Yes | Yes | Yes | No |
+| `hardware-three-way` | Yes | Yes | Yes | Yes |
+
+An interaction means that one setting changes another setting's effect:
+
+- **Option × hardware:** flag A helps more on some machines.
+- **Option × option:** flags A and B work better (or worse) together.
+- **Option × option × hardware:** that extra joint effect differs between machines.
+
+Choose any model from the table using `--model`, for example:
 
 ```bash
-python -m ml.main train --app gromacs --data path/to/runs.zip
-python -m ml.load path/to/runs
-python -m ml.main train --model no-hardware
-python -m ml.main predict --model no-hardware --system path/to/system.json
-python -m ml.main train --model random
-python -m ml.main predict --model random --system path/to/system.json --seed 42
+python -m ml.main train --model hardware-three-way
+python -m ml.main predict --model hardware-three-way --system path/to/system.json
+python -m ml.main suggest --model hardware-three-way --system path/to/system.json
 ```
 
-`--app` accepts `llama.cpp` or `gromacs` on all main commands. `--data` accepts
-folders or ZIPs for training, suggestions, and evaluation. Baselines are saved
-separately; evaluation compares all methods automatically. Validity checks reject
-known option, hardware, and toolchain conflicts but do not guarantee compilation.
+Each model is saved separately. `evaluate` compares all models automatically:
+selection scores closer to **1.0** are better; `error*` values closer to **0** are
+better. More interactions need more varied measurements—check evaluation results
+before choosing a more complex model. Interaction models score all valid build
+combinations, which can be expensive with many flags.
 
-## Ridge with build-option interactions
+## Baseline models
 
-| `--model` | Individual options | Option × hardware | Option × option |
-| --- | --- | --- | --- |
-| `hardware` (default) | Yes | Yes | No |
-| `hardware-interactions` | Yes | Yes | Yes |
-| `no-hardware` | Yes | No | No |
-| `no-hardware-interactions` | Yes | No | Yes |
+- **`no-hardware`:** Ridge regression using individual build-option effects only;
+  hardware is used for build validity, not performance prediction.
+- **`no-hardware-interactions`:** Adds option × option effects without hardware
+  inputs, so it can learn which flags work well together.
+- **`random`:** Chooses a valid configuration uniformly at random without learning
+  performance; use `--seed` with `predict` for repeatable choices.
+- **Best-on-average (`baseline` in evaluation):** Picks the complete configuration
+  with the highest mean relative performance on training platforms among those
+  measured and eligible on the held-out platform. Available in evaluation only.
 
-The interaction models add products of encoded values from different build
-options. For flags A and B, the log-performance prediction gains a term
-`coefficient_AB * A * B`: an extra effect when both flags are enabled. Numeric
-and boolean build settings are treated as categorical choices. Pairs are selected
-from training data only; products that never vary are omitted. Pair effects are
-shared across machines; no three-way terms are added. Bayesian ridge fitting,
-uncertainty, validity checks, and decision reports are reused.
-
-```bash
-python -m ml.main train --model hardware-interactions
-python -m ml.main train --model no-hardware-interactions
-python -m ml.main predict --model hardware-interactions --system path/to/system.json
-python -m ml.main suggest --model hardware-interactions --system path/to/system.json
-python -m ml.main evaluate
-```
-
-Each variant has its own saved model file. Evaluation compares all variants on
-the same held-out platforms and measured candidates. `interactions` and
-`no_hardware_interactions` are selection scores; `error_interactions` is prediction
-error. More pair features can overfit sparse measurements, so compare held-out
-scores. The new no-hardware baseline scores all valid combinations, which can
-be expensive for many flags; the original baseline retains its additive search.
+Select a baseline with `--model`, for example `train --model no-hardware`.
 
 ## Files
 
 All paths below are inside `ml/`.
 
-| File | How it works / provides |
+| File | Purpose |
 | --- | --- |
-| `main.py` | Command-line entry point for training, prediction, suggestions, and evaluation. |
-| `load.py` | Reads run folders/ZIPs, extracts hardware features, and merges repeated builds into a table. |
+| `main.py` | CLI commands and model selection. |
+| `load.py` | Loads benchmarks and hardware; averages repeated measurements. |
 | `load_llama.py` | Parses llama.cpp build options and throughput; checks application-specific validity. |
 | `load_gromacs.py` | Parses GROMACS build options and throughput; checks application-specific validity. |
-| `models/ridge_regression.py` | Learns hardware/option effects with Bayesian ridge regression; ranks builds and estimates uncertainty. |
+| `models/ridge_regression.py` | Original Bayesian ridge model. |
 | `models/ridge_regression_interactions.py` | Extends ridge encoding with pairwise build-option effects. |
-| `models/baseline_models.py` | Provides option-only regression, random selection, and best-on-average configuration selection. |
-| `models/common.py` | Shared base class for option domains, valid candidates, selection, suggestions, save/load, and configuration extraction. |
-| `models/__init__.py` | Exports the model classes. |
+| `models/ridge_regression_three_way.py` | Extends pairwise ridge with option-pair × hardware effects. |
+| `models/baseline_models.py` | No-hardware, random, and best-on-average baselines. |
+| `models/common.py` | Shared candidate validation, selection, suggestions, and save/load. |
 | `evaluate.py` | Holds out each platform and compares predicted build choices against measured performance. |
 | `validation.py` | Shared option schemas and hardware/toolchain checks, using system metadata. |
 | `requirements.txt` | Python dependencies for data handling, modelling, and model storage. |
-| `__init__.py` | Makes `ml` a Python package. |
-| `README.md` | Quick overview, commands, and file guide. |
 
 ## Adding a model
 

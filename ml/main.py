@@ -27,11 +27,13 @@ from .load import APPS, HW, app_options, columns, describe, hardware_features, l
 from .models.baseline_models import NoHardwareInteractionModel, NoHardwareModel, RandomBaseline
 from .models.ridge_regression import PerformanceModel
 from .models.ridge_regression_interactions import InteractionPerformanceModel
-from .models.common import BaseModel, configs
+from .models.ridge_regression_three_way import ThreeWayPerformanceModel
+from .models.common import BaseModel, NoHardwareMixin, configs
 
 
 MODEL_TYPES = {"hardware": PerformanceModel, "hardware-interactions": InteractionPerformanceModel,
                "no-hardware": NoHardwareModel, "no-hardware-interactions": NoHardwareInteractionModel,
+               "hardware-three-way": ThreeWayPerformanceModel,
                "random": RandomBaseline}
 
 
@@ -73,7 +75,7 @@ def train(args):
         # what the model learned
         print(f"model fit on the training data: explains {model.r2:.0%} of the measured performance differences, "
               f"estimated noise ±{model.noise:.1%}")
-        if isinstance(model, (NoHardwareModel, NoHardwareInteractionModel)):
+        if isinstance(model, NoHardwareMixin):
             # The option-only fit is identical for every machine. Avoid the
             # full candidate-space enumeration used by the decision report.
             print()
@@ -149,7 +151,8 @@ def evaluate(args):
         result = leave_one_platform_out(runs, random_trials=args.random_trials, seed=args.seed)
         print(result.round(3).to_string(index=False))
         scores = ["error", "model", "error_interactions", "interactions", "baseline",
-                  "no_hardware", "no_hardware_interactions", "random"]
+                  "error_three_way", "three_way", "no_hardware", "no_hardware_interactions",
+                  "random"]
         print("\naverage:", result[scores].mean().round(3).to_dict())
 
 

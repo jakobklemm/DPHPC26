@@ -12,13 +12,20 @@ import itertools
 import joblib
 import numpy as np
 
-from ..load import CFG, HARDWARE_DETERMINED, columns, strip, valid
+from ..load import CFG, HARDWARE_DETERMINED, HW, columns, strip, valid
 
 
 def configs(table):
     """Extract build configurations from a benchmark table as plain dictionaries."""
     cols = columns(table, CFG)
     return [{strip(c): row[c] for c in cols} for _, row in table[cols].iterrows()]
+
+
+class NoHardwareMixin:
+    """Exclude hardware from fitting while retaining it for build validity."""
+
+    def fit(self, table):
+        return super().fit(table.drop(columns=columns(table, HW)))
 
 
 class BaseModel:
