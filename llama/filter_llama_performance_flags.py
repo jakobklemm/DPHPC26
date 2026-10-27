@@ -2,7 +2,9 @@
 
 import argparse
 import json
+import os
 import platform
+import shlex
 import shutil
 import subprocess
 from pathlib import Path
@@ -49,11 +51,29 @@ CPU_COMPILER_VALUES = {
     "-mprefer-vector-width=256": {"avx"},
     "-mprefer-vector-width=512": {"avx512f"},
 }
-COMPILERS = {"gcc": ("gcc", "g++"), "clang": ("clang", "clang++")}
+COMPILER_OFF = {"-O": "-O0", "-march": "-march=x86-64",
+                "-mprefer-vector-width": "-mprefer-vector-width=128",
+                "-ffp-contract": "-ffp-contract=off"}
+
+
+def off_value(name):
+    return COMPILER_OFF.get(name, "-fno-" + name.removeprefix("-f"))
+
+
+COMPILERS = ("clang", "clang++")
+
+
+def find_cuda_compiler():
+    """Find nvcc on PATH or at the location specified by CUDACXX."""
+    try:
+        executable = shlex.split(os.environ.get("CUDACXX", "nvcc"))[0]
+    except (IndexError, ValueError):
+        return None
+    return shutil.which(executable)
 
 
 def cpu_info() -> tuple[str, set[str]]:
-    """Read the full CPU feature set, not just xaas's vectorization subset."""
+    """Read the full CPU feature set."""
     output = subprocess.check_output(["lscpu"], text=True)
     features = set()
     for line in output.splitlines():
@@ -82,31 +102,34 @@ def compile_check(executable: str, flag: str, *, openmp: bool = False) -> bool:
     return result.returncode == 0
 
 
-def toolchain_supports(toolchain: str, flag: str, *, openmp: bool = False) -> bool:
-    return all(compile_check(exe, flag, openmp=openmp) for exe in COMPILERS[toolchain])
+def toolchain_supports(flag: str, *, openmp: bool = False) -> bool:
+    return all(compile_check(exe, flag, openmp=openmp) for exe in COMPILERS)
 
 
-def filter_catalog(catalog: dict, architecture: str, features: set[str], compiler: str) -> dict:
+def filter_catalog(catalog: dict, architecture: str, features: set[str], device: str) -> dict:
     """Intersect catalog choices with detected CPU and installed compilers."""
-    tool = {"g++": "gcc", "clang++": "clang"}[compiler]
-    if not all(shutil.which(exe) for exe in COMPILERS[tool]):
-        raise ValueError(f"{compiler} and its C compiler must be installed")
+    if not all(shutil.which(exe) for exe in COMPILERS):
+        raise ValueError("clang and clang++ must be installed")
     x86 = architecture in {"x86_64", "amd64"}
     cmake = {}
-    for name, values in catalog["cmake"].items():
+    for name, values in catalog["cpu"].items():
         if name in CPU_CMAKE_FLAGS and (not x86 or not CPU_CMAKE_FLAGS[name] <= features):
+            cmake[name] = ["OFF"]
             continue
-        if name in CPU_COMPILER_SWITCHES and not toolchain_supports(
-            tool, CPU_COMPILER_SWITCHES[name]
-        ):
+        if name in CPU_COMPILER_SWITCHES and not toolchain_supports(CPU_COMPILER_SWITCHES[name]):
+            cmake[name] = ["OFF"]
             continue
-        if name == "GGML_OPENMP" and not toolchain_supports(tool, "-fopenmp", openmp=True):
+        if name == "GGML_OPENMP" and not toolchain_supports("-fopenmp", openmp=True):
+            cmake[name] = ["OFF"]
             continue
-        if name == "GGML_LTO" and not toolchain_supports(tool, "-flto"):
+        if name == "GGML_LTO" and not toolchain_supports("-flto"):
+            cmake[name] = ["OFF"]
             continue
         cmake[name] = values
     supported = {}
-    for name, values in catalog["compiler"][tool].items():
+    for name, values in catalog["compiler"].items():
+        if not x86 and name in {"-march", "-mprefer-vector-width"}:
+            continue
         eligible = [
             value
             for value in values
@@ -121,15 +144,21 @@ def filter_catalog(catalog: dict, architecture: str, features: set[str], compile
                     )
                 )
             )
-            and toolchain_supports(tool, value)
+            and toolchain_supports(value)
+            # ggml's non-finite arithmetic requires these modes to be undone
+            # by a later -fno-finite-math-only. Never advertise that false
+            # experiment as a selectable configuration.
+            and value not in {"-Ofast", "-ffast-math"}
+            and value != off_value(name)
         ]
         if eligible:
             supported[name] = eligible
-    invalid_combinations = [
-        rule for rule in catalog.get("invalid_combinations", []) if all(name in cmake for name in rule)
-    ]
+    device_flags = catalog["device"].get(device.upper(), {}) if device != "cpu" else {}
+    invalid_combinations = [rule for rule in catalog.get("invalid_combinations", [])
+                            if all(name in cmake or name in device_flags for name in rule)]
     return {
         "cmake": cmake,
+        "device": device_flags,
         "compiler": supported,
         "invalid_combinations": invalid_combinations,
     }
@@ -137,15 +166,15 @@ def filter_catalog(catalog: dict, architecture: str, features: set[str], compile
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--compiler", choices=("g++", "clang++"), required=True)
-    parser.add_argument("--input", type=Path, default=ROOT / "llama-performance-flags.json")
+    parser.add_argument("--device", choices=("cpu", "cuda", "vulkan"), required=True)
+    parser.add_argument("--input", type=Path, default=ROOT / "flags.json")
     parser.add_argument("--output", type=Path, default=ROOT / "llama-performance-flags-system.json")
     args = parser.parse_args()
 
     architecture, features = cpu_info()
     with args.input.open(encoding="utf-8") as source:
         catalog = json.load(source)
-    result = filter_catalog(catalog, architecture, features, args.compiler)
+    result = filter_catalog(catalog, architecture, features, args.device)
     with args.output.open("w", encoding="utf-8") as destination:
         json.dump(result, destination, indent=2)
         destination.write("\n")

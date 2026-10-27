@@ -4,8 +4,7 @@
 Usage: python3 collect_cpu_metrics.py -o cpu-metrics.json --benchmark-output bench.json
        --log bench.log -- /path/to/program args...
 
-Run inside the same container as the workload: perf wrapping `docker run` on
-the host only measures the Docker client, not the application in the daemon.
+Run directly on the host alongside the workload.
 """
 
 import argparse
