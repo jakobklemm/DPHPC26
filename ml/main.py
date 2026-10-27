@@ -24,12 +24,15 @@ import numpy as np
 
 from .evaluate import leave_one_platform_out #, leave_one_build_out
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
-from .models.baseline_models import NoHardwareModel, RandomBaseline
+from .models.baseline_models import NoHardwareInteractionModel, NoHardwareModel, RandomBaseline
 from .models.ridge_regression import PerformanceModel
+from .models.ridge_regression_interactions import InteractionPerformanceModel
 from .models.common import BaseModel, configs
 
 
-MODEL_TYPES = {"hardware": PerformanceModel, "no-hardware": NoHardwareModel, "random": RandomBaseline}
+MODEL_TYPES = {"hardware": PerformanceModel, "hardware-interactions": InteractionPerformanceModel,
+               "no-hardware": NoHardwareModel, "no-hardware-interactions": NoHardwareInteractionModel,
+               "random": RandomBaseline}
 
 
 def model_path(models, app, kind="hardware"):
@@ -70,7 +73,7 @@ def train(args):
         # what the model learned
         print(f"model fit on the training data: explains {model.r2:.0%} of the measured performance differences, "
               f"estimated noise ±{model.noise:.1%}")
-        if isinstance(model, NoHardwareModel):
+        if isinstance(model, (NoHardwareModel, NoHardwareInteractionModel)):
             # The option-only fit is identical for every machine. Avoid the
             # full candidate-space enumeration used by the decision report.
             print()
@@ -119,7 +122,7 @@ def suggest(args):
     # Fresh model and measured builds per application
     for app, runs in table.groupby("application"):
         runs = app_options(runs)
-        model = PerformanceModel().fit(runs)
+        model = MODEL_TYPES[args.model]().fit(runs)
         measured = configs(runs[runs["platform"] == platform])
         suggestions = model.suggest(hardware, measured, n=args.n)
         print(f"== {app}")
@@ -145,7 +148,9 @@ def evaluate(args):
             continue
         result = leave_one_platform_out(runs, random_trials=args.random_trials, seed=args.seed)
         print(result.round(3).to_string(index=False))
-        print("\naverage:", result[["error", "model", "baseline", "no_hardware", "random"]].mean().round(3).to_dict())
+        scores = ["error", "model", "error_interactions", "interactions", "baseline",
+                  "no_hardware", "no_hardware_interactions", "random"]
+        print("\naverage:", result[scores].mean().round(3).to_dict())
 
 
 def main():
@@ -167,6 +172,8 @@ def main():
     p.set_defaults(func=predict)
 
     p = sub.add_parser("suggest")
+    p.add_argument("--model", choices=[name for name in MODEL_TYPES if name != "random"],
+                   default="hardware", help="model to train for suggestions")
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
     p.add_argument("--system", required=True, help="system.json of the target machine")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")

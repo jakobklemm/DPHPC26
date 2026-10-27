@@ -1,7 +1,7 @@
 """
 Baselines: does learning hardware-specific option effects improve build choices?
 
-Compare the hardware-aware model with three simpler selection methods:
+Compare the hardware-aware models with simpler selection methods:
 
   baseline     best-on-average complete configuration (baseline_pick)
                Rank configurations by mean relative performance on training
@@ -22,6 +22,11 @@ Compare the hardware-aware model with three simpler selection methods:
                until a valid build is found. Return the build and None, since
                there is no performance prediction. A seed makes choices repeatable.
 
+  no_hardware_interactions (NoHardwareInteractionModel)
+               Learn option effects and option pairs without hardware inputs.
+               Score all valid combinations: independent option ranking is no
+               longer correct when flags interact.
+
 For prediction, no_hardware and random combine option values seen in training,
 including combinations never measured together. Both search lazily, use hardware
 only for validity checks and hardware-determined settings, and raise ValueError
@@ -41,6 +46,7 @@ import pandas as pd
 from ..load import CFG, HW, columns
 from .common import BaseModel
 from .ridge_regression import PerformanceModel
+from .ridge_regression_interactions import InteractionPerformanceModel
 
 
 def baseline_pick(train, test, options):
@@ -101,6 +107,17 @@ class NoHardwareModel(PerformanceModel):
                         seen.add(neighbor)
                         heapq.heappush(queue, (cost(neighbor), neighbor))
         raise ValueError("no valid build configurations for this hardware")
+
+
+class NoHardwareInteractionModel(InteractionPerformanceModel):
+    """Option-pair ridge baseline; hardware is used only for build validity.
+
+    Inherit exhaustive selection from BaseModel rather than the additive-only
+    search in NoHardwareModel, because the best choice depends on flag pairs.
+    """
+
+    def fit(self, table):
+        return super().fit(table.drop(columns=columns(table, HW)))
 
 
 class RandomBaseline(BaseModel):
