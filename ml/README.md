@@ -54,10 +54,22 @@ All paths below are inside `ml/`.
 | `load.py` | Reads run folders/ZIPs, extracts hardware features, and merges repeated builds into a table. |
 | `load_llama.py` | Parses llama.cpp build options and throughput; checks application-specific validity. |
 | `load_gromacs.py` | Parses GROMACS build options and throughput; checks application-specific validity. |
-| `model.py` | Learns hardware/option effects with Bayesian ridge regression; ranks builds and estimates uncertainty. |
-| `baseline_models.py` | Provides option-only regression, random selection, and best-on-average configuration selection. |
+| `models/ridge_regression.py` | Learns hardware/option effects with Bayesian ridge regression; ranks builds and estimates uncertainty. |
+| `models/baseline_models.py` | Provides option-only regression, random selection, and best-on-average configuration selection. |
+| `models/common.py` | Shared base class for option domains, valid candidates, selection, suggestions, save/load, and configuration extraction. |
+| `models/__init__.py` | Exports the model classes. |
 | `evaluate.py` | Holds out each platform and compares predicted build choices against measured performance. |
 | `validation.py` | Shared option schemas and hardware/toolchain checks, using system metadata. |
 | `requirements.txt` | Python dependencies for data handling, modelling, and model storage. |
 | `__init__.py` | Makes `ml` a Python package. |
 | `README.md` | Quick overview, commands, and file guide. |
+
+## Adding a model
+
+1. Create `ml/models/<name>.py` and subclass `BaseModel` from `.common`.
+2. Implement `fit(table)`: call `self._fit_options(table)`, train, and return `self`.
+3. Implement `predict_performance(hardware, configs)`: return arrays of relative
+   performance predictions and uncertainty, both in performance space.
+4. Register the class in `MODEL_TYPES` in `ml/main.py`.
+
+The base class handles valid candidates, selection, suggestions, and save/load.

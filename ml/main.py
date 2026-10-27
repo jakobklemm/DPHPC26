@@ -23,9 +23,10 @@ from pathlib import Path
 import numpy as np
 
 from .evaluate import leave_one_platform_out #, leave_one_build_out
-from .load import APPS, CFG, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
-from .baseline_models import NoHardwareModel, RandomBaseline
-from .model import PerformanceModel
+from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
+from .models.baseline_models import NoHardwareModel, RandomBaseline
+from .models.ridge_regression import PerformanceModel
+from .models.common import BaseModel, configs
 
 
 MODEL_TYPES = {"hardware": PerformanceModel, "no-hardware": NoHardwareModel, "random": RandomBaseline}
@@ -34,12 +35,6 @@ MODEL_TYPES = {"hardware": PerformanceModel, "no-hardware": NoHardwareModel, "ra
 def model_path(models, app, kind="hardware"):
     suffix = "" if kind == "hardware" else f".{kind}"
     return Path(models) / f"{app}{suffix}.joblib"
-
-
-# the configs in `table` as plain dicts {option: value}
-def configs(table):
-    cols = columns(table, CFG)
-    return [{strip(c): row[c] for c in cols} for _, row in table[cols].iterrows()]
 
 
 # Hardware features of the machine described by a system.json
@@ -106,7 +101,7 @@ def predict(args):
     if not apps:
         raise ValueError("no trained models found; run python -m ml.main train first")
     for app in apps:
-        model = PerformanceModel.load(model_path(args.models, app, args.model))
+        model = BaseModel.load(model_path(args.models, app, args.model))
         if isinstance(model, RandomBaseline):
             # A fresh generator avoids replaying the state saved during training.
             model.rng = np.random.default_rng(args.seed)

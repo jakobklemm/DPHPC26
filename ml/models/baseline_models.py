@@ -38,8 +38,9 @@ import math
 import numpy as np
 import pandas as pd
 
-from .load import CFG, HW, columns
-from .model import PerformanceModel
+from ..load import CFG, HW, columns
+from .common import BaseModel
+from .ridge_regression import PerformanceModel
 
 
 def baseline_pick(train, test, options):
@@ -102,7 +103,7 @@ class NoHardwareModel(PerformanceModel):
         raise ValueError("no valid build configurations for this hardware")
 
 
-class RandomBaseline(PerformanceModel):
+class RandomBaseline(BaseModel):
     """Uniform random configuration, retrying invalid combinations.
 
     Fit records option domains only. No performance values are learned.

@@ -32,14 +32,10 @@ performance of unmeasured combinations in the full candidate space.
 import numpy as np
 import pandas as pd
 
-from .load import CFG, HW, columns, strip
-from .baseline_models import NoHardwareModel, RandomBaseline, baseline_pick
-from .model import PerformanceModel
-
-
-def configs(table):
-    cols = columns(table, CFG)
-    return [{strip(c): row[c] for c in cols} for _, row in table[cols].iterrows()]
+from .load import HW, columns, strip
+from .models.baseline_models import NoHardwareModel, RandomBaseline, baseline_pick
+from .models.ridge_regression import PerformanceModel
+from .models.common import configs
 
 
 # def leave_one_build_out(table):
