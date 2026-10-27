@@ -9,16 +9,40 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
-from filter_llama_performance_flags import find_cuda_compiler
+from filter_llama_performance_flags import (find_cuda_compiler, off_value,
+                                            profile_prerequisite_error)
 
 spec = importlib.util.spec_from_file_location("runner", ROOT / "llama_gpu_bench-random.py")
 runner = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runner)
+
+
+def fake_perf_environment(base):
+    """Exercise the perf collector without needing laptop PMU permissions."""
+    tools = base / "tools"
+    tools.mkdir()
+    perf = tools / "perf"
+    perf.write_text(
+        f"#!{sys.executable}\n"
+        "import subprocess, sys\n"
+        "from pathlib import Path\n"
+        "args = sys.argv[1:]\n"
+        "events = args[args.index('-e') + 1].split(',')\n"
+        "data = ''.join('100;;' + event + '\\n' for event in events)\n"
+        "if '-o' in args:\n"
+        "    Path(args[args.index('-o') + 1]).write_text(data)\n"
+        "else:\n"
+        "    sys.stderr.write(data)\n"
+        "sys.exit(subprocess.run(args[args.index('--') + 1:]).returncode)\n"
+    )
+    perf.chmod(0o755)
+    return {**os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"]}
 
 
 class PlanTests(unittest.TestCase):
@@ -35,6 +59,7 @@ class PlanTests(unittest.TestCase):
         }
 
     def test_complete_sweep_and_cpu_only(self):
+        self.assertEqual(off_value("-O"), "-O3")
         options = {**self.options, "device": {}, "invalid_combinations": []}
         plan = runner.execution_plan(options, "cpu")
         self.assertEqual(len(plan), 4)
@@ -45,6 +70,7 @@ class PlanTests(unittest.TestCase):
             self.assertEqual(config["cmake"]["GGML_VULKAN"], "OFF")
             self.assertEqual(len(config["cmake"]), 4)
             self.assertEqual(len(config["compiler_flags"]), 2)
+            self.assertNotEqual(config["compiler_flags"]["-O"], "-O0")
             self.assertEqual(sum(value == "ON" for value in config["cmake"].values()) +
                              sum(config["compiler_flags"][key] != runner.off_value(key)
                                  for key in config["compiler_flags"]), 1)
@@ -86,6 +112,21 @@ class PlanTests(unittest.TestCase):
 
 
 class PathTests(unittest.TestCase):
+    def test_profiling_rejects_missing_tools_and_unavailable_counters(self):
+        with patch("filter_llama_performance_flags.shutil.which",
+                   side_effect=lambda tool: None if tool == "perf" else "/usr/bin/" + tool):
+            self.assertEqual(profile_prerequisite_error("cuda"),
+                             "Profiling requires host tools: perf")
+        with patch("filter_llama_performance_flags.shutil.which", return_value="/usr/bin/tool"):
+            with patch("filter_llama_performance_flags.subprocess.run",
+                       return_value=SimpleNamespace(returncode=0, stderr="<not counted>;;cycles:u\n")):
+                self.assertIn("Cannot access CPU counters", profile_prerequisite_error("cuda"))
+            with patch("filter_llama_performance_flags.subprocess.run",
+                       return_value=SimpleNamespace(
+                           returncode=0, stderr="100;;cycles:u\n200;;instructions:u\n")):
+                self.assertIsNone(profile_prerequisite_error("cuda"))
+        self.assertIn("Vulkan GPU profiling", profile_prerequisite_error("vulkan"))
+
     def test_cuda_compiler_can_be_set_with_cudacxx(self):
         with tempfile.TemporaryDirectory() as directory:
             compiler = Path(directory) / "nvcc"
@@ -170,23 +211,30 @@ class LocalBuildTests(unittest.TestCase):
                 'set_target_properties(llama-bench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")\n'
             )
             (source / "main.cpp").write_text(
-                '#include <cstdlib>\n#include <iostream>\nint main() { '
+                '#include <cstdlib>\n#include <iostream>\n'
+                '#if !defined(__OPTIMIZE__) || !defined(NDEBUG)\n'
+                '#error benchmark must be an optimized Release build\n#endif\n'
+                'int main() { '
                 'if (std::getenv("LLAMA_BENCH_TEST_FAIL")) return 7; '
                 'std::cout << "[{\\"backends\\":\\"CPU\\",'
                 '\\"avg_ns\\":1000,\\"n_prompt\\":1,\\"n_gen\\":0}]"; }\n'
             )
             model = base / "tiny.gguf"
             model.write_bytes(b"test model placeholder")
+            environment = fake_perf_environment(base)
             command = [sys.executable, str(ROOT / "llama_gpu_bench-profile.py"),
                        "--source", str(source), "--model", str(model), "--device", "cpu",
                        "--build-dir", str(base / "build"),
                        "--results-dir", str(base / "results"), "--workers", "2",
-                       "--cmake-arg", "GGML_CUDA=OFF", "--cmake-arg", "GGML_VULKAN=OFF",
-                       "--compiler-flag=-O0"]
-            subprocess.run(command, check=True, capture_output=True, text=True)
+                       "--cmake-arg", "GGML_CUDA=OFF", "--cmake-arg", "GGML_VULKAN=OFF"]
+            subprocess.run(command, check=True, capture_output=True, text=True, env=environment)
             run = next((base / "results").iterdir())
             build_record = json.loads((run / "build.json").read_text())
             self.assertEqual(build_record["status"], "completed")
+            self.assertEqual(build_record["stages"], {"benchmark": "completed",
+                                                       "cpu_perf": "completed",
+                                                       "gpu_hpctoolkit": "not_applicable"})
+            self.assertEqual(json.loads((run / "cpu-metrics.json").read_text())["cycles"], 100)
             self.assertEqual(build_record["flags_file"], str(ROOT / "flags.json"))
             self.assertEqual(build_record["benchmark_command"][4], "0")
             self.assertTrue(all("-DNDEBUG" in flag for flag in build_record["configure_command"]
@@ -200,7 +248,7 @@ class LocalBuildTests(unittest.TestCase):
                      "--prompt", "1", "--generate", "1", "--repetitions", "1",
                      "--build-dir", str(base / "build"),
                      "--results-dir", str(base / "sweep-results")]
-            subprocess.run(sweep, check=True, capture_output=True, text=True)
+            subprocess.run(sweep, check=True, capture_output=True, text=True, env=environment)
             planned = json.loads((base / "sweep-results/subset-plan.json").read_text())
             executed = json.loads((base / "sweep-results/subset-executions.json").read_text())
             self.assertEqual(len(planned), len(executed))
@@ -209,18 +257,19 @@ class LocalBuildTests(unittest.TestCase):
             self.assertEqual(json.loads((base / "sweep-results/subset-settings.json").read_text())
                              ["gpu_layers"], 0)
             self.assertGreater(len(executed[0]["config"]["cmake"]), 10)
-            subprocess.run(sweep, check=True, capture_output=True, text=True)
+            subprocess.run(sweep, check=True, capture_output=True, text=True, env=environment)
             self.assertEqual(len(json.loads((base / "sweep-results/subset-executions.json").read_text())), 1)
             failure_command = [*sweep[:-2], "--results-dir", str(base / "failure-results")]
             failed = subprocess.run(failure_command, capture_output=True, text=True,
-                                    env={**os.environ, "LLAMA_BENCH_TEST_FAIL": "1"})
+                                     env={**environment, "LLAMA_BENCH_TEST_FAIL": "1"})
             self.assertEqual(failed.returncode, 1)
             self.assertIn("1 failed", failed.stdout)
             record_path = base / "failure-results/subset-executions.json"
             previous = json.loads(record_path.read_text())[0]
             self.assertEqual(previous["status"], "failed")
             self.assertEqual(previous["exit_code"], 1)
-            retried = subprocess.run(failure_command, check=True, capture_output=True, text=True)
+            retried = subprocess.run(failure_command, check=True, capture_output=True,
+                                     text=True, env=environment)
             self.assertIn("Retrying failed execution", retried.stdout)
             current = json.loads(record_path.read_text())[0]
             self.assertEqual(current["status"], "completed")

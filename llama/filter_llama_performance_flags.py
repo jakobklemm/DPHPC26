@@ -51,7 +51,7 @@ CPU_COMPILER_VALUES = {
     "-mprefer-vector-width=256": {"avx"},
     "-mprefer-vector-width=512": {"avx512f"},
 }
-COMPILER_OFF = {"-O": "-O0", "-march": "-march=x86-64",
+COMPILER_OFF = {"-O": "-O3", "-march": "-march=x86-64",
                 "-mprefer-vector-width": "-mprefer-vector-width=128",
                 "-ffp-contract": "-ffp-contract=off"}
 
@@ -70,6 +70,28 @@ def find_cuda_compiler():
     except (IndexError, ValueError):
         return None
     return shutil.which(executable)
+
+
+def profile_prerequisite_error(device):
+    """Return the first reason a complete host-side profile cannot run."""
+    if device == "vulkan":
+        return "Vulkan GPU profiling is not supported by the CUDA HPCToolkit collector"
+    required = ["perf", *(["hpcrun", "hpcstruct", "hpcprof"] if device == "cuda" else [])]
+    missing = [tool for tool in required if not shutil.which(tool)]
+    if missing:
+        return "Profiling requires host tools: " + ", ".join(missing)
+
+    from collect_cpu_metrics import parse_stat
+
+    probe = subprocess.run(
+        ["perf", "stat", "--no-big-num", "-x", ";", "-e", "cycles:u,instructions:u", "--", "true"],
+        capture_output=True, text=True,
+    )
+    counters = parse_stat(probe.stderr)
+    if probe.returncode or not {"cycles", "instructions"} <= counters.keys():
+        return ("Cannot access CPU counters (perf stat failed): "
+                + (probe.stderr.strip() or "no cycles/instructions counted"))
+    return None
 
 
 def cpu_info() -> tuple[str, set[str]]:
@@ -148,7 +170,7 @@ def filter_catalog(catalog: dict, architecture: str, features: set[str], device:
             # ggml's non-finite arithmetic requires these modes to be undone
             # by a later -fno-finite-math-only. Never advertise that false
             # experiment as a selectable configuration.
-            and value not in {"-Ofast", "-ffast-math"}
+            and value not in {"-O0", "-Ofast", "-ffast-math"}
             and value != off_value(name)
         ]
         if eligible:
