@@ -1,4 +1,11 @@
-From the repository root, set up once:
+# Build performance models
+
+Uses local llama.cpp and GROMACS benchmarks to learn build performance, recommend
+build options for a machine, suggest new benchmarks, and compare against baselines.
+
+## Commands
+
+Run from the repository root. Set up once; activate `.venv` in each new terminal:
 
 ```bash
 python3 -m venv .venv
@@ -6,178 +13,51 @@ source .venv/bin/activate
 pip install -r ml/requirements.txt
 ```
 
-Activate `.venv` again in each new terminal.
-
-The default source is the [project Polybox share](https://polybox.ethz.ch/index.php/s/N5f6FHcoFRiCeM3).
-The loader discovers ZIPs recursively and reads only the four metadata files per
-run using HTTP range requests. Large build artifacts are not downloaded or
-extracted. If a server does not support ranges, the archive is downloaded to a
-temporary file and removed on close. Network access is required; data is read
-afresh on each invocation so new uploads are included automatically.
-
-Each run's `source.yml` identifies its application via `project_name`. Supported
-applications are `llama.cpp` and `gromacs`; unknown applications are reported and
-skipped. Each application gets its own model and application-specific options
-and performance metric.
-
-Inspect the data or train all discovered applications:
-
 ```bash
-python -m ml.load
-python -m ml.main train
+python -m ml.load                                             # Inspect benchmark data
+python -m ml.main train                                       # Train and save models
+python -m ml.main predict --system path/to/system.json         # Recommend build options
+python -m ml.main suggest --system path/to/system.json         # Suggest builds to benchmark
+python -m ml.main evaluate --random-trials 1000 --seed 42       # Compare models and baselines
 ```
 
-Models are saved to `models/<application>.joblib`. Predict with all available saved
-models, suggest new builds for all discovered applications, or evaluate them:
+Data defaults to `llama/results` and `gromacs/results`, including folders and ZIPs.
+Models are saved in `models/`. Replace `path/to/system.json` with the target
+machine's metadata. `predict` loads saved models; `suggest` trains fresh ones.
+Evaluation holds out one platform at a time and needs at least two per application.
+Selection scores show performance relative to the platform's best measured build
+(1.0 = best); `error` is mean absolute prediction error.
+
+Optional: select an application or data source, or train and use a baseline:
 
 ```bash
-python -m ml.main predict --system path/to/system.json
-python -m ml.main suggest --system path/to/system.json
-python -m ml.main evaluate
-```
-
-`predict` uses saved models without accessing Polybox. `suggest` trains fresh
-models from current data and ranks untested builds by prediction plus uncertainty.
-Benchmark those suggestions separately, upload new run ZIPs, and train again.
-The target machine's `system.json` is still required. Evaluation holds out each
-platform in turn and requires at least two platforms per application.
-
-Two baselines are defined in `ml/baseline_models.py`, alongside the default
-hardware-aware model in `ml/model.py`:
-
-- `no-hardware`: Bayesian ridge regression using build options only. Hardware
-  features and hardware-determined options (currently CUDA architecture) are
-  excluded from regression. Hardware is used only to filter invalid candidates
-  and fill in hardware-determined settings when returning a build. Selection
-  uses the additive option effects to search in score order, stopping at the
-  first valid build without constructing all combinations.
-- `random`: records the option values seen in training without learning from
-  performance. It tries configurations in uniformly random order, rejecting
-  invalid combinations until a valid build is found. Retries are without
-  replacement, so selection raises an error if no valid configuration exists.
-  Combinations are sampled lazily rather than constructed in advance.
-
-Train and use either baseline with `--model`:
-
-```bash
+python -m ml.main train --app gromacs --data path/to/runs.zip
+python -m ml.load path/to/runs
 python -m ml.main train --model no-hardware
 python -m ml.main predict --model no-hardware --system path/to/system.json
 python -m ml.main train --model random
 python -m ml.main predict --model random --system path/to/system.json --seed 42
 ```
 
-Baseline files are saved separately as `models/<application>.no-hardware.joblib`
-and `models/<application>.random.joblib`. The random baseline returns a build
-without a predicted performance. Omit `--seed` for a fresh random selection.
+`--app` accepts `llama.cpp` or `gromacs` on all main commands. `--data` accepts
+folders or ZIPs for training, suggestions, and evaluation. Baselines are saved
+separately; evaluation compares all methods automatically. Validity checks reject
+known option, hardware, and toolchain conflicts but do not guarantee compilation.
 
-`evaluate` compares the hardware-aware model, both new baselines, and the
-original best-on-average baseline automatically:
+## Files
 
-```bash
-python -m ml.main evaluate --random-trials 1000 --seed 42
-```
+All paths below are inside `ml/`.
 
-Per platform, `model`, `baseline`, and `no_hardware` report the selected build's measured
-performance relative to the best measured build on that platform (higher is
-better). `random` and `random_std` report the mean and standard deviation across
-the requested number of independent random selections. `error` is the
-hardware-aware model's mean absolute prediction error. Evaluation defaults to
-1000 random selections with seed 0 for reproducibility.
-
-The `baseline` ranks complete configurations by their arithmetic mean
-relative performance on the training platforms and selects the highest-ranked
-one that has an eligible measurement on the held-out platform. Hardware-determined
-options are excluded from configuration matching. Its reported score is
-`selected build performance / best measured performance on the held-out platform`:
-1.0 is best, and 0.9 means 90% of the best measured throughput. This is a selection
-score, not a prediction error. Unlike `no_hardware`, it looks up complete
-configurations rather than learning individual option effects. If no complete
-configuration matches training, `baseline` is missing (`NaN`). The CLI's average
-is the arithmetic mean across platforms with available scores.
-
-All four methods select from measured configurations that pass the
-existing validity rules and use option values seen in the training fold. A
-platform with no eligible builds reports `runs=0` and missing scores. The
-normalizing best measurement is still the best across all measured builds on
-that platform. This evaluates ranking of measured builds; use `predict` and
-benchmark its output to evaluate new combinations.
-
-Build validity remains a boolean, independent of whether a machine or complete
-configuration has appeared in training. Prediction and suggestions still combine
-individual option values seen during training, including combinations never
-measured together. Validation does not require a previous successful build.
-
-Static validity checks apply to the complete output, including hardware-derived
-CUDA architecture, in the hardware model and both baselines. Evaluation uses the
-same checks. The two application profiles implement:
-
-| Check | llama.cpp | GROMACS |
-| --- | --- | --- |
-| Option schema | Boolean performance switches from the repository's flag catalog, BLAS vendor, harness CMake arguments | Harness compiler/optimization settings, SIMD, FFT and GPU choices, supported boolean options |
-| Dependencies | Conflicting active CUDA MMQ/cuBLAS requests; dynamic backends require shared libraries | External MPI versus explicit thread-MPI; bundled FFTW only with FFTW; GPU acceleration versus double precision |
-| Hardware | Active CPU ISA switches and compiler ISA flags; CUDA GPU and architecture compatibility | SIMD architecture/instruction support; compiler ISA flags; CUDA GPU and architecture compatibility |
-| Toolchain | Selected C/C++ compilers, backend/BLAS/libcurl availability, known incompatible compiler flags, explicit OpenMP/LTO capabilities | Selected C/C++ compilers, backend/FFT/MPI/BLAS/LAPACK availability, compiler flags, explicit OpenMP/LTO capabilities; bundled FFTW versus Ninja |
-
-The schemas live in `load_llama.py`, `load_gromacs.py` and `validation.py`. They
-describe our supported harness options, not every option in every upstream
-release. Extend the relevant schema and tests when changing the harness or
-upstream version. Unsupported names/values are rejected, even if present in
-training. Shared CMake options are checked for the selected application.
-
-`valid(config, hardware, app=None)` returns `True` or `False`.
-`validation_errors(config, hardware, app=None)` returns a list of reasons prefixed
-with `schema:`, `dependencies:`, `hardware:` or `toolchain:`. Supplying `app` is
-recommended; without it, the application is inferred from option names.
-
-Discovery uses `system.json` CPU features, GPU backends, compiler inventory and
-positive library discoveries. Unavailable compilers and explicitly unavailable
-backends reject dependent configurations. Missing metadata does not reject a
-configuration. XaaS's vectorization subset omits features such as FMA and BMI2;
-their absence is not inferred from that subset. An optional full CPU feature list
-can be supplied as `CPU Info.Flags` (a list or space-separated string).
-
-Runtime library discovery does not establish development-package availability
-or FFTW precision. Optional explicit build-environment facts can be supplied in
-`system.json`, for example:
-
-```json
-{
-  "Build Capabilities": {
-    "gcc_openmp": true,
-    "gcc_lto": false,
-    "fftw_single": true,
-    "fftw_double": false,
-    "mkl": false
-  }
-}
-```
-
-Recognized capability keys are `<gcc|clang|icx|icc>_<openmp|lto>`, `fftw`,
-`fftw_single`, `fftw_double`, `mkl`, `blas`, `openblas`, `lapack`, `mpi`, `curl`,
-`hwloc`, and `accelerate`. Describe the intended build environment (including
-container-provided tools), rather than an unrelated host installation. We do not
-probe the prediction host, require compile/run verification, or introduce
-verified/unverified states. Static checks reject known incompatibilities; they
-do not guarantee compilation with every compiler/toolkit/upstream version.
-
-The rules follow the upstream [GROMACS installation guide](https://manual.gromacs.org/documentation/current/install-guide/index.html),
-[GROMACS build options](https://github.com/gromacs/gromacs/blob/main/CMakeLists.txt),
-[ggml build options](https://github.com/ggml-org/llama.cpp/blob/master/ggml/CMakeLists.txt),
-[ggml CPU configuration](https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-cpu/CMakeLists.txt),
-and [Clang flag reference](https://clang.llvm.org/docs/ClangCommandLineReference.html).
-
-Retrain saved models to include the added discovery features. Previously saved
-models still use the new validity functions, with missing features treated as
-unspecified.
-
-Optional `--app` selects one application. `--data` replaces Polybox with local
-folders, ZIP files, other public share URLs, or a mixture:
-
-```bash
-python -m ml.main train --app gromacs
-python -m ml.main train --data path/to/local/runs
-python -m ml.main suggest --app llama.cpp --system path/to/system.json --data path/to/runs.zip
-python -m ml.load path/to/local/runs
-```
-
-Run tests with `python -m unittest discover -s ml/tests`.
+| File | How it works / provides |
+| --- | --- |
+| `main.py` | Command-line entry point for training, prediction, suggestions, and evaluation. |
+| `load.py` | Reads run folders/ZIPs, extracts hardware features, and merges repeated builds into a table. |
+| `load_llama.py` | Parses llama.cpp build options and throughput; checks application-specific validity. |
+| `load_gromacs.py` | Parses GROMACS build options and throughput; checks application-specific validity. |
+| `model.py` | Learns hardware/option effects with Bayesian ridge regression; ranks builds and estimates uncertainty. |
+| `baseline_models.py` | Provides option-only regression, random selection, and best-on-average configuration selection. |
+| `evaluate.py` | Holds out each platform and compares predicted build choices against measured performance. |
+| `validation.py` | Shared option schemas and hardware/toolchain checks, using system metadata. |
+| `requirements.txt` | Python dependencies for data handling, modelling, and model storage. |
+| `__init__.py` | Makes `ml` a Python package. |
+| `README.md` | Quick overview, commands, and file guide. |
