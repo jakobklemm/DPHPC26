@@ -1,111 +1,100 @@
 # Build performance models
 
-Uses local llama.cpp and GROMACS benchmarks to learn build performance, recommend
-build options for a machine, suggest new benchmarks, and compare against baselines.
+- **Purpose:** recommend build flags for llama.cpp and GROMACS; choose useful next benchmarks.
+- **Inputs:** benchmark results + hardware metadata (`system.json`).
+- **Workflow:** observed option values → valid combinations → predicted performance → best flags.
 
-## Commands
+## 1. Set up
 
-Run from the repository root. Set up once; activate `.venv` in each new terminal:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r ml/requirements.txt
-```
+Run from the repository root:
 
 ```bash
-python -m ml.load                                             # Inspect benchmark data
-python -m ml.main train                                       # Train and save models
-python -m ml.main predict --system path/to/system.json         # Recommend build options
-python -m ml.main suggest --system path/to/system.json         # Suggest builds to benchmark
-python -m ml.main evaluate --random-trials 1000 --seed 42       # Compare models and baselines
+python3 -m venv .venv                    # Once
+source .venv/bin/activate               # Each terminal
+python -m pip install -r ml/requirements.txt
 ```
 
-Data defaults to `llama/results` and `gromacs/results`, including folders and ZIPs.
-Models are saved in `models/`. Replace `path/to/system.json` with the target
-machine's metadata. `predict` loads saved models; `suggest` trains fresh ones.
-Evaluation holds out one platform at a time and needs at least two per application.
-Selection scores show performance relative to the platform's best measured build
-(1.0 = best); `error` is mean absolute prediction error.
-
-Use `--app llama.cpp` or `--app gromacs` to select an application, and
-`--data path/to/runs.zip` to use other benchmark folders or ZIPs. Both work with
-`train`, `suggest`, and `evaluate`; `predict` supports `--app`.
-
-## Ridge Regression models
-
-Ridge regression predicts a target as a weighted sum of input features while
-shrinking coefficients to reduce overfitting. Here, Bayesian ridge predicts log
-relative performance and estimates uncertainty. The variants add different
-interaction features:
-
-| `--model` | Individual options | Option × hardware | Option × option | Option × option × hardware |
-| --- | --- | --- | --- | --- |
-| `hardware` (default) | Yes | Yes | No | No |
-| `hardware-interactions` | Yes | Yes | Yes | No |
-| `hardware-three-way` | Yes | Yes | Yes | Yes |
-
-An interaction means that one setting changes another setting's effect:
-
-- **Option × hardware:** flag A helps more on some machines.
-- **Option × option:** flags A and B work better (or worse) together.
-- **Option × option × hardware:** that extra joint effect differs between machines.
-
-Choose any model from the table using `--model`, for example:
+## 2. Run
 
 ```bash
-python -m ml.main train --model hardware-three-way
-python -m ml.main predict --model hardware-three-way --system path/to/system.json
-python -m ml.main suggest --model hardware-three-way --system path/to/system.json
+python -m ml.load                                                    # Inspect data
+python -m ml.main train --model random-forest --app llama.cpp          # Fit + save
+python -m ml.main predict --model random-forest --app llama.cpp --system path/to/system.json
+python -m ml.main suggest --model random-forest --app llama.cpp --system path/to/system.json -n 5
+python -m ml.main evaluate --app llama.cpp --random-trials 1000 --seed 42
 ```
 
-Each model is saved separately. `evaluate` compares all models automatically:
-selection scores closer to **1.0** are better; `error*` values closer to **0** are
-better. More interactions need more varied measurements—check evaluation results
-before choosing a more complex model. Interaction models score all valid build
-combinations, which can be expensive with many flags.
+- Replace `path/to/system.json` with the target machine's metadata.
+- `train`: save one model per application; `predict`: load it and output flags.
+- `suggest`: fit fresh; rank unmeasured builds by performance + uncertainty.
+- `evaluate`: compare all models; at least **two hardware platforms** per application.
+- Default data: `llama/results/`, `gromacs/results/`; folders and ZIPs supported.
+- Other data: add `--data path/to/runs.zip` to `train`, `suggest`, or `evaluate`.
+- Application: `--app llama.cpp` or `--app gromacs`; omit for both.
+- Saved models: `models/`; change with `--models path/to/models` **before** the command.
+- Options/help: `python -m ml.main train --help` (likewise for other commands).
 
-## Baseline models
+## 3. Choose a model
 
-- **`no-hardware`:** Ridge regression using individual build-option effects only;
-  hardware is used for build validity, not performance prediction.
-- **`no-hardware-interactions`:** Adds option × option effects without hardware
-  inputs, so it can learn which flags work well together.
-- **`random`:** Chooses a valid configuration uniformly at random without learning
-  performance; use `--seed` with `predict` for repeatable choices.
-- **Best-on-average (`baseline` in evaluation):** Picks the complete configuration
-  with the highest mean relative performance on training platforms among those
-  measured and eligible on the held-out platform. Available in evaluation only.
+Use the same `--model` for training and prediction. Default: `hardware`.
 
-Select a baseline with `--model`, for example `train --model no-hardware`.
-
-## Files
-
-All paths below are inside `ml/`.
-
-| File | Purpose |
+| `--model` | What / why |
 | --- | --- |
-| `main.py` | CLI commands and model selection. |
-| `load.py` | Loads benchmarks and hardware; averages repeated measurements. |
-| `load_llama.py` | Parses llama.cpp build options and throughput; checks application-specific validity. |
-| `load_gromacs.py` | Parses GROMACS build options and throughput; checks application-specific validity. |
-| `models/ridge_regression.py` | Original Bayesian ridge model. |
-| `models/ridge_regression_interactions.py` | Extends ridge encoding with pairwise build-option effects. |
-| `models/ridge_regression_three_way.py` | Extends pairwise ridge with option-pair × hardware effects. |
-| `models/baseline_models.py` | No-hardware, random, and best-on-average baselines. |
-| `models/common.py` | Shared candidate validation, selection, suggestions, and save/load. |
-| `evaluate.py` | Holds out each platform and compares predicted build choices against measured performance. |
-| `validation.py` | Shared option schemas and hardware/toolchain checks, using system metadata. |
-| `requirements.txt` | Python dependencies for data handling, modelling, and model storage. |
+| `hardware` | Bayesian ridge; regularized option × hardware effects |
+| `hardware-interactions` | Ridge + option pairs; interacting flags |
+| `hardware-three-way` | Ridge + option-pair × hardware; machine-dependent pair effects |
+| `random-forest` | Nonlinear trees; automatic conditional interactions |
+| `catboost` | Boosted trees; native categorical settings |
+| `gaussian-process` | Kernel + native uncertainty; benchmark selection |
+| `kernel-ridge` | Regularized nonlinear RBF regression |
+| `support-vector` | Regularized RBF regression with error tolerance |
+| `small-mlp` | Small neural network; nonlinear comparison |
+| `no-hardware` | Option-only ridge; test hardware features' contribution |
+| `no-hardware-interactions` | Option-pair ridge without hardware inputs |
+| `random` | Uniform valid choice; baseline, no `suggest` |
 
-## Adding a model
+- `baseline` in evaluation: best-on-average measured configuration; no CLI model.
 
-1. Create `ml/models/<name>.py` and subclass `BaseModel` from `.common`.
-2. Implement `fit(table)`: call `self._fit_options(table)`, train, and return `self`.
-3. Implement `predict_performance(hardware, configs)`: return arrays of relative
-   performance predictions and uncertainty, both in performance space.
-4. Register the class in `MODEL_TYPES` in `ml/main.py`.
+## 4. Change parameters
 
-The base class handles valid candidates, selection, suggestions, and save/load.
+- **CLI defaults:** edit `_make_regressor()` in the relevant `ml/models/` file; retrain.
+- **Experiment in Python:** constructor overrides; save for subsequent CLI prediction.
 
-Run model tests with `python -m unittest discover -s ml/tests -v`.
+```python
+from pathlib import Path
+from ml.load import app_options, load_table
+from ml.models import RandomForestPerformanceModel
+
+model = RandomForestPerformanceModel(
+    max_depth=6, min_samples_leaf=3,  # Limit overfitting
+    ensemble_size=4,                # Fewer bootstrap fits; faster training (minimum 2)
+    random_state=42,                # Repeatable fits in the same environment
+).fit(app_options(load_table(app="llama.cpp")))
+
+Path("models").mkdir(exist_ok=True)
+model.save("models/llama.cpp.random-forest.joblib")
+```
+
+- Non-GP new models: full-data fit + 8 bootstrap fits by default; whole machines resampled, or rows with one machine.
+- GP: one fit with native uncertainty. Bootstrap spread for other new models: **uncalibrated exploration heuristic**.
+- Saved overrides apply to `predict`; `train` and `suggest` use current constructor defaults.
+
+## 5. Read results / edit code
+
+- Selection score: measured performance / platform's best measured build; **1.0 best**.
+- `error*`: mean absolute prediction error; **0 best**. Training R²: fit diagnostic only.
+- Evaluation: whole-machine holdout; identical eligible **measured** candidates for all models.
+- Validity checks: hardware/toolchain compatibility; separate from predictive accuracy.
+- Full selection: combinations of observed option values, including unmeasured combinations; potentially expensive.
+- CatBoost: included dependency; required for evaluation, imported lazily for other workflows.
+
+| Change | Where (`ml/`) |
+| --- | --- |
+| Estimator defaults / model details | Individual files in `models/` |
+| Shared encoding, fitting, uncertainty, selection | `models/common.py` |
+| Available models | `models/__init__.py` → `MODEL_TYPES` |
+| Commands / evaluation | `main.py` / `evaluate.py` |
+| Data and hardware extraction | `load.py`, `load_llama.py`, `load_gromacs.py` |
+| Build validity | `validation.py` + application loaders |
+
+**Add a regressor:** create `models/<name>.py` → subclass `RegressionPerformanceModel` → implement `_make_regressor(seed, n_features)` → register in `MODEL_TYPES`. Shared workflows reused automatically.

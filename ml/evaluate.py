@@ -38,100 +38,86 @@ import numpy as np
 import pandas as pd
 
 from .load import HW, columns, strip
-from .models.baseline_models import (NoHardwareInteractionModel, NoHardwareModel,
-                                     RandomBaseline, baseline_pick)
-from .models.ridge_regression import PerformanceModel
-from .models.ridge_regression_interactions import InteractionPerformanceModel
-from .models.ridge_regression_three_way import ThreeWayPerformanceModel
+from .models import MODEL_TYPES
+from .models.baseline_models import baseline_pick
 from .models.common import configs
 
 
-# def leave_one_build_out(table):
-#     rows = []
-#     for i in table.index:
-#         # `relative` is recomputed without the held-out build: if it was the best one, the other
-#         # builds' relative values would otherwise reveal how good it is
-#         train = rescale(table.drop(index=i))
-#         test = table.loc[i]
-#         best = train.loc[train["platform"] == test["platform"], "performance"].max()
-#         measured = test["performance"] / best
-#
-#         model = PerformanceModel().fit(train)
-#         hardware = {strip(c): test[c] for c in columns(table, HW)}
-#         predicted, _ = model.predict_performance(hardware, [{strip(c): test[c] for c in columns(table, CFG)}])
-#         guess = train.loc[train["platform"] == test["platform"], "relative"].mean()
-#
-#         varying = [c for c in columns(table, CFG) if table[c].nunique() > 1]
-#         rows.append({
-#             "build": " ".join(f"{strip(c)}={test[c]}" for c in varying),
-#             "measured": measured,
-#             "predicted": predicted[0],
-#             "error": abs(predicted[0] - measured),
-#             "guess": abs(guess - measured),
-#         })
-#     return pd.DataFrame(rows)
-#
-#
-# def rescale(table):
-#     """Recompute `relative` (performance / best on the same platform) for a subset of the table."""
-#     table = table.copy()
-#     table["relative"] = table["performance"] / table.groupby("platform")["performance"].transform("max")
-#     return table
+# Existing ridge/baseline column names for result compatibility
+# Automatic score/error column pairs for new models
+EVALUATION_NAMES = {
+    "hardware": ("model", "error"),
+    "hardware-interactions": ("interactions", "error_interactions"),
+    "no-hardware": ("no_hardware", None),
+    "no-hardware-interactions": ("no_hardware_interactions", None),
+    "hardware-three-way": ("three_way", "error_three_way"),
+}
 
 
 def leave_one_platform_out(table, random_trials=1000, seed=0):
+    """Compare all registered models on identical eligible measured candidates.
+
+    New model score/error columns use underscores in place of CLI hyphens.
+    Each model fits preprocessing only on the outer training platforms. There is
+    no automatic hyperparameter tuning and no held-out-platform fit information.
+    """
+    # Positive random-trial count and separate training platform
     if random_trials < 1:
         raise ValueError("random_trials must be at least 1")
+    if table["platform"].nunique() < 2:
+        raise ValueError("leave-one-platform-out evaluation needs at least two platforms")
+    # Shared CLI model registry
+    # Separate random baseline without performance predictions
+    names = {}
+    for name in MODEL_TYPES:
+        if name != "random":
+            score = name.replace("-", "_")
+            names[name] = EVALUATION_NAMES.get(name, (score, "error_" + score))
     rows = []
-    random = RandomBaseline(seed=seed)
+    # One seed for reproducible random choices across folds
+    random = MODEL_TYPES["random"](seed=seed)
     for platform in sorted(table["platform"].unique()):
+        # Whole-machine holdout; training on other machines only
         train = table[table["platform"] != platform]
         test = table[table["platform"] == platform]
         hardware = {strip(c): test[c].iloc[0] for c in columns(test, HW)}
-
-        model = PerformanceModel().fit(train)
-        no_hardware = NoHardwareModel().fit(train)
-        interactions = InteractionPerformanceModel().fit(train)
-        no_hardware_interactions = NoHardwareInteractionModel().fit(train)
-        three_way = ThreeWayPerformanceModel().fit(train)
-        random.fit(train)
-        eligible = [
-            all(c.get(o) in model.values[o] for o in model.options) and model._valid(c, hardware)
-            for c in configs(test)
-        ]
+        # Original eligibility rules shared by all models
+        # Training-observed option values and valid builds only
+        # Single ridge fit reused for scoring
+        reference = MODEL_TYPES["hardware"]().fit(train)
+        eligible = [all(c.get(o) in reference.values[o] for o in reference.options)
+                    and reference._valid(c, hardware) for c in configs(test)]
         test = test.loc[eligible]
-        if test.empty:
-            rows.append({"platform": platform, "runs": 0, "error": np.nan,
-                         "model": np.nan, "baseline": np.nan, "no_hardware": np.nan,
-                         "interactions": np.nan, "error_interactions": np.nan,
-                         "no_hardware_interactions": np.nan,
-                         "three_way": np.nan, "error_three_way": np.nan,
-                         "random": np.nan, "random_std": np.nan})
-            continue
-        candidates = configs(test)
-        predicted, _ = model.predict_performance(hardware, candidates)
-        option_predicted, _ = no_hardware.predict_performance(hardware, candidates)
-        pair_predicted, _ = interactions.predict_performance(hardware, candidates)
-        pair_option_predicted, _ = no_hardware_interactions.predict_performance(hardware, candidates)
-        three_way_predicted, _ = three_way.predict_performance(hardware, candidates)
-        measured = test["relative"].to_numpy()
-        random_performance = np.array([
-            measured[random.choose_index(hardware, candidates)] for _ in range(random_trials)
-        ])
-
-        rows.append({
-            "platform": platform,
-            "runs": len(test),
-            "error": float(np.mean(np.abs(predicted - measured))),
-            "model": measured[int(np.argmax(predicted))],
-            "baseline": baseline_pick(train, test, model.options),
-            "no_hardware": measured[int(np.argmax(option_predicted))],
-            "interactions": measured[int(np.argmax(pair_predicted))],
-            "error_interactions": float(np.mean(np.abs(pair_predicted - measured))),
-            "no_hardware_interactions": measured[int(np.argmax(pair_option_predicted))],
-            "three_way": measured[int(np.argmax(three_way_predicted))],
-            "error_three_way": float(np.mean(np.abs(three_way_predicted - measured))),
-            "random": float(random_performance.mean()),
-            "random_std": float(random_performance.std()),
-        })
-    return pd.DataFrame(rows)
+        # NaN scores for platforms without eligible builds
+        row = {"platform": platform, "runs": len(test), "baseline": np.nan,
+               "random": np.nan, "random_std": np.nan}
+        for score, error in names.values():
+            row[score] = np.nan
+            if error:
+                row[error] = np.nan
+        if not test.empty:
+            # Identical measured candidates across models
+            candidates = configs(test)
+            measured = test["relative"].to_numpy()
+            for name, (score, error) in names.items():
+                model = reference if name == "hardware" else MODEL_TYPES[name]().fit(train)
+                # Predicted best build; measured performance as selection score
+                predicted, _ = model.predict_performance(hardware, candidates)
+                row[score] = float(measured[int(np.argmax(predicted))])
+                if error:
+                    # Mean absolute error in relative-performance space
+                    row[error] = float(np.mean(np.abs(predicted - measured)))
+            # Existing best-on-average and repeated uniform-random baselines
+            row["baseline"] = baseline_pick(train, test, reference.options)
+            random.fit(train)
+            draws = np.array([measured[random.choose_index(hardware, candidates)]
+                              for _ in range(random_trials)])
+            row["random"] = float(draws.mean())
+            row["random_std"] = float(draws.std())
+        rows.append(row)
+    # Existing column order followed by new model scores/errors
+    legacy = ["platform", "runs", "error", "model", "baseline", "no_hardware",
+              "interactions", "error_interactions", "no_hardware_interactions",
+              "three_way", "error_three_way", "random", "random_std"]
+    result = pd.DataFrame(rows)
+    return result[legacy + [c for c in result if c not in legacy]]

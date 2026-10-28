@@ -24,17 +24,9 @@ import numpy as np
 
 from .evaluate import leave_one_platform_out #, leave_one_build_out
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
-from .models.baseline_models import NoHardwareInteractionModel, NoHardwareModel, RandomBaseline
-from .models.ridge_regression import PerformanceModel
-from .models.ridge_regression_interactions import InteractionPerformanceModel
-from .models.ridge_regression_three_way import ThreeWayPerformanceModel
+# Single model registry for CLI and evaluation
+from .models import MODEL_TYPES, RandomBaseline
 from .models.common import BaseModel, NoHardwareMixin, configs
-
-
-MODEL_TYPES = {"hardware": PerformanceModel, "hardware-interactions": InteractionPerformanceModel,
-               "no-hardware": NoHardwareModel, "no-hardware-interactions": NoHardwareInteractionModel,
-               "hardware-three-way": ThreeWayPerformanceModel,
-               "random": RandomBaseline}
 
 
 def model_path(models, app, kind="hardware"):
@@ -66,6 +58,12 @@ def train(args):
               f"-> {model_path(args.models, app, args.model)}")
         if isinstance(model, RandomBaseline):
             print("random baseline: recorded option values; no performance model fitted\n")
+            continue
+        if hasattr(model, "uncertainty_method"):
+            # Training fit quality and model-specific uncertainty method
+            # No ridge-specific noise or coefficient reports for new surrogates
+            print(f"training log-space R²: {model.r2:.3f}; "
+                  f"uncertainty: {model.uncertainty_method}\n")
             continue
         
         # Only the options that differ between runs, the rest is the same everywhere.
@@ -153,6 +151,9 @@ def evaluate(args):
         scores = ["error", "model", "error_interactions", "interactions", "baseline",
                   "error_three_way", "three_way", "no_hardware", "no_hardware_interactions",
                   "random"]
+        # Automatic inclusion of new model scores/errors in averages
+        # Exclusion of labels, counts and random spread
+        scores += [c for c in result if c not in scores + ["platform", "runs", "random_std"]]
         print("\naverage:", result[scores].mean().round(3).to_dict())
 
 
