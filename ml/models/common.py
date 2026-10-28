@@ -35,6 +35,8 @@ class NoHardwareMixin:
 class BaseModel:
     """Common option domains, build validity, selection, and model storage."""
 
+    prediction_batch_size = 4096
+
     def fit(self, table):
         """Fit the model, calling _fit_options(table) to record option domains."""
         raise NotImplementedError("models must implement fit")
@@ -57,24 +59,35 @@ class BaseModel:
         # candidate builds that `predict` and `suggest` choose from.
         self.values = {o: sorted(table[CFG + o].unique()) for o in self.options}
 
-    def candidates(self, hardware):
-        """Combine observed option values and retain valid builds for this machine."""
+    def iter_candidates(self, hardware):
+        """Yield valid builds without storing the Cartesian product."""
         combinations = itertools.product(*(self.values[o] for o in self.options))
         configs = (dict(zip(self.options, values)) for values in combinations)
-        return [c for c in configs if self._valid(c, hardware)]
+        return (c for c in configs if self._valid(c, hardware))
+
+    def candidates(self, hardware):
+        """Collect valid builds for workflows that need the complete list."""
+        return list(self.iter_candidates(hardware))
 
     def _valid(self, config, hardware):
         # Complete output validation, including derived CUDA architecture
         return valid(self._add_rule_options(config, hardware), hardware, getattr(self, "application", None))
 
     def predict(self, hardware):
-        """Return the valid build with highest predicted performance and its score."""
-        candidates = self.candidates(hardware)
-        if not candidates:
+        """Score bounded batches, retaining only the best build between batches."""
+        candidates = self.iter_candidates(hardware)
+        best_config, best_score = None, None
+        while batch := list(itertools.islice(candidates, self.prediction_batch_size)):
+            mean, _ = self.predict_performance(hardware, batch)
+            best = int(np.argmax(mean))
+            score = float(mean[best])
+            # Strict comparison preserves the first configuration on ties,
+            # matching argmax over the original complete candidate list.
+            if best_config is None or score > best_score:
+                best_config, best_score = batch[best], score
+        if best_config is None:
             raise ValueError("no valid build configurations for this hardware")
-        mean, _ = self.predict_performance(hardware, candidates)
-        best = int(np.argmax(mean))
-        return self._add_rule_options(candidates[best], hardware), float(mean[best])
+        return self._add_rule_options(best_config, hardware), best_score
 
     def _add_rule_options(self, config, hardware):
         return {**config, **{o: HARDWARE_DETERMINED[o](hardware) for o in self.rule_options}}

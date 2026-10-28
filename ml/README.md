@@ -100,6 +100,8 @@ model.save("models/llama.cpp.random-forest.joblib")
 - Evaluation: whole-machine holdout; identical eligible **measured** candidates for all models.
 - Validity checks: hardware/toolchain compatibility; separate from predictive accuracy.
 - Full selection: combinations of observed option values, including unmeasured combinations; potentially expensive.
+- `predict` retains only the best build between batches (memory is bounded by the batch size; all combinations are checked)
+- `suggest` and ridge training decision reports collect the full candidate list
 - CatBoost: included dependency; required for evaluation, imported lazily for other workflows.
 
 | Change | Where (`ml/`) |
