@@ -27,6 +27,12 @@ Compare the hardware-aware models with simpler selection methods:
                Score all valid combinations: independent option ranking is no
                longer correct when flags interact.
 
+  no-hardware-{random-forest,catboost,gaussian-process,kernel-ridge,
+               support-vector,small-mlp}
+               Option-only counterparts of the nonlinear surrogates. Reuse
+               each estimator's defaults and uncertainty method, excluding
+               hardware inputs through NoHardwareMixin. Score all valid builds.
+
 For prediction, no_hardware and random combine option values seen in training,
 including combinations never measured together. Both search lazily, use hardware
 only for validity checks and hardware-determined settings, and raise ValueError
@@ -47,6 +53,12 @@ from ..load import CFG
 from .common import BaseModel, NoHardwareMixin
 from .ridge_regression import PerformanceModel
 from .ridge_regression_interactions import InteractionPerformanceModel
+from .random_forest import RandomForestPerformanceModel
+from .catboost import CatBoostPerformanceModel
+from .gaussian_process import GaussianProcessPerformanceModel
+from .kernel_ridge import KernelRidgePerformanceModel
+from .support_vector import SupportVectorPerformanceModel
+from .small_mlp import SmallMLPPerformanceModel
 
 
 def baseline_pick(train, test, options):
@@ -112,6 +124,30 @@ class NoHardwareInteractionModel(NoHardwareMixin, InteractionPerformanceModel):
     Inherit exhaustive selection from BaseModel rather than the additive-only
     search in NoHardwareModel, because the best choice depends on flag pairs.
     """
+
+
+class NoHardwareRandomForestModel(NoHardwareMixin, RandomForestPerformanceModel):
+    """Option-only random forest with the hardware-aware model's defaults."""
+
+
+class NoHardwareCatBoostModel(NoHardwareMixin, CatBoostPerformanceModel):
+    """Option-only CatBoost with native categorical build settings."""
+
+
+class NoHardwareGaussianProcessModel(NoHardwareMixin, GaussianProcessPerformanceModel):
+    """Option-only Gaussian process with native predictive uncertainty."""
+
+
+class NoHardwareKernelRidgeModel(NoHardwareMixin, KernelRidgePerformanceModel):
+    """Option-only kernel ridge with the hardware-aware model's defaults."""
+
+
+class NoHardwareSupportVectorModel(NoHardwareMixin, SupportVectorPerformanceModel):
+    """Option-only support vector regression with the same estimator defaults."""
+
+
+class NoHardwareSmallMLPModel(NoHardwareMixin, SmallMLPPerformanceModel):
+    """Option-only small MLP with the hardware-aware model's defaults."""
 
 
 class RandomBaseline(BaseModel):

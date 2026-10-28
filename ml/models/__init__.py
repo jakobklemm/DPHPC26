@@ -1,6 +1,11 @@
 """Build selection models and shared model infrastructure."""
 
-from .baseline_models import NoHardwareInteractionModel, NoHardwareModel, RandomBaseline
+from .baseline_models import (
+    NoHardwareInteractionModel, NoHardwareModel, RandomBaseline,
+    NoHardwareRandomForestModel, NoHardwareCatBoostModel,
+    NoHardwareGaussianProcessModel, NoHardwareKernelRidgeModel,
+    NoHardwareSupportVectorModel, NoHardwareSmallMLPModel,
+)
 from .common import BaseModel
 from .ridge_regression import PerformanceModel
 from .ridge_regression_interactions import InteractionPerformanceModel
@@ -27,6 +32,12 @@ MODEL_TYPES = {
     "kernel-ridge": KernelRidgePerformanceModel,
     "support-vector": SupportVectorPerformanceModel,
     "small-mlp": SmallMLPPerformanceModel,
+    "no-hardware-random-forest": NoHardwareRandomForestModel,
+    "no-hardware-catboost": NoHardwareCatBoostModel,
+    "no-hardware-gaussian-process": NoHardwareGaussianProcessModel,
+    "no-hardware-kernel-ridge": NoHardwareKernelRidgeModel,
+    "no-hardware-support-vector": NoHardwareSupportVectorModel,
+    "no-hardware-small-mlp": NoHardwareSmallMLPModel,
 }
 
 # Public model classes for Python use and constructor tuning
@@ -34,4 +45,7 @@ __all__ = ["BaseModel", "PerformanceModel", "InteractionPerformanceModel", "Thre
            "NoHardwareModel", "NoHardwareInteractionModel", "RandomBaseline",
            "RandomForestPerformanceModel", "CatBoostPerformanceModel",
            "GaussianProcessPerformanceModel", "KernelRidgePerformanceModel",
-           "SupportVectorPerformanceModel", "SmallMLPPerformanceModel", "MODEL_TYPES"]
+           "SupportVectorPerformanceModel", "SmallMLPPerformanceModel",
+           "NoHardwareRandomForestModel", "NoHardwareCatBoostModel",
+           "NoHardwareGaussianProcessModel", "NoHardwareKernelRidgeModel",
+           "NoHardwareSupportVectorModel", "NoHardwareSmallMLPModel", "MODEL_TYPES"]

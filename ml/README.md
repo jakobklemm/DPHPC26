@@ -51,9 +51,23 @@ Use the same `--model` for training and prediction. Default: `hardware`.
 | `small-mlp` | Small neural network; nonlinear comparison |
 | `no-hardware` | Option-only ridge; test hardware features' contribution |
 | `no-hardware-interactions` | Option-pair ridge without hardware inputs |
+| `no-hardware-random-forest` | Option-only random forest |
+| `no-hardware-catboost` | Option-only CatBoost |
+| `no-hardware-gaussian-process` | Option-only Gaussian process |
+| `no-hardware-kernel-ridge` | Option-only kernel ridge |
+| `no-hardware-support-vector` | Option-only support vector regression |
+| `no-hardware-small-mlp` | Option-only small MLP |
 | `random` | Uniform valid choice; baseline, no `suggest` |
 
 - `baseline` in evaluation: best-on-average measured configuration; no CLI model.
+- `no-hardware-*` baseline uses the corresponding model's estimator defaults,
+  constructor overrides, and uncertainty method, learning from build options only
+  (hardware is still required for build validity and hardware-determined settings)
+
+```bash
+python -m ml.main train --model no-hardware-random-forest --app llama.cpp
+python -m ml.main predict --model no-hardware-random-forest --app llama.cpp --system path/to/system.json
+```
 
 ## 4. Change parameters
 
