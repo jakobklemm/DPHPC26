@@ -7,6 +7,7 @@ import platform
 import shlex
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 
@@ -83,14 +84,32 @@ def profile_prerequisite_error(device):
 
     from collect_cpu_metrics import parse_stat
 
-    probe = subprocess.run(
-        ["perf", "stat", "--no-big-num", "-x", ";", "-e", "cycles:u,instructions:u", "--", "true"],
-        capture_output=True, text=True,
-    )
+    try:
+        probe = subprocess.run(
+            ["perf", "stat", "--no-big-num", "-x", ";", "-e", "cycles:u,instructions:u", "--", "true"],
+            capture_output=True, text=True,
+        )
+    except OSError as error:
+        return f"Cannot run perf stat: {error}"
     counters = parse_stat(probe.stderr)
     if probe.returncode or not {"cycles", "instructions"} <= counters.keys():
         return ("Cannot access CPU counters (perf stat failed): "
                 + (probe.stderr.strip() or "no cycles/instructions counted"))
+    if device == "cuda":
+        try:
+            with tempfile.TemporaryDirectory(prefix="llama-hpctoolkit-check-") as temporary:
+                gpu_probe = subprocess.run(
+                    ["hpcrun", "-o", str(Path(temporary) / "measurements"), "-e", "gpu=cuda",
+                     shutil.which("true") or "true"], capture_output=True, text=True,
+                )
+        except OSError as error:
+            return f"Cannot run HPCToolkit CUDA probe: {error}"
+        if gpu_probe.returncode:
+            detail = (gpu_probe.stderr or gpu_probe.stdout).strip()
+            if "not compiled with NVIDIA CUDA support" in detail:
+                return ("HPCToolkit was built without CUDA support; install and load "
+                        "a +cuda build (e.g. spack install hpctoolkit+cuda), then retry")
+            return f"HPCToolkit CUDA probe failed: {detail or f'exit {gpu_probe.returncode}'}"
     return None
 
 

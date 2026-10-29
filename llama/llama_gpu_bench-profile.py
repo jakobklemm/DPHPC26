@@ -59,7 +59,10 @@ def benchmark_args(binary, model, args, repetitions):
 
 
 def verify_benchmark(path, device):
-    data = json.loads(path.read_text())
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, ValueError) as error:
+        raise RuntimeError(f"Invalid or empty benchmark output {path}; see {path.with_suffix('.log')}") from error
     if not isinstance(data, list) or not data or not all(
         isinstance(row, dict) and device.lower() in row.get("backends", "").lower()
         for row in data
@@ -260,8 +263,14 @@ def profile(args, output, env, bench, record, save):
     database = gpu_dir / "database"
     with (gpu_dir / "benchmark.json").open("w") as stdout, (
         gpu_dir / "benchmark.log").open("w") as stderr:
-        subprocess.run(["hpcrun", "-o", str(measurements), "-e", "gpu=cuda", *bench],
-                       env=env, stdout=stdout, stderr=stderr, check=True)
+        try:
+            subprocess.run(["hpcrun", "-o", str(measurements), "-e", "gpu=cuda", *bench],
+                           env=env, stdout=stdout, stderr=stderr, check=True)
+        except subprocess.CalledProcessError as error:
+            raise RuntimeError(
+                f"HPCToolkit CUDA measurement failed (exit {error.returncode}); "
+                f"see {gpu_dir / 'benchmark.log'}"
+            ) from error
     verify_benchmark(gpu_dir / "benchmark.json", "cuda")
     run_logged(["hpcstruct", "-j", str(args.workers), str(measurements)],
                gpu_dir / "analysis.log")
