@@ -86,7 +86,7 @@ class NoHardwareModel(NoHardwareMixin, PerformanceModel):
     and to restore hardware-determined settings, never as a regression input.
     """
 
-    def predict(self, hardware):
+    def best_build(self, hardware):
         # With no hardware interactions, option effects add in log space.
         # Search combinations from highest to lowest score, stopping at the
         # first valid one instead of materializing the full Cartesian product.
@@ -107,8 +107,7 @@ class NoHardwareModel(NoHardwareMixin, PerformanceModel):
             _, indices = heapq.heappop(queue)
             config = {o: values[i][1] for o, values, i in zip(self.options, ranked, indices)}
             if self._valid(config, hardware):
-                mean, _ = self.predict_performance(hardware, [config])
-                return self._add_rule_options(config, hardware), float(mean[0])
+                return config
             for dimension, values in enumerate(ranked):
                 if indices[dimension] + 1 < len(values):
                     neighbor = indices[:dimension] + (indices[dimension] + 1,) + indices[dimension + 1:]
@@ -173,7 +172,8 @@ class RandomBaseline(BaseModel):
                 return int(i)
         raise ValueError("no valid build configurations for this hardware")
 
-    def predict(self, hardware):
+    def predict(self, hardware, search=None):
+        # search is ignored: without predictions there is nothing to search
         # Lazy Fisher-Yates shuffle of combination indices. Memory grows only
         # with rejected draws, not with the potentially huge candidate space.
         sizes = [len(self.values[o]) for o in self.options]

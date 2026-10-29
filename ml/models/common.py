@@ -73,7 +73,18 @@ class BaseModel:
         # Complete output validation, including derived CUDA architecture
         return valid(self._add_rule_options(config, hardware), hardware, getattr(self, "application", None))
 
-    def predict(self, hardware):
+    def predict(self, hardware, search="local"):
+        """Best build for this hardware and its predicted performance.
+
+        search="local": best_build, a local search, fast; exact when options add up.
+        search="exhaustive": exhaustive_best_build, predicts every combination, slow.
+        """
+        find = {"local": self.best_build, "exhaustive": self.exhaustive_best_build}[search]
+        config = find(hardware)
+        score = float(self.predict_performance(hardware, [config])[0][0])
+        return self._add_rule_options(config, hardware), score
+
+    def exhaustive_best_build(self, hardware):
         """Score bounded batches, retaining only the best build between batches."""
         candidates = self.iter_candidates(hardware)
         best_config, best_score = None, None
@@ -87,7 +98,7 @@ class BaseModel:
                 best_config, best_score = batch[best], score
         if best_config is None:
             raise ValueError("no valid build configurations for this hardware")
-        return self._add_rule_options(best_config, hardware), best_score
+        return best_config
 
     def _add_rule_options(self, config, hardware):
         return {**config, **{o: HARDWARE_DETERMINED[o](hardware) for o in self.rule_options}}

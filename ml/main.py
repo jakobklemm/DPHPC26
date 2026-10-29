@@ -106,7 +106,7 @@ def predict(args):
         if isinstance(model, RandomBaseline):
             # A fresh generator avoids replaying the state saved during training.
             model.rng = np.random.default_rng(args.seed)
-        config, predicted = model.predict(hardware)
+        config, predicted = model.predict(hardware, search=args.search)
         print(f"== {app}")
         for argument in describe(app, config).split(" "):
             print(argument)
@@ -169,6 +169,9 @@ def main():
     p = sub.add_parser("predict")
     p.add_argument("--model", choices=MODEL_TYPES, default="hardware", help="saved model to use")
     p.add_argument("--seed", type=int, help="reproducible random baseline selection")
+    p.add_argument("--search", choices=["local", "exhaustive"], default="local",
+                   help="local: fast search, exact for hardware/no-hardware (default); "
+                        "exhaustive: predict every combination, slow")
     p.add_argument("--app", choices=sorted(APPS), help="default: all available trained applications")
     p.add_argument("--system", required=True, help="system.json of the target machine")
     p.set_defaults(func=predict)
