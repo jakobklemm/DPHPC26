@@ -102,6 +102,84 @@ class BaseModel:
         order = np.argsort(-(mean + spread))[:n]
         return [(self._add_rule_options(untested[i], hardware), float(mean[i]), float(spread[i])) for i in order]
 
+    # Other options a decision variant may change to make an alternative value buildable
+    max_extra_changes = 2
+
+    def _changes(self, config, options, k):
+        """Builds that differ from config in exactly k of the given options."""
+        for chosen in itertools.combinations(options, k):
+            alternatives = [[v for v in self.values[o] if v != config[o]] for o in chosen]
+            for values in itertools.product(*alternatives):
+                yield {**config, **dict(zip(chosen, values))}
+
+    def _best_valid(self, hardware, builds):
+        """The valid build with the highest prediction and its prediction, (None, None) if none is valid."""
+        builds = [c for c in builds if self._valid(c, hardware)]
+        if not builds:
+            return None, None
+        predicted = self.predict_performance(hardware, builds)[0]
+        best = int(np.argmax(predicted))
+        return builds[best], predicted[best]
+
+    def best_build(self, hardware):
+        """Best valid build by local search instead of predicting every combination.
+
+        Starts from the first valid combination and moves to the best build that
+        changes one or two options until none is better. Two at a time, so that
+        pairs that are only valid together (e.g. FORCE_MMQ/FORCE_CUBLAS) can swap.
+        Exact for models where options add up (ridge without option pairs);
+        otherwise a local optimum.
+        """
+        best = next(self.iter_candidates(hardware), None)
+        if best is None:
+            raise ValueError("no valid build configurations for this hardware")
+        score = self.predict_performance(hardware, [best])[0][0]
+        while True:
+            neighbours = itertools.chain(self._changes(best, self.options, 1),
+                                         self._changes(best, self.options, 2))
+            candidate, candidate_score = self._best_valid(hardware, neighbours)
+            if candidate is None or candidate_score <= score:
+                return best
+            best, score = candidate, candidate_score
+
+    def decisions(self, hardware):
+        """Report alternative option costs and uncertainty relative to the best build.
+
+        Dependent option changes are included when needed to form a valid build.
+        Costs are relative performance changes; how they and their uncertainty
+        are computed depends on the model (_costs).
+        """
+        best = self.best_build(hardware)
+        rows, variants = [], []
+        for option in self.options:
+            others = [o for o in self.options if o != option]
+            for value in self.values[option]:
+                if value == best[option]:
+                    continue
+                # the valid build with this value that differs least from the best one (then: predicted best)
+                for k in range(self.max_extra_changes + 1):
+                    variant, _ = self._best_valid(hardware, self._changes({**best, option: value}, others, k))
+                    if variant is not None:
+                        break
+                else:
+                    continue  # this value cannot be built on this machine (with few other changes)
+                rows.append({"option": option, "value": best[option], "alternative": value,
+                             "also": {o: variant[o] for o in self.options if o != option and variant[o] != best[o]}})
+                variants.append(variant)
+        result = pd.DataFrame(rows)
+        if rows:
+            result["cost"], result["uncertainty"] = self._costs(hardware, best, variants)
+        return result
+
+    def _costs(self, hardware, best, variants):
+        """Relative change of each variant against the best build, and its uncertainty.
+
+        Fallback from predictions alone: the uncertainty is the variant's own
+        prediction spread, not that of the difference, so usually too large.
+        """
+        mean, spread = self.predict_performance(hardware, [best] + variants)
+        return mean[1:] / mean[0] - 1, spread[1:] / mean[0]
+
     def save(self, path):
         joblib.dump(self, path)
 
@@ -305,6 +383,28 @@ class RegressionPerformanceModel(BaseModel):
         prediction = performance_space(self.regressor.predict(frame))
         draws = np.array([performance_space(member.predict(frame)) for member in self.ensemble])
         return prediction, np.std(draws, axis=0)
+
+    def _costs(self, hardware, best, variants):
+        """Change and uncertainty of the difference to the best build, in log space.
+
+        GP: joint predictive covariance of best and variants. Bootstrap: the
+        change computed within each member, so shared errors cancel out.
+        """
+        frame = self._prediction_frame(hardware, [best] + variants)
+        log_prediction = self.regressor.predict(frame)
+        log_change = log_prediction[1:] - log_prediction[0]
+        if self.native_uncertainty:
+            if self.regressor.constant:
+                log_std = np.zeros(len(variants))
+            else:
+                X = self.regressor.encoder.transform(frame)
+                _, cov = self.regressor.regressor.predict(X, return_cov=True)
+                variance = np.diag(cov)[1:] + cov[0, 0] - 2 * cov[0, 1:]
+                log_std = np.sqrt(np.clip(variance, 0, None))
+            return np.exp(log_change) - 1, np.exp(log_std) - 1
+        draws = np.array([member.predict(frame) for member in self.ensemble])
+        member_costs = np.exp(draws[:, 1:] - draws[:, :1]) - 1
+        return np.exp(log_change) - 1, np.std(member_costs, axis=0)
 
     def suggest(self, hardware, measured, n=5):
         # Measured-flag normalization for consistent build exclusion

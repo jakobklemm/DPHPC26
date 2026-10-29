@@ -77,40 +77,12 @@ class PerformanceModel(BaseModel):
         mean = np.exp(log_mean)
         return mean, mean * log_std
 
-    def decisions(self, hardware):
-        """Report alternative option costs and uncertainty relative to the best build.
-
-        Dependent option changes are included when needed to form a valid build.
-        Costs are relative performance changes; uncertainty uses the ridge
-        coefficient covariance, so this explanation is specific to this model.
-        """
-        candidates = self.candidates(hardware)
-        predicted = self.predict_performance(hardware, candidates)[0]
-        best = candidates[int(np.argmax(predicted))]
-        rows = []
-        for option in self.options:
-            for value in self.values[option]:
-                if value == best[option]:
-                    continue
-                # the valid build with this value that differs least from the best one (then: predicted best)
-                with_value = [(sum(c[o] != best[o] for o in self.options), -p, i)
-                              for i, (c, p) in enumerate(zip(candidates, predicted)) if c[option] == value]
-                if not with_value:
-                    continue  # this value cannot be built on this machine
-                variant = candidates[min(with_value)[2]]
-                rows.append({"option": option, "value": best[option], "alternative": value,
-                             "also": {o: variant[o] for o in self.options if o != option and variant[o] != best[o]},
-                             "variant": variant})
-        if not rows:
-            return pd.DataFrame(rows)
-
-        builds = pd.DataFrame([{**hardware, **c} for c in [best] + [r.pop("variant") for r in rows]])
+    def _costs(self, hardware, best, variants):
+        """Exact for ridge: the change is linear in the encoded inputs, its
+        uncertainty follows from the coefficient covariance."""
+        builds = pd.DataFrame([{**hardware, **c} for c in [best] + variants])
         X = self._encode(builds[self.hw_features + self.options]).to_numpy()
         diff = X[1:] - X[0]
         log_change = diff @ self.regressor.coef_
         log_std = np.sqrt(np.einsum("ij,jk,ik->i", diff, self.regressor.sigma_, diff))
-        result = pd.DataFrame(rows)
-        result["cost"] = np.exp(log_change) - 1
-        result["uncertainty"] = np.exp(log_std) - 1
-        return result
-
+        return np.exp(log_change) - 1, np.exp(log_std) - 1

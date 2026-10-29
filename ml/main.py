@@ -26,7 +26,7 @@ from .evaluate import leave_one_platform_out #, leave_one_build_out
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 # Single model registry for CLI and evaluation
 from .models import MODEL_TYPES, RandomBaseline
-from .models.common import BaseModel, NoHardwareMixin, configs
+from .models.common import BaseModel, configs
 
 
 def model_path(models, app, kind="hardware"):
@@ -60,24 +60,17 @@ def train(args):
             print("random baseline: recorded option values; no performance model fitted\n")
             continue
         if hasattr(model, "uncertainty_method"):
-            # Training fit quality and model-specific uncertainty method
-            # No ridge-specific noise or coefficient reports for new surrogates
+            # Training fit quality and model-specific uncertainty method (no ridge noise estimate)
             print(f"training log-space R²: {model.r2:.3f}; "
-                  f"uncertainty: {model.uncertainty_method}\n")
-            continue
-        
-        # Only the options that differ between runs, the rest is the same everywhere.
-        # varying = [c for c in columns(runs, CFG) if runs[c].nunique() > 1]
-        # print(runs[["platform"] + varying + ["runs", "performance", "relative"]].rename(columns=strip).sort_values("relative", ascending=False).round(3).to_string(index=False))
-        
-        # what the model learned
-        print(f"model fit on the training data: explains {model.r2:.0%} of the measured performance differences, "
-              f"estimated noise ±{model.noise:.1%}")
-        if isinstance(model, NoHardwareMixin):
-            # The option-only fit is identical for every machine. Avoid the
-            # full candidate-space enumeration used by the decision report.
-            print()
-            continue
+                  f"uncertainty: {model.uncertainty_method}")
+        else:
+            # Only the options that differ between runs, the rest is the same everywhere.
+            # varying = [c for c in columns(runs, CFG) if runs[c].nunique() > 1]
+            # print(runs[["platform"] + varying + ["runs", "performance", "relative"]].rename(columns=strip).sort_values("relative", ascending=False).round(3).to_string(index=False))
+
+            # what the model learned
+            print(f"model fit on the training data: explains {model.r2:.0%} of the measured performance differences, "
+                  f"estimated noise ±{model.noise:.1%}")
         print("\nper machine and option: the value the model picks, then what each other value costs")
         for platform, machine in runs.groupby("platform"):
             hardware = {strip(c): machine[c].iloc[0] for c in columns(machine, HW)}
@@ -88,12 +81,17 @@ def train(args):
                 continue
             # options with the most expensive wrong choice first
             order = decisions.groupby("option")["cost"].min().sort_values().index
+            # columns as wide as the longest option name and value (compiler flags are long)
+            width = decisions["option"].str.len().max()
+            value_width = max(decisions["value"].astype(str).str.len().max(),
+                              decisions["alternative"].astype(str).str.len().max())
             for option in order:
                 rows = decisions[decisions["option"] == option].sort_values("cost", ascending=False)
-                print(f"    {option:20s} {rows['value'].iloc[0]}")
+                print(f"    {option:{width}s}  {rows['value'].iloc[0]}")
                 for _, d in rows.iterrows():
                     also = "".join(f"  (with {o}={v})" for o, v in d["also"].items())
-                    print(f"      {'':18s} {d['alternative']:16s} {d['cost']:+5.0%} ±{d['uncertainty']:.0%}{also}")
+                    print(f"    {'':{width}s}  {d['alternative']:{value_width}s}  "
+                          f"{d['cost']:+5.0%} ±{d['uncertainty']:.0%}{also}")
         print()
 
 
