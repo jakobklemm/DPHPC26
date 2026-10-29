@@ -28,7 +28,7 @@ python -m ml.main evaluate --app llama.cpp --random-trials 1000 --seed 42
 - `train`: save one model per application; `predict`: load it and output flags.
 - `suggest`: fit fresh; rank unmeasured builds by performance + uncertainty.
 - `evaluate`: compare all models; at least **two hardware platforms** per application.
-- Default data: `llama/results/`, `gromacs/results/`; folders and ZIPs supported.
+- Default data: `llama/results/` (without `threadripper_run0`, see `IGNORED_RESULTS` in `load_llama.py`), `gromacs/results/`; folders and ZIPs supported.
 - Other data: add `--data path/to/runs.zip` to `train`, `suggest`, or `evaluate`.
 - Application: `--app llama.cpp` or `--app gromacs`; omit for both.
 - Saved models: `models/`; change with `--models path/to/models` **before** the command.
@@ -100,8 +100,10 @@ model.save("models/llama.cpp.random-forest.joblib")
 - Evaluation: whole-machine holdout; identical eligible **measured** candidates for all models.
 - Validity checks: hardware/toolchain compatibility; separate from predictive accuracy.
 - Full selection: combinations of observed option values, including unmeasured combinations; potentially expensive.
-- `predict` retains only the best build between batches (memory is bounded by the batch size; all combinations are checked)
-- `suggest` and ridge training decision reports collect the full candidate list
+- `predict --search local` (default): local search (`best_build`), seconds; exact for `hardware`/`no-hardware`, a local optimum for models where options interact
+- `predict --search exhaustive`: checks every combination in batches (`exhaustive_best_build`), memory bounded, but slow (GB10 llama.cpp: ~35 min)
+- `suggest` collects the full candidate list
+- Training decision report (all models): local search around the best build, changing one or two options at a time; exact for `hardware`/`no-hardware`, a local optimum for the others
 - CatBoost: included dependency; required for evaluation, imported lazily for other workflows.
 
 | Change | Where (`ml/`) |

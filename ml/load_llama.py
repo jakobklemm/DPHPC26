@@ -139,12 +139,13 @@ def performance(benchmark):
     """
     benchmark.json holds one entry per test, currently for llama two:
       - prompt processing (n_prompt=512): reads a prompt, compute-bound
-      - token generation  (n_gen=1024):   writes an answer, memory-bound
+      - token generation  (n_gen=128):    writes an answer, memory-bound
     """
     # The tests are combined into the total time for the whole benchmark
-    # workload (here: read 512 tokens, then generate 1024). Each test thus
-    # counts as much as the time it takes: generation takes ~10.5 s and
-    # prompt processing ~1.3 s, so generation weighs about 8 times more.
+    # workload (here: read 512 tokens, then generate 128). Each test thus
+    # counts as much as the time it takes: on GB10 generation takes ~1.27 s and
+    # prompt processing ~0.09 s, so generation is ~93 % of the time and effects
+    # on prompt processing alone (e.g. FORCE_CUBLAS, -28 % there) barely show.
     total_seconds = sum(test["avg_ns"] for test in benchmark) / 1e9
     total_tokens = sum(test["n_prompt"] + test["n_gen"] for test in benchmark)
     # Returned as tokens per second over the whole workload, so that higher is
