@@ -62,9 +62,9 @@ class PerformanceModel(BaseModel):
             self.option_columns = [c for c in kept if c in option_values]
             self.hw_columns = [c for c in kept if c not in option_values]
         X = X.reindex(columns=self.option_columns + self.hw_columns, fill_value=0)
-        for o in self.option_columns:
-            for h in self.hw_columns:
-                X[f"{o} x {h}"] = X[o] * X[h]
+        # All interaction columns built first and added at once, one insert per column fragments the frame
+        interactions = {f"{o} x {h}": X[o] * X[h] for o in self.option_columns for h in self.hw_columns}
+        X = pd.concat([X, pd.DataFrame(interactions, index=X.index)], axis=1)
         if X.shape[1] == 0:
             # A baseline may have no varying options and no hardware features.
             X["constant"] = 1.0
