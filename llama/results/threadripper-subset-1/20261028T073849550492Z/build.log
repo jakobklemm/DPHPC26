@@ -1,0 +1,307 @@
++ cmake -S /home/pub/DPHPC26/llama.cpp -B /home/pub/DPHPC26/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ '-DCMAKE_C_FLAGS_RELEASE=-g -DNDEBUG -O1 -fno-vectorize -fslp-vectorize -fno-unroll-loops -fno-inline-functions -fno-strict-aliasing -funsafe-math-optimizations -ffp-contract=off -fmath-errno -march=x86-64 -mprefer-vector-width=128' '-DCMAKE_CXX_FLAGS_RELEASE=-g -DNDEBUG -O1 -fno-vectorize -fslp-vectorize -fno-unroll-loops -fno-inline-functions -fno-strict-aliasing -funsafe-math-optimizations -ffp-contract=off -fmath-errno -march=x86-64 -mprefer-vector-width=128' -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -DGGML_LLAMAFILE=OFF -DGGML_CPU_REPACK=ON -DGGML_NATIVE=OFF -DGGML_LTO=ON -DGGML_OPENMP=OFF -DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=ON -DGGML_BMI2=OFF -DGGML_AVX_VNNI=OFF -DGGML_AVX512=OFF -DGGML_AVX512_VBMI=OFF -DGGML_AVX512_VNNI=OFF -DGGML_AVX512_BF16=OFF -DGGML_CUDA=ON -DGGML_VULKAN=OFF -DCMAKE_CUDA_ARCHITECTURES=75 -DGGML_CUDA_FORCE_MMQ=OFF -DGGML_CUDA_FORCE_CUBLAS=OFF -DGGML_CUDA_NO_VMM=OFF -DGGML_CUDA_FA=OFF -DGGML_CUDA_FA_ALL_QUANTS=OFF -DGGML_CUDA_GRAPHS=OFF -DCMAKE_CUDA_HOST_COMPILER=clang++ -DCMAKE_CUDA_FLAGS=-lineinfo
+-- llama.cpp version: 0.7.0-dev
+CMAKE_BUILD_TYPE=Release
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: x86_64
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: -mf16c GGML_F16C
+-- CUDA Toolkit found
+-- Using CMAKE_CUDA_ARCHITECTURES=75 CMAKE_CUDA_ARCHITECTURES_NATIVE=75-real
+-- FlashAttention K-V type combinations: f16-f16;q4_0-q4_0;q8_0-q8_0;bf16-bf16
+-- Could NOT find NCCL (missing: NCCL_LIBRARY NCCL_INCLUDE_DIR) 
+-- Warning: NCCL not found, performance for multiple CUDA GPUs will be suboptimal
+-- CUDA host compiler is Clang 21.1.8
+-- Including CUDA backend
+-- ggml version: 0.27.0
+-- ggml commit:  922f53ed3
+-- OpenSSL found: 3.6.1
+-- Generating embedded license file for target: llama-app
+-- Configuring done (1.0s)
+-- Generating done (0.2s)
+-- Build files have been written to: /home/pub/DPHPC26/build
++ cmake --build /home/pub/DPHPC26/build --target llama-bench -j 4
+[  0%] Building CXX object common/CMakeFiles/llama-common-base.dir/build-info.cpp.o
+[  0%] Building CXX object vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/httplib.cpp.o
+[  0%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[  0%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+clang: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  1%] Linking CXX static library libllama-common-base.a
+[  2%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+clang: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  2%] Built target llama-common-base
+[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  2%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  4%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  4%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+clang: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  4%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  4%] Linking CXX shared library ../../bin/libggml-base.so
+[  4%] Built target ggml-base
+[  5%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[  5%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+clangclang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[  5%] Linking CUDA shared library ../../../bin/libggml-cuda.so
+[  5%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 55%] Built target ggml-cuda
+[ 55%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 56%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+clang: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 56%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 56%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 56%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 58%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 58%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled-kernel.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 58%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 58%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 59%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 59%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 59%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/quants.c.o
+clang: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 59%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/repack.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 61%] Linking CXX shared library ../../bin/libggml-cpu.so
+[ 61%] Built target ggml-cpu
+[ 62%] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o
+[ 62%] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 62%] Linking CXX shared library ../../bin/libggml.so
+[ 62%] Built target ggml
+[ 63%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_10_cxx.cxx.o
+[ 63%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_9_cxx.cxx.o
+[ 63%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_8_cxx.cxx.o
+clang++clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 63%] Linking CXX static library libcpp-httplib.a
+[ 63%] Built target cpp-httplib
+[ 63%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_7_cxx.cxx.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 65%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_6_cxx.cxx.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 65%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_5_cxx.cxx.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 65%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_4_cxx.cxx.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 65%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_3_cxx.cxx.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 66%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_2_cxx.cxx.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 66%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_1_cxx.cxx.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 66%] Building CXX object src/CMakeFiles/llama.dir/Unity/unity_0_cxx.cxx.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 66%] Building CXX object src/CMakeFiles/llama.dir/llama.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 68%] Building CXX object src/CMakeFiles/llama.dir/llama-adapter.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 68%] Building CXX object src/CMakeFiles/llama.dir/llama-arch.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 68%] Building CXX object src/CMakeFiles/llama.dir/llama-batch.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 68%] Building CXX object src/CMakeFiles/llama.dir/llama-chat.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 69%] Building CXX object src/CMakeFiles/llama.dir/llama-context.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 69%] Building CXX object src/CMakeFiles/llama.dir/llama-cparams.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 69%] Building CXX object src/CMakeFiles/llama.dir/llama-grammar.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 69%] Building CXX object src/CMakeFiles/llama.dir/llama-graph.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 70%] Building CXX object src/CMakeFiles/llama.dir/llama-hparams.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 70%] Building CXX object src/CMakeFiles/llama.dir/llama-impl.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 70%] Building CXX object src/CMakeFiles/llama.dir/llama-io.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 70%] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 72%] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-iswa.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 72%] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-dsa.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 72%] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-dsa-iswa.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 72%] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-msa.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 73%] Building CXX object src/CMakeFiles/llama.dir/llama-kv-cache-dsv4.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 73%] Building CXX object src/CMakeFiles/llama.dir/llama-memory.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 73%] Building CXX object src/CMakeFiles/llama.dir/llama-moe-cache.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 73%] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 75%] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid-iswa.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 75%] Building CXX object src/CMakeFiles/llama.dir/llama-memory-hybrid-idx.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 75%] Building CXX object src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 75%] Building CXX object src/CMakeFiles/llama.dir/llama-mmap.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 76%] Building CXX object src/CMakeFiles/llama.dir/llama-model-loader.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 76%] Building CXX object src/CMakeFiles/llama.dir/llama-model-saver.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 76%] Building CXX object src/CMakeFiles/llama.dir/llama-model.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 76%] Building CXX object src/CMakeFiles/llama.dir/llama-quant.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 77%] Building CXX object src/CMakeFiles/llama.dir/llama-sampler.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 77%] Building CXX object src/CMakeFiles/llama.dir/llama-vocab.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 77%] Building CXX object src/CMakeFiles/llama.dir/unicode-data.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 77%] Building CXX object src/CMakeFiles/llama.dir/unicode.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 79%] Linking CXX shared library ../bin/libllama.so
+[ 79%] Built target llama
+[ 79%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/parsers.cpp.o
+[ 79%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/cohere2moe.cpp.o
+[ 79%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/deepseek.cpp.o
+[ 80%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/functionary-v3-2.cpp.o
+clang++clang++clang++: : warning: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+
+: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 80%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/gemma4.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 80%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/gigachat-v3.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 80%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/gpt-oss.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/harmony-xml.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/k2-horizon.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/kimi-k2.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 81%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/kimi-k3.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/ling3.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/lfm2.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/llm-jp-harmony.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 83%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/minicpm5.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 84%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/minimax-m3.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 84%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/ministral3.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 84%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/muse-glimmer.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 84%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/muse-spark.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 86%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/qwen3-coder.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 86%] Building CXX object common/CMakeFiles/llama-common.dir/parsers/translate-gemma.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 86%] Building CXX object common/CMakeFiles/llama-common.dir/arg.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 86%] Building CXX object common/CMakeFiles/llama-common.dir/chat-auto-parser-generator.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/chat-auto-parser-helpers.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/chat-diff-analyzer.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/chat-peg-parser.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 87%] Building CXX object common/CMakeFiles/llama-common.dir/chat.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 88%] Building CXX object common/CMakeFiles/llama-common.dir/common.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 88%] Building CXX object common/CMakeFiles/llama-common.dir/console.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 88%] Building CXX object common/CMakeFiles/llama-common.dir/debug.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 88%] Building CXX object common/CMakeFiles/llama-common.dir/download.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 90%] Building CXX object common/CMakeFiles/llama-common.dir/fit.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 90%] Building CXX object common/CMakeFiles/llama-common.dir/file-lock.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 90%] Building CXX object common/CMakeFiles/llama-common.dir/hf-cache.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 90%] Building CXX object common/CMakeFiles/llama-common.dir/imatrix-loader.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 91%] Building CXX object common/CMakeFiles/llama-common.dir/json-schema-to-grammar.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 91%] Building CXX object common/CMakeFiles/llama-common.dir/json-schema.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 91%] Building CXX object common/CMakeFiles/llama-common.dir/json.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 91%] Building CXX object common/CMakeFiles/llama-common.dir/llguidance.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 93%] Building CXX object common/CMakeFiles/llama-common.dir/log.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 93%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-cache.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 93%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-map.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 93%] Building CXX object common/CMakeFiles/llama-common.dir/ngram-mod.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 94%] Building CXX object common/CMakeFiles/llama-common.dir/peg-parser.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 94%] Building CXX object common/CMakeFiles/llama-common.dir/preset.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 94%] Building CXX object common/CMakeFiles/llama-common.dir/reasoning-budget.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 94%] Building CXX object common/CMakeFiles/llama-common.dir/sampling.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 95%] Building CXX object common/CMakeFiles/llama-common.dir/speculative.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 95%] Building CXX object common/CMakeFiles/llama-common.dir/subproc.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 95%] Building CXX object common/CMakeFiles/llama-common.dir/trie.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 95%] Building CXX object common/CMakeFiles/llama-common.dir/unicode.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 97%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/lexer.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 97%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/parser.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 97%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/runtime.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 97%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/value.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 98%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/string.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 98%] Building CXX object common/CMakeFiles/llama-common.dir/jinja/caps.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[ 98%] Linking CXX shared library ../bin/libllama-common.so
+[ 98%] Built target llama-common
+[ 98%] Building CXX object tools/llama-bench/CMakeFiles/llama-bench-impl.dir/llama-bench.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[100%] Linking CXX shared library ../../bin/libllama-bench-impl.so
+[100%] Built target llama-bench-impl
+[100%] Building CXX object tools/llama-bench/CMakeFiles/llama-bench.dir/main.cpp.o
+clang++: warning: overriding '-funsafe-math-optimizations' option with '-ffp-contract=off' [-Woverriding-option]
+[100%] Linking CXX executable ../../bin/llama-bench
+[100%] Built target llama-bench
