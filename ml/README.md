@@ -28,7 +28,7 @@ python -m ml.main evaluate --app llama.cpp --random-trials 1000 --seed 42
 - `train`: save one model per application; `predict`: load it and output flags.
 - `suggest`: fit fresh; rank unmeasured builds by performance + uncertainty.
 - `evaluate`: compare all models; at least **two hardware platforms** per application.
-- Default data: `llama/results/` (without `threadripper_run0`, see `IGNORED_RESULTS` in `load_llama.py`), `gromacs/results/`; folders and ZIPs supported.
+- Default data: `llama/results/`, `gromacs/results/`; folders and ZIPs supported.
 - Other data: add `--data path/to/runs.zip` to `train`, `suggest`, or `evaluate`.
 - Application: `--app llama.cpp` or `--app gromacs`; omit for both.
 - Saved models: `models/`; change with `--models path/to/models` **before** the command.

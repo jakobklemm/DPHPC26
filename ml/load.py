@@ -45,16 +45,6 @@ DEFAULT_RESULTS = {
     "gromacs": REPOSITORY_ROOT / "gromacs" / "results",
 }
 
-# an application's results folder, without the subfolders its module ignores (IGNORED_RESULTS)
-def default_results(app):
-    folder = DEFAULT_RESULTS[app]
-    ignored = getattr(APPS[app], "IGNORED_RESULTS", set())
-    if not ignored or not folder.is_dir():
-        return [folder]
-    return [p for p in sorted(folder.iterdir())
-            if p.name not in ignored and (p.is_dir() or p.suffix == ".zip")]
-
-
 # Options whose value follows from the hardware, as {option: rule(hardware) -> value}, learning them would not work.
 # A rule returning None means the option is not passed.
 HARDWARE_DETERMINED = {
@@ -223,7 +213,7 @@ def load_table(paths=None, app=None):
 
     """
     # Read each application's local results by default; explicit paths override them.
-    paths = paths or [p for a in ([app] if app else DEFAULT_RESULTS) for p in default_results(a)]
+    paths = paths or ([DEFAULT_RESULTS[app]] if app else list(DEFAULT_RESULTS.values()))
     rows = [parse_run(files) for files in read_runs(paths)]
     rows = [r for r in rows if r and (app is None or r["application"] == app)]
     if not rows:

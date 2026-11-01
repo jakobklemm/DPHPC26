@@ -16,11 +16,6 @@ from .validation import (BOOL, COMMON_SCHEMA, cuda_errors, enabled,
 
 APPLICATION = "llama.cpp"  # project_name in source.yml
 
-# Folders in llama/results/ not read by default: the threadripper runs come from the old
-# harness, which passes only the options it changes and records no compiler flags.
-# Explicitly given paths (--data) are still read.
-IGNORED_RESULTS = {"threadripper_run0"}
-
 # The default value CMake uses for an option when the build does not pass it.
 # to detect that a build that does not pass GGML_LTO and a build that passes -DGGML_LTO=OFF are the same build
 CMAKE_DEFAULTS = {"GGML_LTO": "OFF", "GGML_OPENMP": "ON", "GGML_CUDA_FA": "ON"}
