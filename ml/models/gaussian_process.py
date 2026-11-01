@@ -25,6 +25,7 @@ Overfitting risk
   Use restrained kernels and assess predictions on whole held-out machines.
 """
 
+import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, Matern
 
@@ -46,3 +47,16 @@ class GaussianProcessPerformanceModel(RegressionPerformanceModel):
         # Constructor overrides for kernel, noise and optimizer
         params.update(self.estimator_params)
         return GaussianProcessRegressor(**params)
+
+    def _costs(self, hardware, best, variants):
+        """Change to the best build, uncertainty from the joint predictive covariance."""
+        frame = self._prediction_frame(hardware, [best] + variants)
+        log_prediction = self.regressor.predict(frame)
+        if self.regressor.constant:
+            log_std = np.zeros(len(variants))
+        else:
+            X = self.regressor.encoder.transform(frame)
+            _, cov = self.regressor.regressor.predict(X, return_cov=True)
+            variance = np.diag(cov)[1:] + cov[0, 0] - 2 * cov[0, 1:]
+            log_std = np.sqrt(np.clip(variance, 0, None))
+        return np.exp(log_prediction[1:] - log_prediction[0]) - 1, np.exp(log_std) - 1

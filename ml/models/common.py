@@ -12,6 +12,7 @@ import itertools
 import joblib
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyRegressor
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -211,6 +212,28 @@ def performance_space(log_prediction):
     return np.exp(np.clip(log_prediction, -300, 300))
 
 
+class StandardizedTarget(BaseEstimator):
+    """Fit a Bayesian linear model on a zero-mean, unit-variance target.
+
+    Their default priors and pruning thresholds assume unit scale; effects of
+    about 1 % in log performance would otherwise count as negligible.
+    """
+
+    def __init__(self, regressor):
+        self.regressor = regressor
+
+    def fit(self, X, y):
+        self.mean_, self.scale_ = np.mean(y), np.std(y) or 1.0
+        self.regressor.fit(X, (y - self.mean_) / self.scale_)
+        return self
+
+    def predict(self, X, return_std=False):
+        if return_std:
+            mean, std = self.regressor.predict(X, return_std=True)
+            return mean * self.scale_ + self.mean_, std * self.scale_
+        return self.regressor.predict(X) * self.scale_ + self.mean_
+
+
 class FeatureEncoder:
     """Training-only schema, imputation and optional scaling or native categories.
 
@@ -396,23 +419,14 @@ class RegressionPerformanceModel(BaseModel):
         return prediction, np.std(draws, axis=0)
 
     def _costs(self, hardware, best, variants):
-        """Change and uncertainty of the difference to the best build, in log space.
-
-        GP: joint predictive covariance of best and variants. Bootstrap: the
-        change computed within each member, so shared errors cancel out.
-        """
+        """Bootstrap: the change computed within each member, so shared errors
+        cancel out. Native uncertainty: the prediction-only fallback, unless the
+        model overrides this (GP)."""
+        if self.native_uncertainty:
+            return super()._costs(hardware, best, variants)
         frame = self._prediction_frame(hardware, [best] + variants)
         log_prediction = self.regressor.predict(frame)
         log_change = log_prediction[1:] - log_prediction[0]
-        if self.native_uncertainty:
-            if self.regressor.constant:
-                log_std = np.zeros(len(variants))
-            else:
-                X = self.regressor.encoder.transform(frame)
-                _, cov = self.regressor.regressor.predict(X, return_cov=True)
-                variance = np.diag(cov)[1:] + cov[0, 0] - 2 * cov[0, 1:]
-                log_std = np.sqrt(np.clip(variance, 0, None))
-            return np.exp(log_change) - 1, np.exp(log_std) - 1
         draws = np.array([member.predict(frame) for member in self.ensemble])
         member_costs = np.exp(draws[:, 1:] - draws[:, :1]) - 1
         return np.exp(log_change) - 1, np.std(member_costs, axis=0)
