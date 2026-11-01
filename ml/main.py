@@ -4,6 +4,7 @@ Command line interface. Run from the repository root.
   train     read runs, train one model per application, save to models/<application>.joblib
   predict   build configuration for a machine, given its system.json
   suggest   configurations worth benchmarking next on a machine
+  simulate  replay active-sampling sessions on measured builds
 
 Data defaults to each application's local results folder (llama/results or
 gromacs/results). --data overrides it with local folders or ZIP files.
@@ -13,7 +14,8 @@ Examples:
   python -m ml.main train
   python -m ml.main predict --system system.json
   python -m ml.main suggest --system system.json
-  
+  python -m ml.main simulate --app llama.cpp --budget 25
+
 """
 
 import argparse
@@ -21,7 +23,9 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
+from .active_sampling import simulate as simulate_sessions
 from .evaluate import leave_one_platform_out #, leave_one_build_out
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 # Single model registry for CLI and evaluation
@@ -155,6 +159,26 @@ def evaluate(args):
         print("\naverage:", result[scores].mean().round(3).to_dict())
 
 
+def simulate(args):
+    table = load_table(args.data, args.app)
+    results = []
+    for (app, platform), pool in table.groupby(["application", "platform"]):
+        pool = app_options(pool).reset_index(drop=True)
+        print(f"== {app} on {platform}: {len(pool)} measured builds, budget {args.budget}, {args.seeds} sessions")
+        if len(pool) <= args.budget:
+            print("the budget would measure the whole pool, skipped\n")
+            continue
+        result = simulate_sessions(pool, args.model, args.budget, args.initial, args.seeds, args.jobs)
+        results.append(result.assign(application=app, platform=platform))
+        # best build found so far at a few points of the budget, then the final model
+        steps = sorted({args.initial, args.budget, *range(10, args.budget, 5)})
+        shown = [f"best@{n}" for n in steps] + ["model_pick", "rank_correlation", "seconds"]
+        print(result.groupby("model")[shown].mean().sort_values(f"best@{args.budget}", ascending=False)
+              .round(4).to_string(), end="\n\n")
+    if args.output and results:
+        pd.concat(results).to_csv(args.output, index=False)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--models", default="models", help="folder with one saved model per application")
@@ -191,6 +215,19 @@ def main():
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.set_defaults(func=evaluate)
+
+    p = sub.add_parser("simulate")
+    p.add_argument("--model", nargs="+", choices=MODEL_TYPES,
+                   default=["gaussian-process", "smac-forest", "bayes-pairs", "sparse-bayes"],
+                   help="models to compare; random sampling is always included")
+    p.add_argument("--budget", type=int, default=25, help="builds measured per session (default: 25)")
+    p.add_argument("--initial", type=int, default=8, help="random builds before the first model (default: 8)")
+    p.add_argument("--seeds", type=int, default=30, help="sessions per model (default: 30)")
+    p.add_argument("--jobs", type=int, default=-1, help="parallel sessions (default: all cores)")
+    p.add_argument("--output", help="CSV file for all sessions, e.g. to plot best@n against n")
+    p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
+    p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
+    p.set_defaults(func=simulate)
 
     args = parser.parse_args()
     args.func(args)
