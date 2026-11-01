@@ -22,14 +22,16 @@ python -m ml.main train --model random-forest --app llama.cpp          # Fit + s
 python -m ml.main predict --model random-forest --app llama.cpp --system path/to/system.json
 python -m ml.main suggest --model random-forest --app llama.cpp --system path/to/system.json -n 5
 python -m ml.main evaluate --app llama.cpp --random-trials 1000 --seed 42
+python -m ml.main simulate --app llama.cpp --budget 25                  # Active sampling on measured builds
 ```
 
 - Replace `path/to/system.json` with the target machine's metadata.
 - `train`: save one model per application; `predict`: load it and output flags.
 - `suggest`: fit fresh; rank unmeasured builds by performance + uncertainty.
 - `evaluate`: compare all models; at least **two hardware platforms** per application.
+- `simulate`: replay active-sampling sessions per machine (see `active_sampling.py`); `--output sessions.csv` for plots.
 - Default data: `llama/results/`, `gromacs/results/`; folders and ZIPs supported.
-- Other data: add `--data path/to/runs.zip` to `train`, `suggest`, or `evaluate`.
+- Other data: add `--data path/to/runs.zip` to `train`, `suggest`, `evaluate`, or `simulate`.
 - Application: `--app llama.cpp` or `--app gromacs`; omit for both.
 - Saved models: `models/`; change with `--models path/to/models` **before** the command.
 - Options/help: `python -m ml.main train --help` (likewise for other commands).
@@ -49,6 +51,9 @@ Use the same `--model` for training and prediction. Default: `hardware`.
 | `kernel-ridge` | Regularized nonlinear RBF regression |
 | `support-vector` | Regularized RBF regression with error tolerance |
 | `small-mlp` | Small neural network; nonlinear comparison |
+| `smac-forest` | Random forest with tree spread as uncertainty; active sampling |
+| `bayes-pairs` | Bayesian ridge on options + all option pairs; active sampling |
+| `sparse-bayes` | Sparse Bayesian regression (ARD), prunes irrelevant options; active sampling |
 | `no-hardware` | Option-only ridge; test hardware features' contribution |
 | `no-hardware-interactions` | Option-pair ridge without hardware inputs |
 | `no-hardware-random-forest` | Option-only random forest |
@@ -59,6 +64,7 @@ Use the same `--model` for training and prediction. Default: `hardware`.
 | `no-hardware-small-mlp` | Option-only small MLP |
 | `random` | Uniform valid choice; baseline, no `suggest` |
 
+- Active sampling: fit on one machine's builds only, no pretraining; `gaussian-process` also fits this role.
 - `baseline` in evaluation: best-on-average measured configuration; no CLI model.
 - `no-hardware-*` baseline uses the corresponding model's estimator defaults,
   constructor overrides, and uncertainty method, learning from build options only
@@ -112,6 +118,7 @@ model.save("models/llama.cpp.random-forest.joblib")
 | Shared encoding, fitting, uncertainty, selection | `models/common.py` |
 | Available models | `models/__init__.py` → `MODEL_TYPES` |
 | Commands / evaluation | `main.py` / `evaluate.py` |
+| Active sampling (`ask`, `tell`, `recommend`) and its simulation | `active_sampling.py` |
 | Data and hardware extraction | `load.py`, `load_llama.py`, `load_gromacs.py` |
 | Build validity | `validation.py` + application loaders |
 

@@ -3,7 +3,7 @@
 Technical description
 - Automatic relevance determination on log-relative performance: each encoded
   input gets its own prior, and inputs without support are pruned to zero.
-- Assumes that only a few options matter, as for llama.cpp on GPUs.
+- Assumes that only a few options matter, as for llama.cpp on GB10.
 
 Determinism
 - The estimator is deterministic for fixed inputs and parameters.
@@ -16,8 +16,8 @@ Benefits
 - Ranks builds well from few measurements when the assumption holds, and the
   surviving options are a direct estimate of parameter importance.
 Drawbacks
-- No interactions. When many options have small effects (CPU builds), pruning
-  depends strongly on the measured builds, so predictions vary between runs.
+- No interactions. When many options have small effects, pruning depends
+  strongly on the measured builds, so predictions vary between runs.
 
 Overfitting risk
 - A few builds can make an irrelevant option look decisive, with too little
