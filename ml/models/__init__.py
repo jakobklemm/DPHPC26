@@ -19,6 +19,7 @@ from .small_mlp import SmallMLPPerformanceModel
 from .smac_forest import SmacForestPerformanceModel
 from .bayes_pairs import BayesPairsPerformanceModel
 from .sparse_bayes import SparseBayesPerformanceModel
+from .residual_correction import ResidualCorrection
 
 # Public CLI names mapped to model constructors
 # CatBoost wrapper import without loading the external dependency
@@ -53,6 +54,6 @@ __all__ = ["BaseModel", "PerformanceModel", "InteractionPerformanceModel", "Thre
            "GaussianProcessPerformanceModel", "KernelRidgePerformanceModel",
            "SupportVectorPerformanceModel", "SmallMLPPerformanceModel",
            "SmacForestPerformanceModel", "BayesPairsPerformanceModel", "SparseBayesPerformanceModel",
-           "NoHardwareRandomForestModel", "NoHardwareCatBoostModel",
+           "ResidualCorrection", "NoHardwareRandomForestModel", "NoHardwareCatBoostModel",
            "NoHardwareGaussianProcessModel", "NoHardwareKernelRidgeModel",
            "NoHardwareSupportVectorModel", "NoHardwareSmallMLPModel", "MODEL_TYPES"]

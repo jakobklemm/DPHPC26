@@ -159,6 +159,20 @@ def evaluate(args):
         print("\naverage:", result[scores].mean().round(3).to_dict())
 
 
+# Model fitted on the application's other machines, or None without --pretrained
+def pretrain(table, app, platform, args):
+    if not args.pretrained:
+        return None
+    others = table[(table["application"] == app) & (table["platform"] != platform)]
+    if args.pretrain_on:
+        others = others[others["platform"].map(lambda name: any(part in name for part in args.pretrain_on))]
+    if others.empty:
+        print("no other machine to pretrain on, sessions without pretraining only")
+        return None
+    print(f"pretrained {args.pretrained} on:", *others["platform"].unique())
+    return MODEL_TYPES[args.pretrained]().fit(app_options(others))
+
+
 def simulate(args):
     table = load_table(args.data, args.app)
     results = []
@@ -168,7 +182,8 @@ def simulate(args):
         if len(pool) <= args.budget:
             print("the budget would measure the whole pool, skipped\n")
             continue
-        result = simulate_sessions(pool, args.model, args.budget, args.initial, args.seeds, args.jobs)
+        pretrained = pretrain(table, app, platform, args)
+        result = simulate_sessions(pool, args.model, args.budget, args.initial, args.seeds, args.jobs, pretrained)
         results.append(result.assign(application=app, platform=platform))
         # best build found so far at a few points of the budget, then the final model
         steps = sorted({args.initial, args.budget, *range(10, args.budget, 5)})
@@ -224,6 +239,11 @@ def main():
     p.add_argument("--initial", type=int, default=8, help="random builds before the first model (default: 8)")
     p.add_argument("--seeds", type=int, default=30, help="sessions per model (default: 30)")
     p.add_argument("--jobs", type=int, default=-1, help="parallel sessions (default: all cores)")
+    p.add_argument("--pretrained", choices=[name for name in MODEL_TYPES if name != "random"],
+                   help="also run corrected sessions: this model, fitted on the other machines, "
+                        "corrected by each --model")
+    p.add_argument("--pretrain-on", nargs="+",
+                   help="pretrain only on platforms containing one of these words, e.g. Threadripper Cortex")
     p.add_argument("--output", help="CSV file for all sessions, e.g. to plot best@n against n")
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")

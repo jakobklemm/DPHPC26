@@ -23,6 +23,7 @@ python -m ml.main predict --model random-forest --app llama.cpp --system path/to
 python -m ml.main suggest --model random-forest --app llama.cpp --system path/to/system.json -n 5
 python -m ml.main evaluate --app llama.cpp --random-trials 1000 --seed 42
 python -m ml.main simulate --app llama.cpp --budget 25                  # Active sampling on measured builds
+python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-hardware   # With transfer learning
 ```
 
 - Replace `path/to/system.json` with the target machine's metadata.
@@ -30,6 +31,7 @@ python -m ml.main simulate --app llama.cpp --budget 25                  # Active
 - `suggest`: fit fresh; rank unmeasured builds by performance + uncertainty.
 - `evaluate`: compare all models; at least **two hardware platforms** per application.
 - `simulate`: replay active-sampling sessions per machine (see `active_sampling.py`); `--output sessions.csv` for plots.
+- `simulate --pretrained`: adds `corrected-<model>` sessions; the pretrained model is fitted on the other machines (`--pretrain-on` limits which) and `<model>` learns its error here.
 - Default data: `llama/results/`, `gromacs/results/`; folders and ZIPs supported.
 - Other data: add `--data path/to/runs.zip` to `train`, `suggest`, `evaluate`, or `simulate`.
 - Application: `--app llama.cpp` or `--app gromacs`; omit for both.
@@ -65,6 +67,7 @@ Use the same `--model` for training and prediction. Default: `hardware`.
 | `random` | Uniform valid choice; baseline, no `suggest` |
 
 - Active sampling: fit on one machine's builds only, no pretraining; `gaussian-process` also fits this role.
+- Transfer learning: `ResidualCorrection` (`models/residual_correction.py`) keeps a pretrained model fixed and corrects it with a new machine's builds; any model above can take either role.
 - `baseline` in evaluation: best-on-average measured configuration; no CLI model.
 - `no-hardware-*` baseline uses the corresponding model's estimator defaults,
   constructor overrides, and uncertainty method, learning from build options only
