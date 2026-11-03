@@ -17,6 +17,14 @@ jobs:
         id: image
         run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
+      # The CUDA devel image needs more space to unpack than a stock runner has free.
+      - name: Free disk space for CUDA image
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/hostedtoolcache \
+            /usr/local/.ghcup /usr/local/share/powershell
+          docker image prune --all --force
+          df -h /
+
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
