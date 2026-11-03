@@ -11,9 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
     cmake \
     git \
-    glslc \
     libomp-dev \
-    libvulkan-dev \
     ninja-build \
     pkg-config \
     python3 \

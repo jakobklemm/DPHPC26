@@ -34,12 +34,29 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and publish
+      - name: Build and publish CUDA image
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: Dockerfile
           platforms: linux/amd64
           push: true
           tags: |
+            ${{ steps.image.outputs.name }}:cuda
+            ${{ steps.image.outputs.name }}:cuda-sha-${{ github.sha }}
             ${{ steps.image.outputs.name }}:latest
             ${{ steps.image.outputs.name }}:sha-${{ github.sha }}
+
+      - name: Clear CUDA build cache
+        run: docker buildx prune --all --force
+
+      - name: Build and publish Vulkan image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.vulkan
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:vulkan
+            ${{ steps.image.outputs.name }}:vulkan-sha-${{ github.sha }}

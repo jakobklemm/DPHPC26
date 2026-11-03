@@ -1,16 +1,21 @@
 # Build-parameter ML container
 
-The image combines the `ml` package (including all models in `ml/requirements.txt`),
-the llama.cpp flag catalog, and clang/CMake/Ninja, CUDA (`nvcc`), and Vulkan build
-dependencies. It contains **no profiling tools**, GGUF weights, trained `.joblib`
-models, llama.cpp checkout, or benchmark history. The existing
+The CUDA and Vulkan images combine the `ml` package (including all models in
+`ml/requirements.txt`), the llama.cpp flag catalog, and clang/CMake/Ninja.
+The CUDA image includes `nvcc` and CUDA development libraries; the Vulkan image
+includes Vulkan headers, `glslc`, and Mesa Vulkan drivers without a CUDA toolkit.
+Neither contains **profiling tools**, GGUF weights, trained `.joblib` models, a
+llama.cpp checkout, or benchmark history. The existing
 `llama/llama_gpu_bench-*.py` scripts require profiling and are not included as
 container runners. The future predict–build–evaluate loop is not implemented.
 
-Build locally with `docker build -t dphpc26:local .`, or run the **Publish build
+Build locally with `docker build -t dphpc26:cuda .` or
+`docker build -f Dockerfile.vulkan -t dphpc26:vulkan .`. Run the **Publish build
 and ML image** workflow manually from GitHub Actions to publish
-`ghcr.io/<owner>/<repo>:latest` and `:sha-<commit>` (amd64 only). Replace the
-image name below with either your local tag or the published tag.
+`ghcr.io/<owner>/<repo>:cuda` and `:vulkan`, plus commit-specific
+`:cuda-sha-<commit>` and `:vulkan-sha-<commit>` tags (amd64 only). The existing
+`:latest` and `:sha-<commit>` tags continue to point to the CUDA image. Replace
+the image name below with the appropriate local or published tag.
 
 ```sh
 docker run --rm -it --gpus all \
@@ -19,16 +24,17 @@ docker run --rm -it --gpus all \
   --mount type=bind,src=/absolute/path/to/trained-models,dst=/workspace/models \
   --mount type=bind,src=/absolute/path/to/bench-results,dst=/workspace/llama/results \
   --mount type=bind,src=/absolute/path/to/build,dst=/workspace/build \
-  dphpc26:local
+  dphpc26:cuda
 ```
 
 Create the host directories before starting the container. Use the same mounts
 for subsequent cycles so builds, trained models, and results survive container
 restarts. The GGUF mount is for inference weights; `models/` is for ML `.joblib`
-files. For CPU-only builds omit `--gpus all`; for CUDA runs install the NVIDIA
-Container Toolkit on the host and use a compatible NVIDIA driver. Vulkan also
-requires access to the host GPU device/driver (for example `/dev/dri`). Native
-CPU tuning sees the host CPU through the container.
+files. For CUDA runs install the NVIDIA Container Toolkit on the host and use a
+compatible NVIDIA driver. For Vulkan, use `dphpc26:vulkan`, omit `--gpus all`,
+and pass through the host GPU device (for example, `--device /dev/dri`) with a
+compatible host driver. For CPU-only builds omit GPU device options. Native CPU
+tuning sees the host CPU through the container.
 
 Inside the container, the ML CLI works from `/workspace`:
 
@@ -55,10 +61,11 @@ cmake --build /workspace/build --target llama-bench -j 4
 /workspace/build/bin/llama-bench -m /workspace/gguf/model.gguf
 ```
 
-Choose a CUDA architecture supported by your GPU/toolkit; for CPU builds use
-`-DGGML_CUDA=OFF` and omit the CUDA-specific CMake arguments. For Vulkan builds,
-use `-DGGML_VULKAN=ON` instead. Reconfigure the same build directory when flags
-change; use a fresh build directory if you change compilers or generators.
+Choose a CUDA architecture supported by your GPU/toolkit. In the Vulkan image,
+replace the CUDA-specific CMake arguments with `-DGGML_CUDA=OFF -DGGML_VULKAN=ON`;
+for CPU builds use `-DGGML_CUDA=OFF` and omit the CUDA-specific arguments.
+Reconfigure the same build directory when flags change; use a fresh build
+directory if you change compilers or generators.
 `llama/flags.json` lists tuning options, and
 `python llama/filter_llama_performance_flags.py --help` lists the host-filtering
 options. `llama-bench` alone does not produce the full run metadata expected by
