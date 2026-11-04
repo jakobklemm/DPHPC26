@@ -38,6 +38,23 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 - Saved models: `models/`; change with `--models path/to/models` **before** the command.
 - Options/help: `python -m ml.main train --help` (likewise for other commands).
 
+### Search space
+
+| Flag | `suggest` | `predict` |
+| --- | --- | --- |
+| No search flag | Bounded search · random unmeasured combinations + flag edits around promising builds · benchmark flag values · up to 2,000 by default | Bounded search · previous winners + random combinations + flag edits around winners and top predictions · saved model’s flag values · up to 10,000 total |
+| `--search bounded` | Random unmeasured combinations + flag edits around promising builds · benchmark flag values · up to 2,000 by default | Previous winners + random combinations + flag edits around winners and top predictions · saved model’s flag values · up to 10,000 total |
+| `--search preset` | every combination of flag values seen in loaded benchmarks · invalid builds and builds already measured on the target excluded · no random sampling | — |
+| `--search local` | — | one- or two-flag edits around the current best build · saved model’s flag values · variable count |
+| `--search exhaustive` | — | All valid measured and unmeasured combinations · saved model’s flag values |
+| `--space PATH` (bounded) | Random unmeasured combinations + flag edits around promising builds · JSON flag values · same budget | Eligible previous winners + random combinations + flag edits around winners and top predictions · JSON flag values · same budget |
+
+- **Saved configurations only** · `simulate` replay pool
+- **Bounded flag edits** · changes to 1–4 flags per build · one- and two-flag changes favored
+- **JSON flag values** · explicitly allowed values, including values absent from training data
+- **Previous winners** · fastest measured builds saved by `train` · target platform first · retraining for older model files
+- **All combinations** · product of per-flag value counts before validity filtering
+
 ## 3. Choose a model
 
 Use the same `--model` for training and prediction. Default: `hardware`.
@@ -108,10 +125,7 @@ model.save("models/llama.cpp.random-forest.joblib")
 - `error*`: mean absolute prediction error; **0 best**. Training R²: fit diagnostic only.
 - Evaluation: whole-machine holdout; identical eligible **measured** candidates for all models.
 - Validity checks: hardware/toolchain compatibility; separate from predictive accuracy.
-- Full selection: combinations of observed option values, including unmeasured combinations; potentially expensive.
-- `predict --search local` (default): local search (`best_build`), seconds; exact for `hardware`/`no-hardware`, a local optimum for models where options interact
-- `predict --search exhaustive`: checks every combination in batches (`exhaustive_best_build`), memory bounded, but slow (GB10 llama.cpp: ~35 min)
-- `suggest` collects the full candidate list
+- Exhaustive prediction timing (GB10 llama.cpp): ~35 min.
 - Training decision report (all models): local search around the best build, changing one or two options at a time; exact for `hardware`/`no-hardware`, a local optimum for the others
 - CatBoost: included dependency; required for evaluation, imported lazily for other workflows.
 
@@ -122,7 +136,14 @@ model.save("models/llama.cpp.random-forest.joblib")
 | Available models | `models/__init__.py` → `MODEL_TYPES` |
 | Commands / evaluation | `main.py` / `evaluate.py` |
 | Active sampling (`ask`, `tell`, `recommend`) and its simulation | `active_sampling.py` |
+| Shared candidate generation, scoring budgets, and default seed | `search.py` |
 | Data and hardware extraction | `load.py`, `load_llama.py`, `load_gromacs.py` |
 | Build validity | `validation.py` + application loaders |
+
+### Live sampling, prediction, and simulation
+
+- **Live sampling** uses `ask()` to propose an unmeasured build from the allowed flag space. Benchmark it on the target and pass the result to `tell()`. After the budget, `recommend()` returns the fastest measured build. Pass `pretrained` to enable local correction of a historical model.
+- **Live prediction** ranks candidates by predicted performance. Bounded `predict` scores previous winners and fresh random builds, then explores flag edits around the winners and top-scoring candidates. Its pick may be unmeasured.
+- **Simulation** replays sampling within a fixed pool of previously benchmarked builds. It reveals each result after selection, so it compares sampling policies on that pool. Live candidate generation and new flag combinations require separate validation.
 
 **Add a regressor:** create `models/<name>.py` → subclass `RegressionPerformanceModel` → implement `_make_regressor(seed, n_features)` → register in `MODEL_TYPES`. Shared workflows reused automatically.

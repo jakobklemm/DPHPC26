@@ -12,9 +12,8 @@ With a model pretrained on other machines (transfer learning), half of the rando
 start becomes that model's top builds, and the model learns only the error of the
 pretrained model on this machine (see models/residual_correction.py).
 
-Currently pool-based: builds are chosen from a fixed table of candidates, so
-`simulate` can replay a session on builds that were already measured ("measuring"
-is looking the result up) and compare the choices with the whole pool.
+`LiveActiveSampler` searches a caller-supplied flag space. `simulate` replays
+sessions on previously measured builds and compares choices with that pool.
 
 Reported per model, averaged over repeated sessions with different random starts:
   best@n          relative performance of the best build among the first n measured
@@ -34,9 +33,91 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from .load import HW, columns, strip
+from .load import APPS, CFG, HW, columns, strip
 from .models import MODEL_TYPES, ResidualCorrection
 from .models.common import configs
+from .search import CandidateSearch, SEARCH_SEED, SEARCH_STARTS, UCB_CANDIDATES
+
+
+class LiveActiveSampler:
+    """Ask for build flags, benchmark them on the target, then tell the sampler the result.
+
+    values maps flag names to their allowed values independently of the measured
+    builds. Pass a model constructor from MODEL_TYPES, or None for random search.
+    """
+
+    def __init__(self, model_type, values, hardware, application, *, initial=8,
+                 seed=SEARCH_SEED, pretrained=None):
+        if initial < 2:
+            raise ValueError("initial must be at least 2 builds")
+        if model_type is None and pretrained is not None:
+            raise ValueError("transfer correction requires a local model")
+        self.initial = initial
+        self.search = CandidateSearch(values, hardware, application,
+                                      APPS[application].HARDWARE_DETERMINED, seed)
+        self.model_type = model_type
+        self.model = None
+        self.measured = {}
+        self.promising = []
+        self.warm = []
+        if pretrained is not None:
+            # Historical warm start
+            self.model_type = partial(ResidualCorrection, pretrained, model_type, hardware)
+            builds = self.search.candidates(UCB_CANDIDATES)
+            self.warm = [row[0] for row in self.search.rank(pretrained, builds, initial // 2)]
+
+    def ask(self):
+        """Return flags for the next build to benchmark."""
+        measured = [config for config, _ in self.measured.values()]
+        if self.model is None:
+            builds = [config for config in self.warm if self.search.key(config) not in self.measured]
+            if not builds:
+                builds = self.search.candidates(1, excluded=measured)
+        else:
+            # Mixed batch and UCB ranking
+            builds = self.search.candidates(
+                UCB_CANDIDATES, anchors=self._anchors(), local_limit=UCB_CANDIDATES // 2,
+                excluded=measured)
+            builds = [row[0] for row in self.search.rank(self.model, builds, SEARCH_STARTS, ucb=True)]
+            self.promising = builds
+        if not builds:
+            raise ValueError("search found no valid unmeasured configurations")
+        return builds[0].copy()
+
+    def tell(self, config, performance):
+        """Record one successful benchmark and refit on all local results."""
+        key = self.search.key(config)
+        if key in self.measured or not self.search.accepts(config):
+            raise ValueError("expected a valid, unmeasured configuration")
+        if not np.isfinite(performance) or performance <= 0:
+            raise ValueError("performance must be positive and finite")
+        config = self.search.complete(config)
+        if self.model_type is not None and len(self.measured) + 1 >= self.initial:
+            # Full local refit
+            measurements = [*self.measured.values(), (config, performance)]
+            table = pd.DataFrame(
+                {"application": self.search.application,
+                 **{HW + name: value for name, value in self.search.hardware.items()},
+                 **{CFG + name: value for name, value in build.items()},
+                 "performance": score}
+                for build, score in measurements)
+            self.model = self.model_type().fit(table.assign(
+                relative=table.performance / table.performance.max()))
+        self.measured[key] = config, performance
+
+    def _anchors(self):
+        best_measured = sorted(self.measured.values(), key=lambda row: row[1], reverse=True)
+        return [config for config, _ in best_measured[:SEARCH_STARTS]] + self.promising
+
+    def recommend(self):
+        """Return the fastest measured build."""
+        return max(self.measured.values(), key=lambda row: row[1])[0].copy()
+
+    def predict(self):
+        """Return the final model's top configuration and predicted score."""
+        if self.model is None:
+            raise ValueError("final prediction requires a fitted model")
+        return self.search.final(self.model, anchors=self._anchors())
 
 
 class ActiveSampler:
@@ -45,7 +126,7 @@ class ActiveSampler:
     pretrained: a model fitted on other machines, corrected by model_type here.
     """
 
-    def __init__(self, model_type, pool, initial=8, seed=0, pretrained=None):
+    def __init__(self, model_type, pool, initial=8, seed=SEARCH_SEED, pretrained=None):
         if initial < 2:
             raise ValueError("initial must be at least 2 builds")
         self.model_type = model_type
@@ -122,5 +203,6 @@ def simulate(pool, models, budget=25, initial=8, seeds=30, jobs=-1, pretrained=N
     if pretrained is not None:
         variants += [(name, pretrained) for name in names if name != "random"]
     sessions = Parallel(n_jobs=jobs)(delayed(_session)(name, pool, budget, initial, seed, source)
-                                     for name, source in variants for seed in range(seeds))
+                                     for name, source in variants
+                                     for seed in range(SEARCH_SEED, SEARCH_SEED + seeds))
     return pd.DataFrame(sessions)

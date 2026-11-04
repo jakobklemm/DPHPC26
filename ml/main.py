@@ -31,6 +31,7 @@ from .load import APPS, HW, app_options, columns, describe, hardware_features, l
 # Single model registry for CLI and evaluation
 from .models import MODEL_TYPES, RandomBaseline
 from .models.common import BaseModel, configs
+from .search import SEARCH_SEED, SEARCH_STARTS
 
 
 def model_path(models, app, kind="hardware"):
@@ -54,6 +55,13 @@ def train(args):
         
         # train the model
         model = MODEL_TYPES[args.model]().fit(runs)
+        if not isinstance(model, RandomBaseline):
+            # Best measured builds per platform
+            model.measured_winners = {
+                platform: [{option: config[option] for option in model.options}
+                           for config in configs(machine.nlargest(SEARCH_STARTS, "performance"))]
+                for platform, machine in runs.groupby("platform")
+            }
         model.save(model_path(args.models, app, args.model))
 
         # print summary
@@ -100,7 +108,8 @@ def train(args):
 
 
 def predict(args):
-    _, hardware = read_hardware(args.system)
+    platform, hardware = read_hardware(args.system)
+    values = json.loads(Path(args.space).read_text()) if args.space else None
     # One selected application or all saved models
     apps = [args.app] if args.app else [app for app in APPS if model_path(args.models, app, args.model).is_file()]
     if not apps:
@@ -110,7 +119,13 @@ def predict(args):
         if isinstance(model, RandomBaseline):
             # A fresh generator avoids replaying the state saved during training.
             model.rng = np.random.default_rng(args.seed)
-        config, predicted = model.predict(hardware, search=args.search)
+            config, predicted = model.predict(hardware, search=args.search)
+        else:
+            winners = getattr(model, "measured_winners", {})
+            anchors = winners.get(platform, []) + [
+                build for source, builds in winners.items() if source != platform for build in builds]
+            config, predicted = model.predict(hardware, search=args.search, seed=args.seed,
+                                              values=values, anchors=anchors)
         print(f"== {app}")
         for argument in describe(app, config).split(" "):
             print(argument)
@@ -121,15 +136,17 @@ def predict(args):
 def suggest(args):
     table = load_table(args.data, args.app)
     platform, hardware = read_hardware(args.system)
+    values = json.loads(Path(args.space).read_text()) if args.space else None
     # Fresh model and measured builds per application
     for app, runs in table.groupby("application"):
         runs = app_options(runs)
         model = MODEL_TYPES[args.model]().fit(runs)
         measured = configs(runs[runs["platform"] == platform])
-        suggestions = model.suggest(hardware, measured, n=args.n)
+        suggestions = model.suggest(hardware, measured, n=args.n, search=args.search,
+                                    seed=args.seed, values=values)
         print(f"== {app}")
         if not suggestions:
-            print("every combination of the option values seen so far is already measured on this machine")
+            print("search found no valid unmeasured configurations")
         for config, mean, spread in suggestions:
             print(f"predicted {mean:.3f} ± {spread:.3f}:  {describe(app, config)}")
 
@@ -207,12 +224,14 @@ def main():
 
     p = sub.add_parser("predict")
     p.add_argument("--model", choices=MODEL_TYPES, default="hardware", help="saved model to use")
-    p.add_argument("--seed", type=int, help="reproducible random baseline selection")
-    p.add_argument("--search", choices=["local", "exhaustive"], default="local",
-                   help="local: fast search, exact for hardware/no-hardware (default); "
+    p.add_argument("--seed", type=int, default=SEARCH_SEED, help="seed for random or bounded search")
+    p.add_argument("--search", choices=["local", "bounded", "exhaustive"], default="bounded",
+                   help="bounded: sample globally and refine the top builds (default); "
+                        "local: fast search, exact for hardware/no-hardware; "
                         "exhaustive: predict every combination, slow")
     p.add_argument("--app", choices=sorted(APPS), help="default: all available trained applications")
     p.add_argument("--system", required=True, help="system.json of the target machine")
+    p.add_argument("--space", help="JSON mapping flags to allowed values for --search bounded")
     p.set_defaults(func=predict)
 
     p = sub.add_parser("suggest")
@@ -222,6 +241,10 @@ def main():
     p.add_argument("--system", required=True, help="system.json of the target machine")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.add_argument("-n", type=int, default=5, help="number of configurations to suggest")
+    p.add_argument("--search", choices=["bounded", "preset"], default="bounded",
+                   help="bounded: sample and refine (default); preset: scan all combinations of fitted flag values")
+    p.add_argument("--seed", type=int, default=SEARCH_SEED, help="seed for bounded UCB search")
+    p.add_argument("--space", help="JSON mapping flags to allowed values")
     p.set_defaults(func=suggest)
 
     p = sub.add_parser("evaluate")
@@ -250,6 +273,10 @@ def main():
     p.set_defaults(func=simulate)
 
     args = parser.parse_args()
+    if args.command == "predict" and args.space and (args.search != "bounded" or args.model == "random"):
+        parser.error("predict --space requires --search bounded and a performance model")
+    if args.command == "suggest" and args.space and args.search == "preset":
+        parser.error("suggest --space requires --search bounded")
     args.func(args)
 
 

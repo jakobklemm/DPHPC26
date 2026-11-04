@@ -18,6 +18,7 @@ from sklearn.metrics import r2_score
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from ..load import CFG, DEFAULT, HARDWARE_DETERMINED, HW, columns, strip, valid
+from ..search import CandidateSearch, SEARCH_SEED, SEARCH_STARTS, UCB_CANDIDATES
 
 
 def configs(table):
@@ -74,12 +75,15 @@ class BaseModel:
         # Complete output validation, including derived CUDA architecture
         return valid(self._add_rule_options(config, hardware), hardware, getattr(self, "application", None))
 
-    def predict(self, hardware, search="local"):
+    def predict(self, hardware, search="local", *, seed=SEARCH_SEED, values=None, anchors=()):
         """Best build for this hardware and its predicted performance.
 
         search="local": best_build, a local search, fast; exact when options add up.
+        search="bounded": previous winners, global draws, and local refinement.
         search="exhaustive": exhaustive_best_build, predicts every combination, slow.
         """
+        if search == "bounded":
+            return self._candidate_search(hardware, seed, values).final(self, anchors=anchors)
         find = {"local": self.best_build, "exhaustive": self.exhaustive_best_build}[search]
         config = find(hardware)
         score = float(self.predict_performance(hardware, [config])[0][0])
@@ -104,15 +108,31 @@ class BaseModel:
     def _add_rule_options(self, config, hardware):
         return {**config, **{o: HARDWARE_DETERMINED[o](hardware) for o in self.rule_options}}
 
-    def suggest(self, hardware, measured, n=5):
-        """Rank unmeasured valid builds by prediction plus uncertainty."""
-        measured = {tuple(c.get(o) for o in self.options) for c in measured}
-        untested = [c for c in self.candidates(hardware) if tuple(c.values()) not in measured]
-        if not untested:
-            return []
-        mean, spread = self.predict_performance(hardware, untested)
-        order = np.argsort(-(mean + spread))[:n]
-        return [(self._add_rule_options(untested[i], hardware), float(mean[i]), float(spread[i])) for i in order]
+    def _candidate_search(self, hardware, seed, values):
+        return CandidateSearch(self.values if values is None else values,
+                               hardware, self.application, self.rule_options, seed)
+
+    def suggest(self, hardware, measured, n=5, *, search="bounded", seed=SEARCH_SEED, values=None):
+        """Rank unmeasured builds by UCB using bounded or preset search."""
+        if search == "preset":
+            if values is not None:
+                raise ValueError("preset search uses the fitted flag values")
+            # Original fitted flag grid
+            preset = self._candidate_search(hardware, seed, None)
+            seen = {preset.key(config) for config in measured}
+            builds = (self._add_rule_options(config, hardware) for config in self.iter_candidates(hardware)
+                      if preset.key(config) not in seen)
+            return preset.rank(self, builds, n, ucb=True)
+        if search != "bounded":
+            raise ValueError(f"unknown suggestion search: {search}")
+        search = self._candidate_search(hardware, seed, values)
+        measured = list(measured)
+        anchors = search.rank(self, [search.complete(c) for c in measured if search.accepts(c)],
+                              SEARCH_STARTS)
+        limit = max(UCB_CANDIDATES, n)
+        builds = search.candidates(limit, anchors=[row[0] for row in anchors],
+                                   local_limit=limit // 2, excluded=measured)
+        return search.rank(self, builds, n, ucb=True)
 
     # Other options a decision variant may change to make an alternative value buildable
     max_extra_changes = 2
@@ -430,10 +450,3 @@ class RegressionPerformanceModel(BaseModel):
         draws = np.array([member.predict(frame) for member in self.ensemble])
         member_costs = np.exp(draws[:, 1:] - draws[:, :1]) - 1
         return np.exp(log_change) - 1, np.std(member_costs, axis=0)
-
-    def suggest(self, hardware, measured, n=5):
-        # Measured-flag normalization for consistent build exclusion
-        # Shared validity checks and performance-plus-spread ranking
-        measured = [{o: category(c.get(o, DEFAULT)) for o in self.options} for c in measured]
-        return super().suggest(hardware, measured, n)
-
