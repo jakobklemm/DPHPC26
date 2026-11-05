@@ -9,6 +9,7 @@ Runs come from llama_gpu_bench.py (build-<run id>.json) or llama_gpu_bench-profi
 """
 
 import json
+import os
 import shlex
 from pathlib import Path
 
@@ -60,7 +61,7 @@ def compiler_flag_option(flag):
 # Compiler flags of the harness: the flag groups of flags.json "compiler", {option: check(flag)}.
 # The option is the flag group, its value the flag passed, e.g. "-fvectorize": "-fno-vectorize".
 # Any flag of the group is accepted, also the harness' "off" values that flags.json does not list.
-FLAGS_FILE = Path(__file__).resolve().parent.parent / "llama" / "flags.json"
+FLAGS_FILE = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent.parent)) / "llama" / "flags.json"
 COMPILER_FLAGS = {group: lambda flag, group=group: compiler_flag_option(flag) == group
                   for group in json.loads(FLAGS_FILE.read_text())["compiler"]}
 # Toolchain choices read from configure_command; the tuned options come from the other fields

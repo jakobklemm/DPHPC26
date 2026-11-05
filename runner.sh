@@ -6,10 +6,11 @@ readonly LLAMA_REPO=https://github.com/ggml-org/llama.cpp.git
 readonly GGUF_NAME=qwen2.5-3b-instruct-q4_k_m.gguf
 readonly GGUF_URL="https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/$GGUF_NAME"
 readonly DATA_DIR="${DATA_DIR:-/data}"
+export DATA_DIR
 
 usage() {
     cat <<'EOF'
-Usage: runner [setup [options] | active-sampling]
+Usage: runner [setup [options] | train [options] | active-sampling]
 
 setup (default): discover the system, clone llama.cpp, download weights, then train.
   --skip-system      Do not generate system.json
@@ -19,7 +20,8 @@ setup (default): discover the system, clone llama.cpp, download weights, then tr
   --model NAME       ML model to train (default: hardware; see ml.main train --help)
   -h, --help         Show this help
 
-Mount one persistent folder at /data (override with DATA_DIR):
+Mount one persistent folder at /data (override with DATA_DIR), containing the
+llama/ and gromacs/ folders from this repository (including their flags.json):
   llama.cpp/         Pinned source checkout
   gguf/             Downloaded inference weights
   llama/results/    Training data supplied by the user (folders and/or ZIPs)
@@ -27,6 +29,7 @@ Mount one persistent folder at /data (override with DATA_DIR):
   build/            Reserved for subsequent builds
   system.json       Container-visible hardware and toolchain snapshot for ML commands
 
+train [ML options] trains llama.cpp using /data/llama/results, saving to /data/models.
 active-sampling is a placeholder; it currently does nothing.
 EOF
 }
@@ -109,6 +112,7 @@ mode=${1:-setup}
 if [[ $# -gt 0 ]]; then shift; fi
 case "$mode" in
     setup) setup "$@" ;;
+    train) exec python -m ml.main --models "$DATA_DIR/models" train --app llama.cpp --data "$DATA_DIR/llama/results" "$@" ;;
     active-sampling) : ;;
     -h|--help) usage ;;
     *) usage >&2; die "unknown mode: $mode" ;;

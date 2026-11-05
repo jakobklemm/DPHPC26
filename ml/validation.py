@@ -6,6 +6,7 @@ consult training measurements or run compilers on the prediction host.
 
 import math
 import json
+import os
 import re
 import shlex
 from pathlib import Path, PurePath
@@ -20,7 +21,8 @@ BOOL = TRUE | FALSE
 @lru_cache(maxsize=None)
 def flag_catalog(application):
     directory = {"llama.cpp": "llama", "gromacs": "gromacs"}[application]
-    return json.loads((Path(__file__).resolve().parent.parent / directory / "flags.json").read_text())
+    root = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent.parent))
+    return json.loads((root / directory / "flags.json").read_text())
 
 
 def catalog_errors(config, application, defaults=None):
