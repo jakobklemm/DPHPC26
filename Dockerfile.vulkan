@@ -7,8 +7,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    ca-certificates \
     clang \
     cmake \
+    curl \
     git \
     glslc \
     libomp-dev \
@@ -20,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-venv \
     util-linux \
+    vulkan-tools \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
@@ -30,7 +33,9 @@ RUN python3 -m venv "$VIRTUAL_ENV" \
 COPY ml/ ml/
 COPY llama/flags.json llama/flags.json
 COPY llama/filter_llama_performance_flags.py llama/filter_llama_performance_flags.py
+COPY --chmod=755 runner.sh /usr/local/bin/runner
 
-RUN mkdir -p llama.cpp gguf models llama/results build
+RUN mkdir -p /data
 
-CMD ["bash"]
+ENTRYPOINT ["/usr/local/bin/runner"]
+CMD ["setup"]
