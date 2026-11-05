@@ -111,7 +111,7 @@ class CandidateSearch:
         """Return (build, mean, spread) in descending score order."""
         # Batched scores and running top picks
         best = []
-        builds = iter(builds)
+        builds = (self.complete(build) for build in builds if self.accepts(build))
         while batch := list(islice(builds, SCORE_BATCH_SIZE)):
             mean, spread = model.predict_performance(self.hardware, batch)
             scores = mean + spread if ucb else mean

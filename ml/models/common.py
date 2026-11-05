@@ -86,6 +86,8 @@ class BaseModel:
             return self._candidate_search(hardware, seed, values).final(self, anchors=anchors)
         find = {"local": self.best_build, "exhaustive": self.exhaustive_best_build}[search]
         config = find(hardware)
+        if not self._valid(config, hardware):
+            raise ValueError("prediction returned a disallowed build configuration")
         score = float(self.predict_performance(hardware, [config])[0][0])
         return self._add_rule_options(config, hardware), score
 

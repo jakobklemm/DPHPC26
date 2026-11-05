@@ -10,7 +10,8 @@ compiler settings the harness turns into flags: compiler, opt_level, native, lto
 """
 
 from .validation import (BOOL, COMMON_SCHEMA, enabled, isa_errors, cuda_errors,
-                         require, schema_errors, toolchain_errors, value)
+                         require, schema_errors, toolchain_errors, value,
+                         flag_catalog, compiler_flag_option, positive_integer)
 
 APPLICATION = "gromacs"  # project_name in source.yml
 
@@ -29,10 +30,17 @@ SIMD_NEEDS = {
     "IBM_VSX": ("power", ("vsx",)),
 }
 BOOLEAN_OPTIONS = {"GMX_DOUBLE", "GMX_MPI", "GMX_THREAD_MPI", "GMX_OPENMP",
+                   "GMX_USE_SIMD_KERNELS", "GMX_CUDA_NB_SINGLE_COMPILATION_UNIT",
                    "GMX_USE_RDTSCP", "GMX_BUILD_MDRUN_ONLY", "GMX_PREFER_STATIC_LIBS",
                    "GMX_EXTERNAL_BLAS", "GMX_EXTERNAL_LAPACK", "GMX_USE_TNG", "GMX_HWLOC",
                    "GMX_FFTW_USE_WISDOM", "GMX_DISABLE_FFTW_MEASURE", "native", "lto"}
+COMPILER_FLAGS = {group: lambda flag, group=group: compiler_flag_option(flag) == group
+                  for group in flag_catalog(APPLICATION)["compiler"]}
+CUDA_FLAGS = {"-Xptxas -O": {"-Xptxas=-O1", "-Xptxas=-O2", "-Xptxas=-O3"}}
 SCHEMA = {
+    **COMPILER_FLAGS, **CUDA_FLAGS,
+    "GMX_SIMD_ACCURACY_BITS_SINGLE": positive_integer,
+    "GMX_SIMD_ARM_SVE_LENGTH": {"128", "256", "512", "1024", "2048"},
     **COMMON_SCHEMA, **dict.fromkeys(BOOLEAN_OPTIONS, BOOL),
     "GMX_SIMD": set(SIMD_NEEDS) | {"AUTO", "None", "NONE", "Reference", "REFERENCE"},
     "GMX_GPU": {"OFF", "CUDA", "OpenCL", "OPENCL", "SYCL", "HIP"},
@@ -86,8 +94,13 @@ def validation_errors(config, hardware):
         if enabled(config, option):
             require(errors, hardware, feature, f"toolchain: {option} requires {feature}")
     # Shared compiler, flag, OpenMP and LTO checks
-    errors.extend(toolchain_errors(config, hardware, openmp=enabled(config, "GMX_OPENMP", True),
-                                   lto=enabled(config, "lto")))
+    flags = " ".join(value(config, option) for option in COMPILER_FLAGS if value(config, option))
+    if value(config, "-mcpu"):
+        # The runner's -mcpu catalog contains ARM CPU targets only.
+        errors.extend(isa_errors(hardware, (), value(config, "-mcpu"), "arm"))
+    checked = {**config, "extra_flags": " ".join((value(config, "extra_flags", ""), flags))}
+    errors.extend(toolchain_errors(checked, hardware, openmp=enabled(config, "GMX_OPENMP", True),
+                                   lto=enabled(config, "lto") or value(config, "-flto") in {"-flto=thin", "-flto=full"}))
     return list(dict.fromkeys(errors))
 
 
@@ -119,4 +132,6 @@ def performance(benchmark):
 
 # how to pass one option to the build
 def build_argument(option, value):
+    if option in COMPILER_FLAGS or option in CUDA_FLAGS:
+        return value
     return f"{option}={value}" if option in HARNESS_OPTIONS else f"-D{option}={value}"

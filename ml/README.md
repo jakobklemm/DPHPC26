@@ -142,6 +142,7 @@ model.save("models/llama.cpp.random-forest.joblib")
 
 ### Live sampling, prediction, and simulation
 
+- **Validation:** sampling, suggestions, and prediction share application-specific checks and `flags.json` exclusions, including historical llama rules. Candidates are filtered before scoring and checked before selection; unknown hardware capabilities still require build verification. Add exclusions to the application's `flags.json`
 - **Live sampling** uses `ask()` to propose an unmeasured build from the allowed flag space. Benchmark it on the target and pass the result to `tell()`. After the budget, `recommend()` returns the fastest measured build. Pass `pretrained` to enable local correction of a historical model.
 - **Live prediction** ranks candidates by predicted performance. Bounded `predict` scores previous winners and fresh random builds, then explores flag edits around the winners and top-scoring candidates. Its pick may be unmeasured.
 - **Simulation** replays sampling within a fixed pool of previously benchmarked builds. It reveals each result after selection, so it compares sampling policies on that pool. Live candidate generation and new flag combinations require separate validation.

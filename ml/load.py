@@ -29,7 +29,7 @@ from pathlib import Path
 import pandas as pd
 
 from . import load_gromacs, load_llama
-from .validation import COMMON_SCHEMA, discovery_features, schema_errors, toolchain_errors
+from .validation import COMMON_SCHEMA, catalog_errors, discovery_features, schema_errors, toolchain_errors
 
 HW = "hw."
 CFG = "cfg."
@@ -73,7 +73,8 @@ def validation_errors(config, hardware, app=None):
         return schema_errors(config, COMMON_SCHEMA) + toolchain_errors(config, hardware)
     if app not in APPS:
         return [f"schema: unsupported application {app}"]
-    return APPS[app].validation_errors(config, hardware)
+    return (APPS[app].validation_errors(config, hardware)
+            + catalog_errors(config, app, getattr(APPS[app], "CMAKE_DEFAULTS", {})))
 
 
 def valid(config, hardware, app=None):

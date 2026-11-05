@@ -5,14 +5,49 @@ consult training measurements or run compilers on the prediction host.
 """
 
 import math
+import json
 import re
 import shlex
-from pathlib import PurePath
+from pathlib import Path, PurePath
+from functools import lru_cache
 
 
 TRUE = {"ON", "YES", "TRUE", "1"}
 FALSE = {"OFF", "NO", "FALSE", "0"}
 BOOL = TRUE | FALSE
+
+
+@lru_cache(maxsize=None)
+def flag_catalog(application):
+    directory = {"llama.cpp": "llama", "gromacs": "gromacs"}[application]
+    return json.loads((Path(__file__).resolve().parent.parent / directory / "flags.json").read_text())
+
+
+def catalog_errors(config, application, defaults=None):
+    """Honor the same experiment exclusions as the benchmark flag catalog.
+
+    These include sampling policy, not only configurations that cannot compile.
+    Existing historical exclusions are consolidated into the application
+    catalog; prediction does not depend on result folders being available.
+    """
+    effective = {**(defaults or {}), **config}
+
+    def matches(option, expected):
+        actual = value(effective, option)
+        if expected in BOOL:
+            return actual is not None and actual.upper() in (TRUE if expected in TRUE else FALSE)
+        return actual == expected
+
+    return ["catalog: excluded combination " + ", ".join(f"{k}={v}" for k, v in rule.items())
+            for rule in flag_catalog(application).get("invalid_combinations", [])
+            if all(matches(option, expected) for option, expected in rule.items())]
+
+
+def compiler_flag_option(flag):
+    if flag.startswith("-O"):
+        return "-O"
+    name = flag.partition("=")[0]
+    return "-f" + name.removeprefix("-fno-") if name.startswith("-fno-") else name
 
 
 def value(config, option, default=None):

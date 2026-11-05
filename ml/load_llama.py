@@ -9,6 +9,7 @@ Runs come from llama_gpu_bench.py (build-<run id>.json) or llama_gpu_bench-profi
 """
 
 import json
+import shlex
 from pathlib import Path
 
 from .validation import (BOOL, COMMON_SCHEMA, cuda_errors, enabled,
@@ -101,6 +102,20 @@ def validation_errors(config, hardware):
         require(errors, hardware, "curl", "toolchain: LLAMA_CURL requires libcurl")
     # Compiler flags checked like extra flags of the build (e.g. -march=x86-64-v3 needs AVX2)
     flags = [value(config, option) for option in COMPILER_FLAGS if value(config, option)]
+    # Same experiment policy as llama_gpu_bench-profile.py, including flags
+    # supplied through raw CMake compiler settings rather than flag groups.
+    build_type = value(config, "CMAKE_BUILD_TYPE", "").upper()
+    compiler_settings = [f"CMAKE_{language}_FLAGS{suffix}"
+                         for language in ("C", "CXX", "CUDA")
+                         for suffix in (("", f"_{build_type}") if build_type else ("",))]
+    for option in compiler_settings:
+        try:
+            flags.extend(shlex.split(value(config, option, "")))
+        except ValueError:
+            errors.append(f"schema: malformed flags in {option}")
+    for flag in flags:
+        if flag in {"-O0", "-Ofast", "-ffast-math"}:
+            errors.append(f"policy: {flag} is excluded by the llama benchmark runner")
     for flag in flags:
         if flag.startswith("-mprefer-vector-width"):
             errors.extend(isa_errors(hardware, (), flag))

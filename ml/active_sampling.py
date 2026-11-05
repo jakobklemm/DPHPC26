@@ -82,6 +82,8 @@ class LiveActiveSampler:
             self.promising = builds
         if not builds:
             raise ValueError("search found no valid unmeasured configurations")
+        if not self.search.accepts(builds[0]):
+            raise ValueError("sampling returned a disallowed build configuration")
         return builds[0].copy()
 
     def tell(self, config, performance):
