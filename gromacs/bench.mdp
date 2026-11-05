@@ -1,0 +1,35 @@
+; Benchmark settings for the GROMACS water box (water_GMX50_bare, PME variant), used by prepare_input.sh.
+; Physics identical to the official pme.mdp; obsolete keys removed and all
+; output disabled so that we only time the MD engine itself.
+
+integrator      = md
+dt              = 0.002          ; 2 fs time step
+nsteps          = 10000          ; fixed work per run (= 20 ps); can be overridden by mdrun -nsteps
+
+; --- No output: file I/O would add noise unrelated to the build ---
+nstxout         = 0
+nstvout         = 0
+nstfout         = 0
+nstxout-compressed = 0
+nstlog          = 0
+nstenergy       = 0
+nstcalcenergy   = 100
+
+; --- Interactions ---
+cutoff-scheme   = Verlet
+nstlist         = 10
+coulombtype     = PME            ; long-range electrostatics via FFT -> exercises the FFT library
+rcoulomb        = 1.0
+rvdw            = 1.0
+fourier-spacing = 0.125
+
+; --- Thermostat / constraints ---
+tcoupl          = v-rescale
+tc-grps         = System
+tau-t           = 0.1
+ref-t           = 300
+constraints     = all-bonds      ; as in official pme.mdp (water uses SETTLE anyway)
+
+; Same random seed every time -> identical .tpr when regenerated
+gen-vel         = no
+ld-seed         = 1993
