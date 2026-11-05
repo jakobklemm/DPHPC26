@@ -10,7 +10,7 @@ export DATA_DIR
 
 usage() {
     cat <<'EOF'
-Usage: runner [setup [options] | train [options] | active-sampling]
+Usage: runner [setup [options] | train [options] | active-sampling [options]]
 
 setup (default): discover the system, clone llama.cpp, download weights, then train.
   --skip-system      Do not generate system.json
@@ -26,11 +26,13 @@ llama/ and gromacs/ folders from this repository (including their flags.json):
   gguf/             Downloaded inference weights
   llama/results/    Training data supplied by the user (folders and/or ZIPs)
   models/           Trained ML .joblib files
-  build/            Reserved for subsequent builds
+  build/            Live sampling build directories
   system.json       Container-visible hardware and toolchain snapshot for ML commands
 
 train [ML options] trains llama.cpp using /data/llama/results, saving to /data/models.
-active-sampling is a placeholder; it currently does nothing.
+active-sampling --steps N [--model NAME] builds and benchmarks N CUDA configurations.
+Use the same model kind as setup (default: hardware); its saved model is used for
+pretraining, except for the random baseline. Runtime settings match the training runner.
 EOF
 }
 
@@ -113,7 +115,7 @@ if [[ $# -gt 0 ]]; then shift; fi
 case "$mode" in
     setup) setup "$@" ;;
     train) exec python -m ml.main --models "$DATA_DIR/models" train --app llama.cpp --data "$DATA_DIR/llama/results" "$@" ;;
-    active-sampling) : ;;
+    active-sampling) exec python /workspace/run_active_sampling.py "$@" ;;
     -h|--help) usage ;;
     *) usage >&2; die "unknown mode: $mode" ;;
 esac
