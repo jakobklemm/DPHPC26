@@ -60,3 +60,14 @@ jobs:
           tags: |
             ${{ steps.image.outputs.name }}:vulkan
             ${{ steps.image.outputs.name }}:vulkan-sha-${{ github.sha }}
+
+      - name: Build and publish CPU image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.cpu
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:cpu
+            ${{ steps.image.outputs.name }}:cpu-sha-${{ github.sha }}

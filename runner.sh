@@ -30,7 +30,8 @@ llama/ and gromacs/ folders from this repository (including their flags.json):
   system.json       Container-visible hardware and toolchain snapshot for ML commands
 
 train [ML options] trains llama.cpp using /data/llama/results, saving to /data/models.
-active-sampling --steps N [--model NAME] builds and benchmarks N CUDA configurations.
+active-sampling --steps N [--model NAME] [--device cpu|cuda] builds and benchmarks N configurations.
+The CPU image defaults to --device cpu; other images default to --device cuda.
 Use the same model kind as setup (default: hardware); its saved model is used for
 pretraining, except for the random baseline. Runtime settings match the training runner.
 EOF
