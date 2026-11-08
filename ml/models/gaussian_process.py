@@ -2,14 +2,21 @@
 
 Technical description
 - Bayesian kernel regression on log-relative performance with a constant times
-  Matérn covariance; native predictive standard deviation supports exploration.
+  Matérn covariance plus a learned white-noise term; native predictive
+  standard deviation supports exploration.
+- Length scale bounded to [0.1, 100]: one changed flag is ~1.4 apart in the
+  scaled one-hot space, so the floor rules out the degenerate "every build
+  uncorrelated" fit that small samples otherwise sometimes reach.
+- ConvergenceWarning "noise_level is close to the specified lower bound" is
+  expected with few distinct builds (exact interpolation is the likelihood
+  optimum) and is left visible on purpose.
 
 Determinism
 - Predictions are deterministic after fitting. Kernel optimizer restarts use
   randomness; fixed random_state makes training reproducible.
 
 Adjustable parameters
-- kernel, alpha (observation noise variance), normalize_y, optimizer,
+- kernel (incl. WhiteKernel noise bounds), alpha (numerical jitter), normalize_y, optimizer,
   n_restarts_optimizer and random_state. No bootstrap ensemble is fitted.
 
 Benefits
@@ -27,7 +34,7 @@ Overfitting risk
 
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import ConstantKernel, Matern
+from sklearn.gaussian_process.kernels import ConstantKernel, Matern, WhiteKernel
 
 from .common import RegressionPerformanceModel
 
@@ -39,10 +46,12 @@ class GaussianProcessPerformanceModel(RegressionPerformanceModel):
     uncertainty_method = "GP predictive standard deviation (model-dependent)"
 
     def _make_regressor(self, seed, n_features):
-        # Matérn similarity; alpha as log-target observation noise variance
+        # Matérn similarity, learned noise; length-scale floor against collapse
         # Target normalization and seeded optimizer restarts
-        params = dict(kernel=ConstantKernel(1.0) * Matern(length_scale=1.0, nu=1.5),
-                      normalize_y=True, alpha=1e-4, n_restarts_optimizer=1,
+        kernel = (ConstantKernel(1.0)
+                  * Matern(length_scale=1.0, length_scale_bounds=(0.1, 100.0), nu=1.5)
+                  + WhiteKernel(noise_level=1e-2, noise_level_bounds=(1e-6, 1.0)))
+        params = dict(kernel=kernel, normalize_y=True, alpha=1e-8, n_restarts_optimizer=2,
                       random_state=seed)
         # Constructor overrides for kernel, noise and optimizer
         params.update(self.estimator_params)
