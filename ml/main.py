@@ -31,6 +31,7 @@ from .load import APPS, HW, app_options, columns, describe, hardware_features, l
 # Single model registry for CLI and evaluation
 from .models import MODEL_TYPES, RandomBaseline
 from .models.common import BaseModel, configs
+from .models.gaussian_process import reset_warning_log
 from .search import SEARCH_SEED, SEARCH_STARTS
 
 
@@ -277,6 +278,8 @@ def main():
         parser.error("predict --space requires --search bounded and a performance model")
     if args.command == "suggest" and args.space and args.search == "preset":
         parser.error("suggest --space requires --search bounded")
+    # Fresh GP warning log per run; fits (also parallel workers) then append
+    reset_warning_log()
     args.func(args)
 
 

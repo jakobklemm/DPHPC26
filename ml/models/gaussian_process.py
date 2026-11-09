@@ -7,9 +7,12 @@ Technical description
 - Length scale bounded to [0.1, 100]: one changed flag is ~1.4 apart in the
   scaled one-hot space, so the floor rules out the degenerate "every build
   uncorrelated" fit that small samples otherwise sometimes reach.
-- ConvergenceWarning "noise_level is close to the specified lower bound" is
-  expected with few distinct builds (exact interpolation is the likelihood
-  optimum) and is left visible on purpose.
+- Kernel-optimizer ConvergenceWarnings are written to gp-warnings.log in the
+  working directory (env GP_WARNINGS_LOG overrides the path), not the terminal;
+  each ml.main run starts the file fresh.
+  "noise_level is close to the specified lower bound" is expected with few
+  distinct builds (exact interpolation is the likelihood optimum);
+  length_scale at a bound means near-noise (0.1) or near-flat (100) data.
 
 Determinism
 - Predictions are deterministic after fitting. Kernel optimizer restarts use
@@ -32,11 +35,43 @@ Overfitting risk
   Use restrained kernels and assess predictions on whole held-out machines.
 """
 
+import os
+import warnings
+
 import numpy as np
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, Matern, WhiteKernel
 
 from .common import RegressionPerformanceModel
+
+
+def warning_log():
+    return os.environ.get("GP_WARNINGS_LOG", "gp-warnings.log")
+
+
+def reset_warning_log():
+    """Empty the log; called once per CLI run before any fit."""
+    open(warning_log(), "w").close()
+
+
+class LoggedGaussianProcessRegressor(GaussianProcessRegressor):
+    """GaussianProcessRegressor that appends kernel ConvergenceWarnings to a file."""
+
+    def fit(self, X, y):
+        # Inside fit, so it also applies in parallel simulate workers
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", ConvergenceWarning)
+            super().fit(X, y)
+        lines = [f"{w.message}\n" for w in caught if issubclass(w.category, ConvergenceWarning)]
+        if lines:
+            with open(warning_log(), "a") as log:
+                log.writelines(lines)
+        # Other warnings unchanged
+        for w in caught:
+            if not issubclass(w.category, ConvergenceWarning):
+                warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
+        return self
 
 
 class GaussianProcessPerformanceModel(RegressionPerformanceModel):
@@ -55,7 +90,7 @@ class GaussianProcessPerformanceModel(RegressionPerformanceModel):
                       random_state=seed)
         # Constructor overrides for kernel, noise and optimizer
         params.update(self.estimator_params)
-        return GaussianProcessRegressor(**params)
+        return LoggedGaussianProcessRegressor(**params)
 
     def _costs(self, hardware, best, variants):
         """Change to the best build, uncertainty from the joint predictive covariance."""
