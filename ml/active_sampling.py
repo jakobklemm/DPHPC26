@@ -8,9 +8,9 @@ number of steps, e.g. 25 builds:
     tell       add the measured performance and refit the model on all of them
     recommend  the best measured build
 
-With a model pretrained on other machines (transfer learning), half of the random
-start becomes that model's top builds, and the model learns only the error of the
-pretrained model on this machine (see models/residual_correction.py).
+With a model pretrained on other machines (transfer learning), the start builds
+are that model's top builds instead of random ones, and the model learns only the
+error of the pretrained model on this machine (see models/residual_correction.py).
 
 `LiveActiveSampler` searches a caller-supplied flag space. `simulate` replays
 sessions on previously measured builds and compares choices with that pool.
@@ -39,17 +39,25 @@ from .models.common import configs
 from .search import CandidateSearch, SEARCH_SEED, SEARCH_STARTS, UCB_CANDIDATES
 
 
+# Start builds before the local model: a fit on a single build predicts the same for every build
+MIN_INITIAL = 2
+DEFAULT_INITIAL = 2
+
+
 class LiveActiveSampler:
     """Ask for build flags, benchmark them on the target, then tell the sampler the result.
 
     values maps flag names to their allowed values independently of the measured
     builds. Pass a model constructor from MODEL_TYPES, or None for random search.
+    Start: `initial` builds, the pretrained model's top picks (random without one),
+    then the local model. source names what chose the last build: "random",
+    "pretrained" or "model".
     """
 
-    def __init__(self, model_type, values, hardware, application, *, initial=8,
+    def __init__(self, model_type, values, hardware, application, *, initial=DEFAULT_INITIAL,
                  seed=SEARCH_SEED, pretrained=None):
-        if initial < 2:
-            raise ValueError("initial must be at least 2 builds")
+        if initial < MIN_INITIAL:
+            raise ValueError(f"initial must be at least {MIN_INITIAL} builds")
         if model_type is None and pretrained is not None:
             raise ValueError("transfer correction requires a local model")
         self.initial = initial
@@ -61,11 +69,13 @@ class LiveActiveSampler:
         self.failed = {}  # builds that did not build or run; never proposed again
         self.promising = []
         self.warm = []
+        self.pretrained = pretrained
+        self.source = None
         if pretrained is not None:
             # Historical warm start
             self.model_type = partial(ResidualCorrection, pretrained, model_type, hardware)
             builds = self.search.candidates(UCB_CANDIDATES)
-            self.warm = [row[0] for row in self.search.rank(pretrained, builds, initial // 2)]
+            self.warm = [row[0] for row in self.search.rank(pretrained, builds, initial)]
 
     def ask(self):
         """Return flags for the next build to benchmark."""
@@ -73,9 +83,16 @@ class LiveActiveSampler:
         if self.model is None:
             builds = [config for config in self.warm
                       if self.search.key(config) not in self.measured and self.search.key(config) not in self.failed]
-            if not builds:
+            self.source = "pretrained"
+            if not builds and self.pretrained is not None:
+                # Top picks used up by failed builds: the pretrained model chooses again
+                builds = self.search.candidates(UCB_CANDIDATES, excluded=measured)
+                builds = [row[0] for row in self.search.rank(self.pretrained, builds, 1)]
+            elif not builds:
                 builds = self.search.candidates(1, excluded=measured)
+                self.source = "random"
         else:
+            self.source = "model"
             # Mixed batch and UCB ranking
             builds = self.search.candidates(
                 UCB_CANDIDATES, anchors=self._anchors(), local_limit=UCB_CANDIDATES // 2,
@@ -137,9 +154,9 @@ class ActiveSampler:
     pretrained: a model fitted on other machines, corrected by model_type here.
     """
 
-    def __init__(self, model_type, pool, initial=8, seed=SEARCH_SEED, pretrained=None):
-        if initial < 2:
-            raise ValueError("initial must be at least 2 builds")
+    def __init__(self, model_type, pool, initial=DEFAULT_INITIAL, seed=SEARCH_SEED, pretrained=None):
+        if initial < MIN_INITIAL:
+            raise ValueError(f"initial must be at least {MIN_INITIAL} builds")
         self.model_type = model_type
         self.pool = pool
         self.initial = initial
@@ -148,7 +165,7 @@ class ActiveSampler:
         self.order = np.random.default_rng(seed).permutation(len(pool))
         if pretrained is not None:
             source, _ = pretrained.predict_performance(self.hardware, self.candidates)
-            top = np.argsort(-source)[:initial // 2]
+            top = np.argsort(-source)[:initial]
             self.order = np.concatenate([top, self.order[~np.isin(self.order, top)]])
             self.model_type = partial(ResidualCorrection, pretrained, model_type, self.hardware)
         self.measured = {}  # pool row -> performance, in measurement order
@@ -200,7 +217,7 @@ def _session(name, pool, steps, initial, seed, pretrained=None):
     return {**result, "seconds": time.perf_counter() - start}
 
 
-def simulate(pool, models, steps=25, initial=8, seeds=30, jobs=-1, pretrained=None):
+def simulate(pool, models, steps=25, initial=DEFAULT_INITIAL, seeds=30, jobs=-1, pretrained=None):
     """Replay sessions on one machine's measured builds; one result row per session.
 
     The same seed gives every model the same random start, so that differences

@@ -8,6 +8,8 @@ It uses the repository's `ml.active_sampling._session` and estimator defaults.
 
 Run from the repository root with the project's Python environment:
 
+> **Start rule changed (2026-11-10):** with a pretrained model, the `--initial` start builds are now all its top picks (before: half top picks, half random), and the default is 2. The commands below with `--initial 8` reproduce the old settings' size, not the old results.
+
 ```bash
 .venv/bin/python active-sampling/run_all_policies.py \
   --data llama/results results-500-seed20261029.zip \
@@ -16,7 +18,7 @@ Run from the repository root with the project's Python environment:
 
 The default output is `active-sampling/llama-all-policies-replay.csv`. Each completed
 session is appended immediately. Repeating the command resumes missing sessions.
-A metadata sidecar checks the loaded data, steps, initial sample count, and numerical
+A metadata sidecar checks the loaded data, steps, initial sample count, start rule, and numerical
 implementation before resuming. Use a new `--output` for different experiments.
 Run only one writer against a given output file at a time.
 

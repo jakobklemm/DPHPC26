@@ -8,12 +8,12 @@
 
 ## 1. Run active sampling (currently only for llama)
 
-**Active sampling** finds a fast build for this machine with few benchmarks. Each step: the model proposes the next build (high predicted performance + high uncertainty) → build + benchmark it → refit the model on all results so far → repeat. The first `--initial` builds are random, since there is no model yet. The model learns from this machine's builds only.
+**Active sampling** finds a fast build for this machine with few benchmarks. Each step: the model proposes the next build (high predicted performance + high uncertainty) → build + benchmark it → refit the model on all results so far → repeat. The first `--initial` builds (default 2, the minimum a model needs) are random, since there is no model yet. The model learns from this machine's builds only.
 
 **Transfer learning** (`--pretrained`) is active sampling with a head start from the other machines' benchmarks:
 
 - A pretrained model is fitted once on the other machines and then kept fixed.
-- Half of the start builds are its top picks instead of random ones.
+- It picks the first `--initial` builds (its top predictions) instead of random ones.
 - The local model (`--model`) learns only the pretrained model's error on this machine
 
 Both run in the container. The work folder `~/dphpc-data` on the host (mounted as `/data`) keeps the llama.cpp source, model weights, builds and results between runs; any other path works if used consistently.
@@ -52,7 +52,7 @@ runner active-sampling --steps 10 --pretrained hardware       # transfer learnin
 | `--model` | Local model, refitted after every build; default `gaussian-process`; also `smac-forest`, `bayes-pairs`, `sparse-bayes`, `random` |
 | `--pretrained` | Transfer learning: this model is fitted on the **other** machines in the results; `--model` then learns its error here. Default: none (cold start) |
 | `--pretrain-on WORD…` | Pretrain only on platforms whose name contains one of these words |
-| `--initial` | Start builds before the first fit (default 8): random, or half from the pretrained model's top picks |
+| `--initial N` | Start builds before the local model takes over (default 2, minimum 2; counted in `--steps`): the pretrained model's top picks, or random without `--pretrained` |
 | `--seed` | Start builds and candidate search (default 0) |
 | `--device` | `cpu` or `cuda`; default: `cuda` if an NVIDIA GPU and the CUDA toolkit are found |
 | `--output` | Results folder; default `/data/llama/results` |

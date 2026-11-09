@@ -89,7 +89,7 @@ def main():
                         default=ROOT / 'active-sampling/llama-all-policies-replay.csv')
     parser.add_argument('--seeds', type=int, default=3)
     parser.add_argument('--steps', type=int, default=25)
-    parser.add_argument('--initial', type=int, default=8)
+    parser.add_argument('--initial', type=int, default=2)
     parser.add_argument('--jobs', type=int, default=6)
     parser.add_argument('--model', nargs='+', choices=MODEL_TYPES,
                         help='Restrict local models for a small run; default: every model.')
@@ -120,6 +120,8 @@ def main():
         ['application', 'platform'] + sorted(c for c in table if c.startswith('cfg.')))
     metadata = {'budget': args.steps,  # key kept so existing outputs still resume
                 'initial': args.initial,
+                # Start builds: the pretrained model's top picks (earlier outputs: half random)
+                'start': 'pretrained-top-initial',
                 'compact_bayes': args.compact_bayes,
                 'data_sha256': hashlib.sha256(canonical.to_csv(index=False).encode()).hexdigest()}
     manifest = args.output.with_suffix('.metadata.json')

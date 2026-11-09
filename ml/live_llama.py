@@ -153,8 +153,7 @@ def run_session(model_type, system, table, *, pretrain, steps, initial, seed, de
     best_score = 0.0
     for step in range(1, steps + 1):
         config = sampler.ask()
-        phase = "start" if sampler.model is None else "model"
-        print(f"\n-- build {step}/{steps} ({phase}): {describe(APPLICATION, config)}", flush=True)
+        print(f"\n-- build {step}/{steps} ({sampler.source}): {describe(APPLICATION, config)}", flush=True)
         step_output = output / f"{step:04d}"
         step_output.mkdir()
         try:

@@ -28,7 +28,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .active_sampling import simulate as simulate_sessions
+from .active_sampling import DEFAULT_INITIAL, simulate as simulate_sessions
 from .evaluate import leave_one_platform_out #, leave_one_build_out
 from .load_llama import APPLICATION as LLAMA
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
@@ -278,7 +278,8 @@ def main():
                    default=["gaussian-process", "smac-forest", "bayes-pairs", "sparse-bayes"],
                    help="models to compare; random sampling is always included")
     p.add_argument("--steps", type=int, default=25, help="builds measured per session (default: 25)")
-    p.add_argument("--initial", type=int, default=8, help="random builds before the first model (default: 8)")
+    p.add_argument("--initial", type=int, default=DEFAULT_INITIAL,
+                   help="start builds before the local model: random, or --pretrained top picks (default: 2)")
     p.add_argument("--seeds", type=int, default=30, help="sessions per model (default: 30)")
     p.add_argument("--jobs", type=int, default=-1, help="parallel sessions (default: all cores)")
     p.add_argument("--pretrained", choices=[name for name in MODEL_TYPES if name != "random"],
@@ -299,7 +300,8 @@ def main():
                    help="transfer learning: this model, fitted on the other machines, corrected by --model")
     p.add_argument("--pretrain-on", nargs="+",
                    help="pretrain only on platforms containing one of these words, e.g. Threadripper Cortex")
-    p.add_argument("--initial", type=int, default=8, help="start builds before the first fit (default: 8)")
+    p.add_argument("--initial", type=int, default=DEFAULT_INITIAL,
+                   help="start builds before the local model: random, or --pretrained top picks (default: 2, minimum 2)")
     p.add_argument("--seed", type=int, default=SEARCH_SEED, help="seed for start builds and candidate search")
     p.add_argument("--device", choices=("cpu", "cuda"), default=os.environ.get("ACTIVE_SAMPLING_DEVICE"),
                    help="benchmark backend (default: cuda if an NVIDIA GPU and the CUDA toolkit are found, else cpu)")
