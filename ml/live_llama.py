@@ -1,29 +1,28 @@
-#!/usr/bin/env python3
-"""Run CPU or CUDA active sampling using the model and paths prepared by container setup."""
+"""Live active sampling of llama.cpp on this machine (ml.main active-sampling).
 
-import argparse
+run_session repeats: LiveActiveSampler proposes a build, benchmark() builds and
+measures it, the sampler refits. Each build gets a results folder that later
+loads as training data.
+
+Work folder layout (container setup creates it; DATA_DIR, default /data):
+  llama.cpp/   pinned source checkout
+  gguf/        inference weights (GGUF_NAME)
+  build/       build directories, one per session
+"""
+
 import json
 import math
-import os
 import shlex
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ml.active_sampling import LiveActiveSampler
-from ml.load import DEFAULT, hardware_features
-from ml.load_llama import COMPILER_FLAGS, performance
-from ml.models import BaseModel, MODEL_TYPES
+from .active_sampling import LiveActiveSampler
+from .load import CFG, DEFAULT, app_options, columns, describe, hardware_features, platform_name, strip
+from .load_llama import APPLICATION, COMPILER_FLAGS, performance
 
 
 GGUF_NAME = "qwen2.5-3b-instruct-q4_k_m.gguf"
-
-
-def positive_int(value):
-    number = int(value)
-    if number < 1:
-        raise argparse.ArgumentTypeError("must be positive")
-    return number
 
 
 def write_json(path, value):
@@ -108,56 +107,75 @@ def benchmark(config, data, build, output, system, device="cuda"):
         write_json(output / "build.json", record)
 
 
-def run(args):
-    data = Path(os.environ.get("DATA_DIR", "/data")).expanduser().resolve()
-    if not (data / "llama.cpp/CMakeLists.txt").is_file() or not (data / "gguf" / GGUF_NAME).is_file():
-        raise ValueError("llama.cpp source or GGUF missing; run container setup first")
-    system = json.loads((data / "system.json").read_text())
-    suffix = "" if args.model == "hardware" else f".{args.model}"
-    model_file = data / "models" / f"llama.cpp{suffix}.joblib"
-    if not model_file.is_file():
-        raise ValueError(f"missing {model_file}; run setup --model {args.model} first")
-    saved = BaseModel.load(model_file)
-    # Reuse setup's observed flag values; all validity/sampling decisions belong to ML.
-    pretrained = None if args.model == "random" else saved
-    values = sampling_space(saved.values, args.device)
-    sampler = LiveActiveSampler(None if args.model == "random" else MODEL_TYPES[args.model],
-                                values, hardware_features(system), "llama.cpp", pretrained=pretrained)
+def detect_device(hardware):
+    """CUDA needs the toolkit ("cuda") and a visible NVIDIA GPU; the CUDA image always has the toolkit."""
+    gpus = hardware.get("n_gpus")
+    has_gpu = hardware.get("gpu_vendor") == "nvidia" and isinstance(gpus, int) and gpus > 0
+    return "cuda" if hardware.get("cuda") is True and has_gpu else "cpu"
+
+
+def run_session(model_type, system, table, *, pretrain, steps, initial, seed, device=None,
+                workdir, output=None, values=None, settings=None):
+    """Benchmark `steps` builds proposed by model_type (None: random); return the results folder.
+
+    table: historical runs for the flag space; pretrain(platform): model fitted on
+    the other machines, or None. values replaces the flag space from table.
+    """
+    work = Path(workdir).expanduser().resolve()
+    if not (work / "llama.cpp" / "CMakeLists.txt").is_file() or not (work / "gguf" / GGUF_NAME).is_file():
+        raise ValueError(f"llama.cpp source or gguf/{GGUF_NAME} missing in {work}; "
+                         "run container setup or pass --workdir")
+    platform, hardware = platform_name(system), hardware_features(system)
+    device = device or detect_device(hardware)
+
+    # Flag space from the benchmarks (or values), backend fixed to the device
+    if values is None:
+        runs = app_options(table)
+        values = {strip(c): sorted(runs[c].unique()) for c in columns(runs, CFG)}
+    values = sampling_space(values, device)
+    pretrained = pretrain(platform)
+    sampler = LiveActiveSampler(model_type, values, hardware, APPLICATION,
+                                initial=initial, seed=seed, pretrained=pretrained)
+
+    # One results folder per session
     session = "active-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-    output = data / "llama/results" / session
+    output = Path(output or work / "llama" / "results").expanduser().resolve() / session
     output.mkdir(parents=True)
-    build = data / "build" / session
-    write_json(output / "session.json", {**vars(args), "setup_model": str(model_file),
-                                         "pretrained": pretrained is not None, "space": values})
-    print(f"Session: {output}\nSetup model: {model_file}", flush=True)
-    best_score = 0
-    for step in range(1, args.steps + 1):
+    build = work / "build" / session
+    write_json(output / "session.json", {**(settings or {}), "platform": platform,
+                                         "device": device, "space": values})
+    settings = settings or {}
+    model = settings.get("model") or ("random" if model_type is None else model_type.__name__)
+    source = settings.get("pretrained") or (type(pretrained).__name__ if pretrained else "none")
+    print(f"== {APPLICATION} on {platform} ({device}): {steps} steps, model {model}, "
+          f"pretrained {source}\n   results: {output}", flush=True)
+
+    best_score = 0.0
+    for step in range(1, steps + 1):
         config = sampler.ask()
+        phase = "start" if sampler.model is None else "model"
+        print(f"\n-- build {step}/{steps} ({phase}): {describe(APPLICATION, config)}", flush=True)
         step_output = output / f"{step:04d}"
         step_output.mkdir()
-        score = benchmark(config, data, build, step_output, system, args.device)
+        try:
+            score = benchmark(config, work, build, step_output, system, device)
+        except RuntimeError as error:
+            # Failed builds count as a step and are not proposed again
+            print(f"   failed: {error}", flush=True)
+            sampler.fail(config)
+            continue
         sampler.tell(config, score)
-        best = sampler.recommend()
         best_score = max(best_score, score)
-        write_json(output / "best.json", {"steps": step, "config": best,
+        write_json(output / "best.json", {"steps": step, "config": sampler.recommend(),
                                           "performance": best_score})
-        print(f"Step {step}/{args.steps}: {score:.3f} tokens/s", flush=True)
-    print(f"Best measured build: {output / 'best.json'}", flush=True)
+        print(f"   {score:.3f} tokens/s (best so far {best_score:.3f})", flush=True)
 
-
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--steps", type=positive_int, required=True, help="number of live builds to measure")
-    parser.add_argument("--model", choices=MODEL_TYPES, default="hardware", help="same model kind used during setup")
-    parser.add_argument("--device", choices=("cpu", "cuda"),
-                        default=os.environ.get("ACTIVE_SAMPLING_DEVICE", "cuda"),
-                        help="benchmark backend (default: cpu in the CPU image, cuda otherwise)")
-    args = parser.parse_args(argv)
-    try:
-        run(args)
-    except (OSError, ValueError, RuntimeError) as error:
-        parser.exit(1, f"active-sampling: {error}\n")
-
-
-if __name__ == "__main__":
-    main()
+    if not sampler.measured:
+        raise ValueError(f"no build succeeded; see {output}")
+    print(f"\nbest measured ({best_score:.3f} tokens/s): {describe(APPLICATION, sampler.recommend())}")
+    if sampler.model is not None:
+        config, score = sampler.predict()
+        print(f"model pick (predicted {score:.3f} of best measured, unmeasured if different): "
+              f"{describe(APPLICATION, config)}")
+    print(f"details: {output / 'best.json'}")
+    return output

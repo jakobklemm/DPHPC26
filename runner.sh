@@ -30,10 +30,10 @@ llama/ and gromacs/ folders from this repository (including their flags.json):
   system.json       Container-visible hardware and toolchain snapshot for ML commands
 
 train [ML options] trains llama.cpp using /data/llama/results, saving to /data/models.
-active-sampling --steps N [--model NAME] [--device cpu|cuda] builds and benchmarks N configurations.
-The CPU image defaults to --device cpu; other images default to --device cuda.
-Use the same model kind as setup (default: hardware); its saved model is used for
-pretraining, except for the random baseline. Runtime settings match the training runner.
+active-sampling --steps N [--model NAME] [--pretrained NAME] [--device cpu|cuda] builds and
+benchmarks N configurations (python -m ml.main active-sampling --help for all options).
+--pretrained fits that model on the other machines in /data/llama/results (transfer learning).
+The CPU image defaults to --device cpu; otherwise cuda if an NVIDIA GPU is detected.
 EOF
 }
 
@@ -116,7 +116,8 @@ if [[ $# -gt 0 ]]; then shift; fi
 case "$mode" in
     setup) setup "$@" ;;
     train) exec python -m ml.main --models "$DATA_DIR/models" train --app llama.cpp --data "$DATA_DIR/llama/results" "$@" ;;
-    active-sampling) exec python /workspace/run_active_sampling.py "$@" ;;
+    active-sampling) exec python -m ml.main active-sampling --workdir "$DATA_DIR" \
+        --system "$DATA_DIR/system.json" --data "$DATA_DIR/llama/results" "$@" ;;
     -h|--help) usage ;;
     *) usage >&2; die "unknown mode: $mode" ;;
 esac

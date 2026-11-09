@@ -48,11 +48,11 @@ class FrozenPoolPredictions:
         return np.asarray([self.values[self.key(build)] for build in builds]).T
 
 
-def run_case(local, pool, source, source_name, budget, initial, seed, compact):
+def run_case(local, pool, source, source_name, steps, initial, seed, compact):
     if compact:
         from compact_bayes import activate
         activate()
-    result = _session(local, pool, budget, initial, seed, source)
+    result = _session(local, pool, steps, initial, seed, source)
     return dict(result, platform=pool.platform.iloc[0],
                 pretrained=source_name, application='llama.cpp')
 
@@ -88,7 +88,7 @@ def main():
     parser.add_argument('--output', type=Path,
                         default=ROOT / 'active-sampling/llama-all-policies-replay.csv')
     parser.add_argument('--seeds', type=int, default=3)
-    parser.add_argument('--budget', type=int, default=25)
+    parser.add_argument('--steps', type=int, default=25)
     parser.add_argument('--initial', type=int, default=8)
     parser.add_argument('--jobs', type=int, default=6)
     parser.add_argument('--model', nargs='+', choices=MODEL_TYPES,
@@ -99,8 +99,8 @@ def main():
     parser.add_argument('--compact-bayes', action='store_true',
                         help='Use the experiment’s verified reduced-covariance Bayesian ridge fit.')
     args = parser.parse_args()
-    if args.seeds < 1 or not 2 <= args.initial <= args.budget or args.jobs == 0:
-        parser.error('require seeds >= 1, 2 <= initial <= budget, and jobs != 0')
+    if args.seeds < 1 or not 2 <= args.initial <= args.steps or args.jobs == 0:
+        parser.error('require seeds >= 1, 2 <= initial <= steps, and jobs != 0')
     if args.compact_bayes:
         from compact_bayes import activate
         activate()
@@ -108,8 +108,8 @@ def main():
         table = load_table(sanitized_paths(args.data, temporary), 'llama.cpp')
     pools = [(platform, app_options(pool).reset_index(drop=True))
              for platform, pool in table.groupby('platform')]
-    if any(len(pool) <= args.budget for _, pool in pools):
-        parser.error('every target pool must contain more builds than the budget')
+    if any(len(pool) <= args.steps for _, pool in pools):
+        parser.error('every target pool must contain more builds than --steps')
     local_models = args.model or list(MODEL_TYPES)
     sources = args.historical or ['none'] + [m for m in MODEL_TYPES if m != 'random']
     if any(s != 'none' for s in sources) and len(pools) < 2:
@@ -118,7 +118,8 @@ def main():
     # A sidecar prevents resuming an output with different data or sampling rules.
     canonical = table.reindex(columns=sorted(table.columns)).sort_values(
         ['application', 'platform'] + sorted(c for c in table if c.startswith('cfg.')))
-    metadata = {'budget': args.budget, 'initial': args.initial,
+    metadata = {'budget': args.steps,  # key kept so existing outputs still resume
+                'initial': args.initial,
                 'compact_bayes': args.compact_bayes,
                 'data_sha256': hashlib.sha256(canonical.to_csv(index=False).encode()).hexdigest()}
     manifest = args.output.with_suffix('.metadata.json')
@@ -138,7 +139,7 @@ def main():
     policies = [(source, local) for source in sources for local in local_models
                 if source == 'none' or local != 'random']
     print(f'{len(policies)} policies, {len(pools)} targets, {args.seeds} seeds', flush=True)
-    fields = ['model', 'seed', *[f'best@{n}' for n in range(1, args.budget + 1)],
+    fields = ['model', 'seed', *[f'best@{n}' for n in range(1, args.steps + 1)],
               'model_pick', 'rank_correlation', 'seconds', 'platform', 'pretrained', 'application']
     with Parallel(n_jobs=args.jobs, return_as='generator_unordered', batch_size=1) as parallel:
         for platform, pool in pools:
@@ -154,7 +155,7 @@ def main():
                     prior = FrozenPoolPredictions(MODEL_TYPES[source_name]().fit(training), pool)
                 print(f'{platform}: historical={source_name}, {len(pending)} sessions', flush=True)
                 results = parallel(delayed(run_case)(local, pool, prior, source_name,
-                                   args.budget, args.initial, seed, args.compact_bayes)
+                                   args.steps, args.initial, seed, args.compact_bayes)
                                    for local, seed in pending)
                 for result in results:
                     header = not args.output.exists()

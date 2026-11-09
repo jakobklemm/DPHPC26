@@ -28,7 +28,6 @@ RUN python3 -m venv "$VIRTUAL_ENV" \
     && pip install --no-cache-dir -r ml/requirements.txt
 
 COPY ml/ ml/
-COPY run_active_sampling.py ./
 COPY llama/flags.json llama/flags.json
 COPY --chmod=755 runner.sh /usr/local/bin/runner
 

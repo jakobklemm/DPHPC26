@@ -2,7 +2,7 @@
 Step 4: how few builds are enough? Active sampling, by default without pretraining.
 
 A session on one machine and application starts with no model and a measurement
-budget, e.g. 25 builds:
+number of steps, e.g. 25 builds:
     ask        next build to measure: random at first, then the highest
                predicted performance + uncertainty (UCB)
     tell       add the measured performance and refit the model on all of them
@@ -58,6 +58,7 @@ class LiveActiveSampler:
         self.model_type = model_type
         self.model = None
         self.measured = {}
+        self.failed = {}  # builds that did not build or run; never proposed again
         self.promising = []
         self.warm = []
         if pretrained is not None:
@@ -68,9 +69,10 @@ class LiveActiveSampler:
 
     def ask(self):
         """Return flags for the next build to benchmark."""
-        measured = [config for config, _ in self.measured.values()]
+        measured = [config for config, _ in self.measured.values()] + list(self.failed.values())
         if self.model is None:
-            builds = [config for config in self.warm if self.search.key(config) not in self.measured]
+            builds = [config for config in self.warm
+                      if self.search.key(config) not in self.measured and self.search.key(config) not in self.failed]
             if not builds:
                 builds = self.search.candidates(1, excluded=measured)
         else:
@@ -89,7 +91,7 @@ class LiveActiveSampler:
     def tell(self, config, performance):
         """Record one successful benchmark and refit on all local results."""
         key = self.search.key(config)
-        if key in self.measured or not self.search.accepts(config):
+        if key in self.measured or key in self.failed or not self.search.accepts(config):
             raise ValueError("expected a valid, unmeasured configuration")
         if not np.isfinite(performance) or performance <= 0:
             raise ValueError("performance must be positive and finite")
@@ -106,6 +108,13 @@ class LiveActiveSampler:
             self.model = self.model_type().fit(table.assign(
                 relative=table.performance / table.performance.max()))
         self.measured[key] = config, performance
+
+    def fail(self, config):
+        """Record a build that could not be built or benchmarked; ask() skips it."""
+        key = self.search.key(config)
+        if key in self.measured:
+            raise ValueError("build already has a measured result")
+        self.failed[key] = self.search.complete(config)
 
     def _anchors(self):
         best_measured = sorted(self.measured.values(), key=lambda row: row[1], reverse=True)
@@ -172,13 +181,13 @@ class ActiveSampler:
         return max(self.measured, key=self.measured.get)
 
 
-def _session(name, pool, budget, initial, seed, pretrained=None):
+def _session(name, pool, steps, initial, seed, pretrained=None):
     start = time.perf_counter()
     sampler = ActiveSampler(None if name == "random" else MODEL_TYPES[name], pool, initial, seed, pretrained)
     performance = pool["performance"].to_numpy()
     relative = pool["relative"].to_numpy()
     best = {}
-    for n in range(1, budget + 1):
+    for n in range(1, steps + 1):
         row = sampler.ask()
         sampler.tell(row, performance[row])
         best[f"best@{n}"] = relative[sampler.recommend()]
@@ -191,20 +200,20 @@ def _session(name, pool, budget, initial, seed, pretrained=None):
     return {**result, "seconds": time.perf_counter() - start}
 
 
-def simulate(pool, models, budget=25, initial=8, seeds=30, jobs=-1, pretrained=None):
+def simulate(pool, models, steps=25, initial=8, seeds=30, jobs=-1, pretrained=None):
     """Replay sessions on one machine's measured builds; one result row per session.
 
     The same seed gives every model the same random start, so that differences
     between models do not come from a lucky start. A pretrained model adds a
     corrected session per model, next to the sessions without pretraining.
     """
-    if not initial <= budget < len(pool):
-        raise ValueError(f"need initial <= budget < {len(pool)} measured builds")
+    if not initial <= steps < len(pool):
+        raise ValueError(f"need initial <= steps < {len(pool)} measured builds")
     names = ["random"] + [name for name in models if name != "random"]
     variants = [(name, None) for name in names]
     if pretrained is not None:
         variants += [(name, pretrained) for name in names if name != "random"]
-    sessions = Parallel(n_jobs=jobs)(delayed(_session)(name, pool, budget, initial, seed, source)
+    sessions = Parallel(n_jobs=jobs)(delayed(_session)(name, pool, steps, initial, seed, source)
                                      for name, source in variants
                                      for seed in range(SEARCH_SEED, SEARCH_SEED + seeds))
     return pd.DataFrame(sessions)

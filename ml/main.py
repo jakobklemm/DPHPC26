@@ -5,6 +5,7 @@ Command line interface. Run from the repository root.
   predict   build configuration for a machine, given its system.json
   suggest   configurations worth benchmarking next on a machine
   simulate  replay active-sampling sessions on measured builds
+  active-sampling  build + benchmark llama.cpp on this machine, refit, repeat
 
 Data defaults to each application's local results folder (llama/results or
 gromacs/results). --data overrides it with local folders or ZIP files.
@@ -14,12 +15,14 @@ Examples:
   python -m ml.main train
   python -m ml.main predict --system system.json
   python -m ml.main suggest --system system.json
-  python -m ml.main simulate --app llama.cpp --budget 25
+  python -m ml.main simulate --app llama.cpp --steps 25
+  python -m ml.main active-sampling --steps 10 --pretrained hardware
 
 """
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -27,12 +30,15 @@ import pandas as pd
 
 from .active_sampling import simulate as simulate_sessions
 from .evaluate import leave_one_platform_out #, leave_one_build_out
+from .load_llama import APPLICATION as LLAMA
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 # Single model registry for CLI and evaluation
 from .models import MODEL_TYPES, RandomBaseline
 from .models.common import BaseModel, configs
 from .models.gaussian_process import reset_warning_log
+from .live_llama import run_session
 from .search import SEARCH_SEED, SEARCH_STARTS
+from .system import discover
 
 
 def model_path(models, app, kind="hardware"):
@@ -196,20 +202,32 @@ def simulate(args):
     results = []
     for (app, platform), pool in table.groupby(["application", "platform"]):
         pool = app_options(pool).reset_index(drop=True)
-        print(f"== {app} on {platform}: {len(pool)} measured builds, budget {args.budget}, {args.seeds} sessions")
-        if len(pool) <= args.budget:
-            print("the budget would measure the whole pool, skipped\n")
+        print(f"== {app} on {platform}: {len(pool)} measured builds, {args.steps} steps, {args.seeds} sessions")
+        if len(pool) <= args.steps:
+            print("the steps would measure the whole pool, skipped\n")
             continue
         pretrained = pretrain(table, app, platform, args)
-        result = simulate_sessions(pool, args.model, args.budget, args.initial, args.seeds, args.jobs, pretrained)
+        result = simulate_sessions(pool, args.model, args.steps, args.initial, args.seeds, args.jobs, pretrained)
         results.append(result.assign(application=app, platform=platform))
-        # best build found so far at a few points of the budget, then the final model
-        steps = sorted({args.initial, args.budget, *range(10, args.budget, 5)})
-        shown = [f"best@{n}" for n in steps] + ["model_pick", "rank_correlation", "seconds"]
-        print(result.groupby("model")[shown].mean().sort_values(f"best@{args.budget}", ascending=False)
+        # best build found so far at a few steps, then the final model
+        points = sorted({args.initial, args.steps, *range(10, args.steps, 5)})
+        shown = [f"best@{n}" for n in points] + ["model_pick", "rank_correlation", "seconds"]
+        print(result.groupby("model")[shown].mean().sort_values(f"best@{args.steps}", ascending=False)
               .round(4).to_string(), end="\n\n")
     if args.output and results:
         pd.concat(results).to_csv(args.output, index=False)
+
+
+# Live active sampling of llama.cpp on this machine; the session itself is in live_llama.py
+def active_sampling(args):
+    system = json.loads(Path(args.system).read_text()) if args.system else discover()
+    table = load_table(args.data, LLAMA)
+    run_session(None if args.model == "random" else MODEL_TYPES[args.model], system, table,
+                pretrain=lambda platform: pretrain(table, LLAMA, platform, args),
+                steps=args.steps, initial=args.initial, seed=args.seed, device=args.device,
+                workdir=args.workdir, output=args.output,
+                values=json.loads(Path(args.space).read_text()) if args.space else None,
+                settings={name: value for name, value in vars(args).items() if name != "func"})
 
 
 def main():
@@ -259,7 +277,7 @@ def main():
     p.add_argument("--model", nargs="+", choices=MODEL_TYPES,
                    default=["gaussian-process", "smac-forest", "bayes-pairs", "sparse-bayes"],
                    help="models to compare; random sampling is always included")
-    p.add_argument("--budget", type=int, default=25, help="builds measured per session (default: 25)")
+    p.add_argument("--steps", type=int, default=25, help="builds measured per session (default: 25)")
     p.add_argument("--initial", type=int, default=8, help="random builds before the first model (default: 8)")
     p.add_argument("--seeds", type=int, default=30, help="sessions per model (default: 30)")
     p.add_argument("--jobs", type=int, default=-1, help="parallel sessions (default: all cores)")
@@ -272,6 +290,26 @@ def main():
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.set_defaults(func=simulate)
+
+    p = sub.add_parser("active-sampling", help="live active sampling of llama.cpp on this machine")
+    p.add_argument("--steps", type=int, required=True, help="builds to benchmark, failed ones included")
+    p.add_argument("--model", choices=MODEL_TYPES, default="gaussian-process",
+                   help="local model refitted after every build (default: gaussian-process)")
+    p.add_argument("--pretrained", choices=[name for name in MODEL_TYPES if name != "random"],
+                   help="transfer learning: this model, fitted on the other machines, corrected by --model")
+    p.add_argument("--pretrain-on", nargs="+",
+                   help="pretrain only on platforms containing one of these words, e.g. Threadripper Cortex")
+    p.add_argument("--initial", type=int, default=8, help="start builds before the first fit (default: 8)")
+    p.add_argument("--seed", type=int, default=SEARCH_SEED, help="seed for start builds and candidate search")
+    p.add_argument("--device", choices=("cpu", "cuda"), default=os.environ.get("ACTIVE_SAMPLING_DEVICE"),
+                   help="benchmark backend (default: cuda if an NVIDIA GPU and the CUDA toolkit are found, else cpu)")
+    p.add_argument("--system", help="system.json of this machine (default: detect now)")
+    p.add_argument("--workdir", default=os.environ.get("DATA_DIR", "/data"),
+                   help="folder with llama.cpp/, gguf/ and build/ (default: $DATA_DIR or /data)")
+    p.add_argument("--output", help="results folder for the session (default: <workdir>/llama/results)")
+    p.add_argument("--space", help="JSON mapping flags to allowed values; default: values in --data")
+    p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
+    p.set_defaults(func=active_sampling)
 
     args = parser.parse_args()
     if args.command == "predict" and args.space and (args.search != "bounded" or args.model == "random"):

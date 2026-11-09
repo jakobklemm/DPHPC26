@@ -11,12 +11,12 @@ Run from the repository root with the project's Python environment:
 ```bash
 .venv/bin/python active-sampling/run_all_policies.py \
   --data llama/results results-500-seed20261029.zip \
-  --seeds 3 --budget 25 --initial 8 --jobs 6 --compact-bayes
+  --seeds 3 --steps 25 --initial 8 --jobs 6 --compact-bayes
 ```
 
 The default output is `active-sampling/llama-all-policies-replay.csv`. Each completed
 session is appended immediately. Repeating the command resumes missing sessions.
-A metadata sidecar checks the loaded data, budget, initial sample count, and numerical
+A metadata sidecar checks the loaded data, steps, initial sample count, and numerical
 implementation before resuming. Use a new `--output` for different experiments.
 Run only one writer against a given output file at a time.
 
@@ -47,7 +47,7 @@ are reused and seeds 3–9 are added:
 .venv/bin/python active-sampling/run_all_policies.py \
   --data llama/results results-500-seed20261029.zip \
   --historical no-hardware-small-mlp --model gaussian-process \
-  --seeds 10 --budget 25 --initial 8 --jobs 6 --compact-bayes
+  --seeds 10 --steps 25 --initial 8 --jobs 6 --compact-bayes
 ```
 
 For the reported experiment, the top five distinct pairings at 15 builds and the top
@@ -57,4 +57,4 @@ policies. Together with earlier ten-seed runs, the final dataset contains 421
 three-seed policies and 39 ten-seed policies, totaling 4,608 distinct sessions.
 
 For a small execution check, use `--historical none --model random --seeds 1
---budget 8 --initial 8 --output /tmp/llama-replay-smoke.csv`.
+--steps 8 --initial 8 --output /tmp/llama-replay-smoke.csv`.
