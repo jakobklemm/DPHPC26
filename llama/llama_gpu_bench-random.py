@@ -192,6 +192,8 @@ def main():
     common.add_argument("--repetitions", type=positive_int, default=3)
     common.add_argument("--gpu-layers", type=int, default=99)
     common.add_argument("--dry-run", action="store_true")
+    common.add_argument("--no-profile", action="store_true",
+                        help="Build and benchmark only; do not require perf or HPCToolkit")
     commands.add_parser("sweep", parents=[common], help="One hot: enable each flag once")
     subset = commands.add_parser("subset", parents=[common], help="Random N-flag subsets")
     subset.add_argument("--count", type=int, default=DEFAULT_COUNT)
@@ -239,11 +241,16 @@ def main():
     if args.device == "cuda" and plan and not find_cuda_compiler():
         parser.error("CUDA builds require nvcc on PATH or CUDACXX=/absolute/path/to/nvcc; "
                      "install the CUDA development toolkit on this host")
-    problem = profile_prerequisite_error(args.device)
-    if problem:
-        parser.error(problem)
-    print("Required stages: benchmark, CPU perf" + (", CUDA HPCToolkit" if args.device == "cuda" else ""),
-          flush=True)
+    if not args.no_profile:
+        problem = profile_prerequisite_error(args.device)
+        if problem:
+            parser.error(problem)
+    stages = ["benchmark"]
+    if not args.no_profile:
+        stages.append("CPU perf")
+        if args.device == "cuda":
+            stages.append("CUDA HPCToolkit")
+    print("Required stages: " + ", ".join(stages), flush=True)
     system_file = results / f"host-system-{args.device}{('-' + args.cuda_arch.replace(';', '-')) if args.cuda_arch else ''}.json"
     # The model is immutable for this run list; hash it only once, not once per build.
     from hashlib import sha256
@@ -257,7 +264,7 @@ def main():
                 "prompt": args.prompt, "generate": args.generate,
                 "repetitions": args.repetitions,
                 "gpu_layers": 0 if args.device == "cpu" else args.gpu_layers,
-                "profile": True, "build_dir": str(build)}
+                "profile": not args.no_profile, "build_dir": str(build)}
     settings_file = results / f"{args.mode}-settings.json"
     if settings_file.exists() and json.loads(settings_file.read_text()) != settings:
         parser.error(f"Run settings changed: use a different --results-dir or remove {settings_file}")
@@ -282,9 +289,11 @@ def main():
     for index in range(len(plan)):
         if index < len(records) and records[index]["status"] == "completed":
             directory = results / records[index]["results_directory"]
-            required = ["benchmark.json", "cpu-metrics.json", "build.json"]
-            if args.device == "cuda":
-                required.append("gpu-metrics.json")
+            required = ["benchmark.json", "build.json"]
+            if not args.no_profile:
+                required.append("cpu-metrics.json")
+                if args.device == "cuda":
+                    required.append("gpu-metrics.json")
             missing = [name for name in required if not (directory / name).is_file()]
             if missing:
                 parser.error(f"Execution {index + 1} was recorded as completed but lacks "
@@ -302,6 +311,8 @@ def main():
                    "--workers", str(args.workers), "--prompt", str(args.prompt),
                    "--generate", str(args.generate), "--repetitions", str(args.repetitions),
                    "--gpu-layers", str(0 if args.device == "cpu" else args.gpu_layers)]
+        if args.no_profile:
+            command.append("--no-profile")
         for name, value in config["cmake"].items():
             command.extend(["--cmake-arg", f"{name}={value}"])
         for name, value in config["runtime"].items():

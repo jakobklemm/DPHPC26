@@ -10,7 +10,7 @@ export DATA_DIR
 
 usage() {
     cat <<'EOF'
-Usage: runner [setup [options] | train [options] | active-sampling [options]]
+Usage: runner [setup | sweep | random | train | active-sampling] [options]
 
 setup (default): discover the system, clone llama.cpp, download weights, then train.
   --skip-system      Do not generate system.json
@@ -24,10 +24,13 @@ Mount one persistent folder at /data (override with DATA_DIR), containing the
 llama/ and gromacs/ folders from this repository (including their flags.json):
   llama.cpp/         Pinned source checkout
   gguf/             Downloaded inference weights
-  llama/results/    Training data supplied by the user (folders and/or ZIPs)
+  llama/results/    Collected or supplied training data (folders and/or ZIPs)
   models/           Trained ML .joblib files
-  build/            Live sampling build directories
+  build/            Collection and live sampling build directories
   system.json       Container-visible hardware and toolchain snapshot for ML commands
+
+sweep [options] collects one configuration per eligible flag, without profiling.
+random [options] collects random subsets (--count 50 --flags-per-build 7 by default).
 
 train [ML options] trains llama.cpp using /data/llama/results, saving to /data/models.
 active-sampling --steps N [--model NAME] [--pretrained NAME] [--device cpu|cuda] builds and
@@ -115,6 +118,14 @@ mode=${1:-setup}
 if [[ $# -gt 0 ]]; then shift; fi
 case "$mode" in
     setup) setup "$@" ;;
+    sweep|random)
+        collection_mode=sweep
+        if [[ "$mode" == random ]]; then collection_mode=subset; fi
+        exec python /workspace/llama/llama_gpu_bench-random.py "$collection_mode" \
+            --source "$DATA_DIR/llama.cpp" --model "$DATA_DIR/gguf/$GGUF_NAME" \
+            --build-dir "$DATA_DIR/build/collection-$mode" \
+            --results-dir "$DATA_DIR/llama/results/$mode" --device cpu --no-profile "$@"
+        ;;
     train) exec python -m ml.main --models "$DATA_DIR/models" train --app llama.cpp --data "$DATA_DIR/llama/results" "$@" ;;
     active-sampling) exec python -m ml.main active-sampling --workdir "$DATA_DIR" \
         --system "$DATA_DIR/system.json" --data "$DATA_DIR/llama/results" "$@" ;;

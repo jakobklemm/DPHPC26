@@ -104,6 +104,8 @@ def main():
     parser.add_argument("--device", required=True, choices=("cpu", "cuda", "vulkan"))
     parser.add_argument("--model-sha256", help="Precomputed model hash for repeated runs")
     parser.add_argument("--preflight-done", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--no-profile", action="store_true",
+                        help="Build and benchmark only; do not require perf or HPCToolkit")
     parser.add_argument("--system-info", type=Path, help="Host snapshot prepared once by the runner")
     parser.add_argument("--cmake-arg", action="append", default=[])
     parser.add_argument("--runtime-arg", action="append", default=[])
@@ -152,7 +154,7 @@ def main():
     if args.device == "cuda" and not find_cuda_compiler():
         parser.error("CUDA builds require nvcc on PATH or CUDACXX=/absolute/path/to/nvcc; "
                      "install the CUDA development toolkit on this host")
-    if not args.preflight_done:
+    if not args.no_profile and not args.preflight_done:
         problem = profile_prerequisite_error(args.device)
         if problem:
             parser.error(problem)
@@ -179,9 +181,12 @@ def main():
               "run_id": output.name,
               "cmake_definitions_in_order": ["-D" + arg for arg in args.cmake_arg],
               "cmake": cmake, "runtime": runtime, "compiler_flags": args.compiler_flag,
-              "profiling": {"cpu_perf": True, "gpu_hpctoolkit": args.device == "cuda"},
-              "stages": {"benchmark": "pending", "cpu_perf": "pending",
-                         "gpu_hpctoolkit": "pending" if args.device == "cuda" else "not_applicable"},
+              "profiling": {"cpu_perf": not args.no_profile,
+                            "gpu_hpctoolkit": not args.no_profile and args.device == "cuda"},
+              "stages": {"benchmark": "pending",
+                         "cpu_perf": "skipped" if args.no_profile else "pending",
+                         "gpu_hpctoolkit": ("not_applicable" if args.device != "cuda" else
+                                            "skipped" if args.no_profile else "pending")},
               "script_sha256": sha256_file(Path(__file__).resolve())}
     record_file = output / "build.json"
 
@@ -227,10 +232,11 @@ def main():
         record["benchmark_wall_seconds"] = round(time.monotonic() - start, 3)
         record["stages"]["benchmark"] = "completed"
         save()
-        profile(args, output, env, bench, record, save)
-        print(f"CPU metrics: {output / 'cpu-metrics.json'}", flush=True)
-        if args.device == "cuda":
-            print(f"GPU metrics: {output / 'gpu-metrics.json'}", flush=True)
+        if not args.no_profile:
+            profile(args, output, env, bench, record, save)
+            print(f"CPU metrics: {output / 'cpu-metrics.json'}", flush=True)
+            if args.device == "cuda":
+                print(f"GPU metrics: {output / 'gpu-metrics.json'}", flush=True)
         record["status"] = "completed"
         save()
         print(f"Results: {benchmark_file}", flush=True)

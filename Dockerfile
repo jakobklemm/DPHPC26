@@ -29,6 +29,7 @@ RUN python3 -m venv "$VIRTUAL_ENV" \
 
 COPY ml/ ml/
 COPY llama/flags.json llama/flags.json
+COPY llama/llama_gpu_bench-random.py llama/llama_gpu_bench-profile.py llama/filter_llama_performance_flags.py llama/
 COPY --chmod=755 runner.sh /usr/local/bin/runner
 
 RUN mkdir -p /data
