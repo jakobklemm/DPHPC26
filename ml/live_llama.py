@@ -37,7 +37,8 @@ def sampling_space(values, device):
     values = {name: list(choices) for name, choices in values.items()}
     if device == "cpu":
         values = {name: choices for name, choices in values.items()
-                  if not name.startswith(("CMAKE_CUDA_", "GGML_CUDA_"))}
+                  if not name.startswith(("CMAKE_CUDA_", "GGML_CUDA_", "CMAKE_VULKAN_",
+                                          "GGML_VULKAN_", "GGML_VK_"))}
     values.update(GGML_CPU=["ON"], GGML_CUDA=["ON" if device == "cuda" else "OFF"],
                   GGML_VULKAN=["OFF"], GGML_HIP=["OFF"], GGML_SYCL=["OFF"], GGML_METAL=["OFF"])
     return values

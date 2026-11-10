@@ -35,7 +35,7 @@ def execution_plan(options, device, cuda_arch=None, mode="sweep", count=DEFAULT_
         return []
     rng = random.Random(SEED)
     cpu = options["cmake"]
-    gpu = options["device"]
+    gpu = options["device"] if device != "cpu" else {}
     compiler = options["compiler"]
     cmake_base = {name: "OFF" for name in cpu}
     cmake_base.update({"GGML_NATIVE": "OFF", "GGML_CUDA": "ON" if device == "cuda" else "OFF",
