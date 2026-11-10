@@ -30,7 +30,8 @@ Mount one persistent folder at /data (override with DATA_DIR), containing:
   system.json       Container-visible hardware and toolchain snapshot for ML commands
 
 sweep [options] collects one configuration per eligible flag, without profiling.
-random [options] collects random subsets (--count 50 --flags-per-build 7 by default).
+random [options] toggles each flag independently (--count 50 --fraction 0.5 by default).
+--fraction must be between 0 and 1; invalid configurations are resampled.
 
 train [ML options] trains llama.cpp using /data/llama/results, saving to /data/models.
 active-sampling --steps N [--model NAME] [--pretrained NAME] [--device cpu|cuda] builds and
@@ -119,9 +120,7 @@ if [[ $# -gt 0 ]]; then shift; fi
 case "$mode" in
     setup) setup "$@" ;;
     sweep|random)
-        collection_mode=sweep
-        if [[ "$mode" == random ]]; then collection_mode=subset; fi
-        exec python /workspace/llama/llama_gpu_bench-random.py "$collection_mode" \
+        exec python /workspace/llama/llama_gpu_bench-random.py "$mode" \
             --source "$DATA_DIR/llama.cpp" --model "$DATA_DIR/gguf/$GGUF_NAME" \
             --build-dir "$DATA_DIR/build/collection-$mode" \
             --results-dir "$DATA_DIR/llama/results/$mode" --device cpu --no-profile "$@"

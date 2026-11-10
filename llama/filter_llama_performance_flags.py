@@ -196,7 +196,8 @@ def filter_catalog(catalog: dict, architecture: str, features: set[str], device:
             supported[name] = eligible
     device_flags = catalog["device"].get(device.upper(), {}) if device != "cpu" else {}
     invalid_combinations = [rule for rule in catalog.get("invalid_combinations", [])
-                            if all(name in cmake or name in device_flags for name in rule)]
+                             if all(name in cmake or name in device_flags or name in supported
+                                    for name in rule)]
     return {
         "cmake": cmake,
         "device": device_flags,

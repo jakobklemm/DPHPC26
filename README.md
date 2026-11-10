@@ -13,7 +13,7 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu sweep \
   --workers 4 --prompt 32 --generate 32 --repetitions 1
 
 docker run --rm -v ~/dphpc-data:/data dphpc26:cpu random \
-  --count 50 --flags-per-build 7
+  --count 50 --fraction 0.5
 ```
 
 ## Train & active sampling

@@ -18,7 +18,7 @@ repository root; place a GGUF model at `llama/model.gguf`, or specify its path.
 
 ```sh
 # With the default script-local source, model and flag catalog:
-python3 llama/llama_gpu_bench-random.py subset --device cpu --count 3 \
+python3 llama/llama_gpu_bench-random.py random --device cpu --count 3 \
   --prompt 16 --generate 16 --repetitions 1
 
 # One configuration for each selectable flag, with every other flag OFF:
@@ -26,24 +26,33 @@ python3 llama/llama_gpu_bench-random.py sweep \
   --source /path/to/llama.cpp --model /path/to/model.gguf --device cpu \
   --workers 4 --prompt 32 --generate 32 --repetitions 1
 
-# 50 distinct random configurations; exactly 7 flags ON in each by default:
-python3 llama/llama_gpu_bench-random.py subset \
+# 50 random configurations; independently enable each flag with probability 0.5:
+python3 llama/llama_gpu_bench-random.py random \
   --source /path/to/llama.cpp --model /path/to/model.gguf --device cpu \
-  --count 50 --flags-per-build 7
+  --count 50 --fraction 0.5
 
 # CUDA example:
-python3 llama/llama_gpu_bench-random.py subset \
+python3 llama/llama_gpu_bench-random.py random \
   --source /path/to/llama.cpp --model /path/to/model.gguf \
   --device cuda --cuda-arch 86 --count 5
 ```
 
 `--cuda-arch` is mandatory with CUDA and forbidden with other devices. The
-backend choice is fixed per invocation, not counted toward the N tuning flags.
-Vulkan configurations can be inspected with `--dry-run`, but execution is
-rejected until a Vulkan GPU metrics collector is available; HPCToolkit's
-`gpu=cuda` event source cannot profile Vulkan. CPU-only runs require timing
-and CPU profiling; CUDA runs require all three measurement stages.
-Use `--dry-run` to print all configurations before building. The root
+backend choice is fixed per invocation, not randomly toggled. In `random` mode,
+`--fraction` is the independent probability of enabling each eligible flag, from
+0 to 1 (default 0.5). Disabled flags use their explicit OFF value; enabled
+multi-valued compiler flags choose a non-OFF value uniformly. Invalid complete
+configurations are rejected and resampled, so the accepted flags are necessarily
+conditioned on those rules. Configurations may repeat, including at fraction 0
+(all OFF) and 1 (all ON). If no valid sample is found after 10,000 attempts, the
+runner exits with an error rather than looping forever.
+
+Vulkan configurations can be inspected with `--dry-run`, but profiled execution
+is rejected until a Vulkan GPU metrics collector is available; HPCToolkit's
+`gpu=cuda` event source cannot profile Vulkan. By default, CPU-only runs require
+timing and CPU profiling; CUDA runs require all three measurement stages.
+Use `--no-profile` for timing-only runs, including Vulkan. Use `--dry-run` to
+preview configurations without building or saving a plan. The root
 `llama/flags.json` is the canonical flag catalog. Supply a different catalog
 with `--flags-file /path/to/flags.json`; the same path is passed to each build
 for invalid-combination checks. A host-filtered catalog can be saved with
@@ -64,14 +73,19 @@ negating them with another compiler switch.
 The default build directory is `llama/build/`, reused across configurations;
 CMake reconfigures and incrementally builds only as needed. The flag filter,
 host snapshot, and model hash are calculated once per invocation. Results are
-in `llama/bench-results/` by default: `<mode>-plan.json` contains **all**
-planned configurations and `<mode>-executions.json` records their results,
-including failures. Each run directory has `build.json`, `benchmark.json`,
-logs, and system metadata. A completed CPU run has `benchmark.json` and
-`cpu-metrics.json`; a completed CUDA run also has `gpu-metrics.json`.
+in `llama/bench-results/` by default: `sweep-plan.json` contains **all** planned
+sweep configurations. Random mode samples at each step without writing a plan.
+`<mode>-executions.json` is the summary of executed configurations, with every
+flag's value and each execution's result, including failures. Each run directory
+has `build.json`, `benchmark.json`, logs, and system metadata. With profiling
+enabled, a completed CPU run also has `cpu-metrics.json`; a completed CUDA run
+additionally has `gpu-metrics.json`.
 `build.json` records each stage's status. Re-running the same mode and results directory
-resumes the recorded plan; `<mode>-settings.json` prevents accidentally resuming
-with a different model or benchmark workload. Use a new results directory for
+resumes the run; random mode replays the seeded sampler to skip completed entries
+and retry failures with the same flags. Increase `--count` to extend a random run.
+`<mode>-settings.json` prevents accidentally resuming with a different model,
+benchmark workload, or random fraction/eligible flags. Old fixed-size `subset`
+runs are not resumed by `random`. Use a new results directory for
 different settings. `--build-dir` and `--results-dir` can be set independently.
 Failed executions are recorded and reported with a nonzero script exit code.
 After fixing the environment, rerun with the same arguments: completed entries
@@ -100,10 +114,10 @@ Use a toolkit version compatible with your installed NVIDIA driver and host
 Clang. The CUDA 12.8 guide does not list Rocky 10 as supported; NVIDIA's
 current Linux installation guide does. For CUDA architecture 75, check that
 `nvcc --list-gpu-arch` includes `compute_75`. Then rerun the original `sweep`
-or `subset` invocation; the runner retries failed configurations. Both `perf`
+or `random` invocation; the runner retries failed configurations. Both `perf`
 and CUDA-enabled HPCToolkit must be installed on the host for CUDA runs.
 
-Profiling is mandatory. The runner checks that `perf` and (for CUDA) the three
+Unless `--no-profile` is passed, the runner checks that `perf` and (for CUDA) the three
 HPCToolkit tools (`hpcrun`, `hpcstruct`, `hpcprof`) are on `PATH`, and checks that
 `perf stat` can access CPU counters before building. Loading HPCToolkit via
 Spack does not install the separate `perf` command. On Rocky Linux, install
@@ -114,7 +128,7 @@ Use small `--prompt`, `--generate`, `--count`, and `--repetitions` settings when
 testing on a laptop. Use a **new** `--results-dir` for an old timing-only plan:
 
 ```sh
-python3 llama/llama_gpu_bench-random.py subset \
+python3 llama/llama_gpu_bench-random.py random \
   --source /path/to/llama.cpp --model /path/to/model.gguf \
   --device cuda --cuda-arch 75 --count 1 \
   --results-dir /path/to/bench-results-profiled
