@@ -1,10 +1,11 @@
-# The devel image includes nvcc and CUDA headers, not just the runtime libraries.
-FROM docker.io/nvidia/cuda:12.8.1-devel-ubuntu24.04
+# llama.cpp CPU build and ML image.
+FROM docker.io/library/ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     VIRTUAL_ENV=/opt/venv \
-    PATH=/opt/venv/bin:/usr/local/cuda/bin:$PATH \
-    PYTHONUNBUFFERED=1
+    PATH=/opt/venv/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    ACTIVE_SAMPLING_DEVICE=cpu
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -25,7 +26,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /workspace
 COPY ml/requirements.txt ml/requirements.txt
 RUN python3 -m venv "$VIRTUAL_ENV" \
-    && pip install --no-cache-dir -r ml/requirements.txt
+    && pip install --no-cache-dir -r ml/requirements.txt \
+    && pip check \
+    && python -c "import catboost, joblib, numpy, pandas, sklearn"
 
 COPY ml/ ml/
 COPY llama/flags.json llama/flags.json

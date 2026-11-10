@@ -20,8 +20,8 @@ Both run in the container. The work folder `~/dphpc-data` on the host (mounted a
 
 ```bash
 # Once: build the image (from the repository root); one of:
-docker build -t dphpc26:cuda .                        # NVIDIA GPU (also runs CPU-only)
-docker build -f Dockerfile.cpu -t dphpc26:cpu .       # CPU only, smaller
+docker build -f docker/llama.cpp.cuda.Dockerfile -t dphpc26:cuda .
+docker build -f docker/llama.cpp.cpu.Dockerfile -t dphpc26:cpu .
 
 # Or simply use the pre-built images on Github
 # docker pull ghcr.io/jakobklemm/dphpc26:cuda (or tagged cpu or vulkan)
