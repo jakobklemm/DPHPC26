@@ -8,13 +8,11 @@ Runs come from llama_gpu_bench.py (build-<run id>.json) or llama_gpu_bench-profi
     benchmark.json             llama-bench output -> performance (tokens per second)
 """
 
-import json
-import os
 import shlex
-from pathlib import Path
 
 from .validation import (BOOL, COMMON_SCHEMA, cuda_errors, enabled,
-                         isa_errors, require, schema_errors, toolchain_errors, value)
+                         isa_errors, require, schema_errors, toolchain_errors, value,
+                         compiler_flags, compiler_flag_option)
 
 APPLICATION = "llama.cpp"  # project_name in source.yml
 
@@ -50,28 +48,19 @@ BOOLEAN_OPTIONS = set(CPU_FEATURES) | {
     "GGML_CUDA_NO_PEER_COPY", "GGML_CUDA_F16", "GGML_HIP", "GGML_SYCL", "GGML_VULKAN",
     "GGML_METAL", "GGML_BLAS", "GGML_BACKEND_DL", "LLAMA_CURL",
 }
-# flag group of a compiler flag: "-fno-vectorize" -> "-fvectorize", "-O2" -> "-O", "-march=native" -> "-march"
-def compiler_flag_option(flag):
-    if flag.startswith("-O"):
-        return "-O"
-    name = flag.partition("=")[0]
-    return "-f" + name.removeprefix("-fno-") if name.startswith("-fno-") else name
-
-
 # Compiler flags of the harness: the flag groups of flags.json "compiler", {option: check(flag)}.
 # The option is the flag group, its value the flag passed, e.g. "-fvectorize": "-fno-vectorize".
 # Any flag of the group is accepted, also the harness' "off" values that flags.json does not list.
-FLAGS_FILE = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent.parent)) / "llama" / "flags.json"
-COMPILER_FLAGS = {group: lambda flag, group=group: compiler_flag_option(flag) == group
-                  for group in json.loads(FLAGS_FILE.read_text())["compiler"]}
+# Loaded lazily by compiler_flags(APPLICATION), not when importing this module.
 # Toolchain choices read from configure_command; the tuned options come from the other fields
 TOOLCHAIN = {"CMAKE_BUILD_TYPE", "CMAKE_C_COMPILER", "CMAKE_CXX_COMPILER"}
-SCHEMA = {**COMMON_SCHEMA, **dict.fromkeys(BOOLEAN_OPTIONS, BOOL), **COMPILER_FLAGS,
+SCHEMA = {**COMMON_SCHEMA, **dict.fromkeys(BOOLEAN_OPTIONS, BOOL),
           "GGML_BLAS_VENDOR": {"Generic", "OpenBLAS", "FLAME", "Intel10_64lp", "Apple", "All"}}
 
 
 def validation_errors(config, hardware):
-    errors = schema_errors(config, SCHEMA)
+    compiler = compiler_flags(APPLICATION)
+    errors = schema_errors(config, {**SCHEMA, **compiler})
     if errors:
         return errors
     # CUDA tuning constraints only with an active CUDA backend
@@ -102,7 +91,7 @@ def validation_errors(config, hardware):
     if enabled(config, "LLAMA_CURL"):
         require(errors, hardware, "curl", "toolchain: LLAMA_CURL requires libcurl")
     # Compiler flags checked like extra flags of the build (e.g. -march=x86-64-v3 needs AVX2)
-    flags = [value(config, option) for option in COMPILER_FLAGS if value(config, option)]
+    flags = [value(config, option) for option in compiler if value(config, option)]
     # Same experiment policy as llama_gpu_bench-profile.py, including flags
     # supplied through raw CMake compiler settings rather than flag groups.
     build_type = value(config, "CMAKE_BUILD_TYPE", "").upper()
@@ -166,4 +155,4 @@ def performance(benchmark):
 
 # how to pass one option to the build: compiler flags as they are, the rest as CMake definitions
 def build_argument(option, value):
-    return value if option in COMPILER_FLAGS else f"-D{option}={value}"
+    return value if option in compiler_flags(APPLICATION) else f"-D{option}={value}"

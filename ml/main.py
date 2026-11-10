@@ -39,6 +39,7 @@ from .models.gaussian_process import reset_warning_log
 from .live_llama import run_session
 from .search import SEARCH_SEED, SEARCH_STARTS
 from .system import discover
+from .validation import flag_catalog
 
 
 def model_path(models, app, kind="hardware"):
@@ -122,6 +123,7 @@ def predict(args):
     if not apps:
         raise ValueError("no trained models found; run python -m ml.main train first")
     for app in apps:
+        flag_catalog(app)
         model = BaseModel.load(model_path(args.models, app, args.model))
         if isinstance(model, RandomBaseline):
             # A fresh generator avoids replaying the state saved during training.

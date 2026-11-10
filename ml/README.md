@@ -23,11 +23,14 @@ Both run in the container. The work folder `~/dphpc-data` on the host (mounted a
 docker build -t dphpc26:cuda .                        # NVIDIA GPU (also runs CPU-only)
 docker build -f Dockerfile.cpu -t dphpc26:cpu .       # CPU only, smaller
 
+# Or simply use the pre-built images on Github
+# docker pull ghcr.io/jakobklemm/dphpc26:cuda (or tagged cpu or vulkan)
+
 # Once: create the work folder
 # Separate folder such that we dont mount a folder from the repository
 mkdir -p ~/dphpc-data/llama # you may choose a different location in the commands
 
-# Once: Copy the flag catalog and the historical benchmarks in this folder (from the repository root)
+# Once: copy the llama flag catalog and historical benchmarks
 cp -r llama/flags.json llama/results ~/dphpc-data/llama/
 
 # Start a shell in the container; one of:

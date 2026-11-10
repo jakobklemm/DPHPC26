@@ -29,7 +29,7 @@ from pathlib import Path
 import pandas as pd
 
 from . import load_gromacs, load_llama
-from .validation import COMMON_SCHEMA, catalog_errors, discovery_features, schema_errors, toolchain_errors
+from .validation import COMMON_SCHEMA, catalog_errors, discovery_features, flag_catalog, schema_errors, toolchain_errors
 
 HW = "hw."
 CFG = "cfg."
@@ -182,10 +182,13 @@ def platform_name(system):
 
 
 # compute one row of the dataframe
-def parse_run(files):
+def parse_run(files, app=None):
+    selected = application(files["source.yml"])
+    if app is not None and selected != app:
+        return None
     system = json.loads(files["system.json"])
     build = json.loads(files["build.json"])
-    app = application(files["source.yml"])
+    app = selected
     if app not in APPS:
         print(f"skipping run {build.get('run_id', '?')}: no loader for application {app!r}")
         return None
@@ -213,12 +216,18 @@ def load_table(paths=None, app=None):
     0.9 is 10 % slower.
 
     """
+    # Only the selected project needs a flag catalog; importing the pipeline and
+    # asking for CLI help must also work without any catalogs being present.
+    if app is not None:
+        flag_catalog(app)
     # Read each application's local results by default; explicit paths override them.
     paths = paths or ([DEFAULT_RESULTS[app]] if app else list(DEFAULT_RESULTS.values()))
-    rows = [parse_run(files) for files in read_runs(paths)]
-    rows = [r for r in rows if r and (app is None or r["application"] == app)]
+    rows = [parse_run(files, app) for files in read_runs(paths)]
+    rows = [r for r in rows if r]
     if not rows:
         raise ValueError(f"no runs{' of ' + app if app else ''} found in {list(map(str, paths))}")
+    for application_name in sorted({r["application"] for r in rows}):
+        flag_catalog(application_name)
     table = pd.DataFrame(rows)
 
     # The same run can be found twice, e.g. as a zip and as its extracted folder.

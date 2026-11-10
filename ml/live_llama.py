@@ -19,7 +19,8 @@ from pathlib import Path
 
 from .active_sampling import LiveActiveSampler
 from .load import CFG, DEFAULT, app_options, columns, describe, hardware_features, platform_name, strip
-from .load_llama import APPLICATION, COMPILER_FLAGS, performance
+from .load_llama import APPLICATION, performance
+from .validation import compiler_flags
 
 
 GGUF_NAME = "qwen2.5-3b-instruct-q4_k_m.gguf"
@@ -43,10 +44,11 @@ def sampling_space(values, device):
 
 
 def commands(config, data, build, device="cuda"):
+    compiler = compiler_flags(APPLICATION)
     cmake = {name: str(value) for name, value in config.items()
-             if name not in COMPILER_FLAGS and value != DEFAULT}
+             if name not in compiler and value != DEFAULT}
     flags = [str(value) for name, value in config.items()
-             if name in COMPILER_FLAGS and value != DEFAULT]
+             if name in compiler and value != DEFAULT]
     # Match llama_gpu_bench-profile.py, called by the training-data subset runner.
     optimization = [] if any(flag.startswith("-O") for flag in flags) else ["-O3"]
     release_flags = " ".join(["-g", "-DNDEBUG", *optimization, *flags])
@@ -71,7 +73,7 @@ def benchmark(config, data, build, output, system, device="cuda"):
     record = {"run_id": f"{output.parent.name}-{output.name}", "config": config,
               "device": device, "source": str(data / "llama.cpp"), "model": str(data / "gguf" / GGUF_NAME),
               "cmake_definitions_in_order": [f"-D{k}={v}" for k, v in config.items()
-                                             if k not in COMPILER_FLAGS and v != DEFAULT],
+                                             if k not in compiler_flags(APPLICATION) and v != DEFAULT],
               "compiler_flags": flags, "configure_command": configure,
               "build_command": compile_command, "benchmark_command": bench, "status": "running"}
     write_json(output / "system.json", system)

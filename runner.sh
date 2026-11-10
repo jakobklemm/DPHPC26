@@ -20,8 +20,8 @@ setup (default): discover the system, clone llama.cpp, download weights, then tr
   --model NAME       ML model to train (default: hardware; see ml.main train --help)
   -h, --help         Show this help
 
-Mount one persistent folder at /data (override with DATA_DIR), containing the
-llama/ and gromacs/ folders from this repository (including their flags.json):
+Mount one persistent folder at /data (override with DATA_DIR), containing:
+  llama/flags.json   llama.cpp flag catalog
   llama.cpp/         Pinned source checkout
   gguf/             Downloaded inference weights
   llama/results/    Collected or supplied training data (folders and/or ZIPs)

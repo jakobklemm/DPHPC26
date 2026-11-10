@@ -22,7 +22,18 @@ BOOL = TRUE | FALSE
 def flag_catalog(application):
     directory = {"llama.cpp": "llama", "gromacs": "gromacs"}[application]
     root = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent.parent))
-    return json.loads((root / directory / "flags.json").read_text())
+    path = root / directory / "flags.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"flag catalog for {application} missing: {path}; "
+                                f"copy {directory}/flags.json into {root / directory}")
+    return json.loads(path.read_text())
+
+
+@lru_cache(maxsize=None)
+def compiler_flags(application):
+    """Load compiler flag groups only after selecting an application."""
+    return {group: lambda flag, group=group: compiler_flag_option(flag) == group
+            for group in flag_catalog(application)["compiler"]}
 
 
 def catalog_errors(config, application, defaults=None):
