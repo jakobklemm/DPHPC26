@@ -1,0 +1,131 @@
++ cmake -S /data/llama.cpp -B /data/build/collection-sweep -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ '-DCMAKE_C_FLAGS_RELEASE=-g -DNDEBUG -O3 -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -fno-inline-functions -fno-strict-aliasing -fno-unsafe-math-optimizations -ffp-contract=off -fno-math-errno -march=x86-64 -mprefer-vector-width=128' '-DCMAKE_CXX_FLAGS_RELEASE=-g -DNDEBUG -O3 -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -fno-inline-functions -fno-strict-aliasing -fno-unsafe-math-optimizations -ffp-contract=off -fno-math-errno -march=x86-64 -mprefer-vector-width=128' -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -DGGML_LLAMAFILE=OFF -DGGML_CPU_REPACK=OFF -DGGML_NATIVE=OFF -DGGML_LTO=ON -DGGML_OPENMP=OFF -DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BMI2=OFF -DGGML_AVX_VNNI=OFF -DGGML_AVX512=OFF -DGGML_AVX512_VBMI=OFF -DGGML_AVX512_VNNI=OFF -DGGML_AVX512_BF16=OFF -DGGML_CUDA=OFF -DGGML_VULKAN=OFF
+-- llama.cpp version: 0.7.0-dev
+CMAKE_BUILD_TYPE=Release
+CMake Warning at ggml/src/CMakeLists.txt:64 (message):
+  IPO is not supported: Change Dir:
+  '/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin'
+
+
+
+  Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f
+  Makefile
+
+  /usr/bin/cmake
+  -S/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/src
+  -B/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin
+  --check-build-system CMakeFiles/Makefile.cmake 0
+
+  /usr/bin/cmake -E cmake_progress_start
+  /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles
+  /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin//CMakeFiles/progress.marks
+
+
+  /usr/bin/gmake -f CMakeFiles/Makefile2 all
+
+  gmake[1]: Entering directory
+  '/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin'
+
+  /usr/bin/gmake -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/depend
+
+  gmake[2]: Entering directory
+  '/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin'
+
+  cd /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin
+  && /usr/bin/cmake -E cmake_depends "Unix Makefiles"
+  /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/src
+  /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/src
+  /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin
+  /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin
+  /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir/DependInfo.cmake
+
+
+  gmake[2]: Leaving directory
+  '/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin'
+
+  /usr/bin/gmake -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+
+  gmake[2]: Entering directory
+  '/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin'
+
+  [ 25%] Building CXX object CMakeFiles/foo.dir/foo.cpp.o
+
+  /usr/bin/clang++ -g -flto=thin -MD -MT CMakeFiles/foo.dir/foo.cpp.o -MF
+  CMakeFiles/foo.dir/foo.cpp.o.d -o CMakeFiles/foo.dir/foo.cpp.o -c
+  /data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/src/foo.cpp
+
+
+  [ 50%] Linking CXX static library libfoo.a
+
+  /usr/bin/cmake -P CMakeFiles/foo.dir/cmake_clean_target.cmake
+
+  /usr/bin/cmake -E cmake_link_script CMakeFiles/foo.dir/link.txt --verbose=1
+
+  "CMAKE_CXX_COMPILER_AR-NOTFOUND" cr libfoo.a CMakeFiles/foo.dir/foo.cpp.o
+
+  Error running link command: No such file or directory
+
+  gmake[2]: *** [CMakeFiles/foo.dir/build.make:101: libfoo.a] Error 2
+
+  gmake[2]: Leaving directory
+  '/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin'
+
+  gmake[1]: *** [CMakeFiles/Makefile2:88: CMakeFiles/foo.dir/all] Error 2
+
+  gmake[1]: Leaving directory
+  '/data/build/collection-sweep/ggml/src/CMakeFiles/_CMakeLTOTest-CXX/bin'
+
+  gmake: *** [Makefile:94: all] Error 2
+
+
+
+
+
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: x86_64
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu:  
+-- ggml version: 0.27.0
+-- ggml commit:  922f53e
+-- Could NOT find OpenSSL, try to set the path to OpenSSL root folder in the system variable OPENSSL_ROOT_DIR (missing: OPENSSL_CRYPTO_LIBRARY OPENSSL_INCLUDE_DIR) 
+CMake Warning at vendor/cpp-httplib/CMakeLists.txt:154 (message):
+  OpenSSL not found, HTTPS support disabled
+
+
+-- Generating embedded license file for target: llama-app
+-- Configuring done (1.1s)
+-- Generating done (2.3s)
+-- Build files have been written to: /data/build/collection-sweep
++ cmake --build /data/build/collection-sweep --target llama-bench -j 4
+[  0%] Built target llama-common-base
+[  0%] Built target cpp-httplib
+[  7%] Built target ggml-base
+[  9%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[ 10%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[ 10%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[ 10%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[ 10%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[ 12%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[ 12%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[ 14%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[ 14%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled.cpp.o
+[ 14%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled-kernel.cpp.o
+[ 16%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[ 16%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[ 18%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[ 18%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+[ 18%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/quants.c.o
+[ 20%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/repack.cpp.o
+[ 20%] Linking CXX shared library ../../bin/libggml-cpu.so
+[ 20%] Built target ggml-cpu
+[ 20%] Linking CXX shared library ../../bin/libggml.so
+[ 21%] Built target ggml
+[ 21%] Linking CXX shared library ../bin/libllama.so
+[ 54%] Built target llama
+[ 56%] Linking CXX shared library ../bin/libllama-common.so
+[ 96%] Built target llama-common
+[ 98%] Linking CXX shared library ../../bin/libllama-bench-impl.so
+[ 98%] Built target llama-bench-impl
+[100%] Linking CXX executable ../../bin/llama-bench
+[100%] Built target llama-bench
