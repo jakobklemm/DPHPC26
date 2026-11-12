@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     libomp-dev \
+    llvm \
     ninja-build \
     pkg-config \
     python3 \

@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     glslc \
     libomp-dev \
     libvulkan-dev \
+    llvm \
     mesa-vulkan-drivers \
     ninja-build \
     pkg-config \
