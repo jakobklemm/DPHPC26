@@ -1,0 +1,129 @@
+{
+  "device": {
+    "CUDA": {
+      "GMX_GPU": [
+        "CUDA"
+      ],
+      "CMAKE_CUDA_ARCHITECTURES": [
+        "120"
+      ],
+      "GMX_CUDA_NB_SINGLE_COMPILATION_UNIT": [
+        "OFF",
+        "ON"
+      ]
+    }
+  },
+  "cuda_compiler": {
+    "-Xptxas -O": [
+      "-Xptxas=-O3",
+      "-Xptxas=-O2",
+      "-Xptxas=-O1"
+    ]
+  },
+  "cpu": {
+    "GMX_SIMD": [
+      "ARM_SVE",
+      "ARM_NEON_ASIMD",
+      "None",
+      "AVX_512",
+      "AVX2_256",
+      "AVX2_128",
+      "AVX_256",
+      "SSE4.1"
+    ],
+    "GMX_USE_SIMD_KERNELS": [
+      "ON",
+      "OFF"
+    ],
+    "GMX_SIMD_ACCURACY_BITS_SINGLE": [
+      "22",
+      "16"
+    ],
+    "GMX_DOUBLE": [
+      "OFF",
+      "ON"
+    ],
+    "GMX_FFT_LIBRARY": [
+      "fftw3",
+      "fftpack"
+    ],
+    "BUILD_SHARED_LIBS": [
+      "ON",
+      "OFF"
+    ]
+  },
+  "compiler": {
+    "-O": [
+      "-O3",
+      "-O2",
+      "-O1",
+      "-Os",
+      "-Oz"
+    ],
+    "-mcpu": [
+      "-mcpu=generic",
+      "-mcpu=neoverse-n1",
+      "-mcpu=neoverse-v2",
+      "-mcpu=cortex-x925",
+      "-mcpu=native"
+    ],
+    "-march": [
+      "-march=x86-64",
+      "-march=x86-64-v2",
+      "-march=x86-64-v3",
+      "-march=x86-64-v4",
+      "-march=native"
+    ],
+    "-fvectorize": [
+      "-fvectorize",
+      "-fno-vectorize"
+    ],
+    "-fslp-vectorize": [
+      "-fslp-vectorize",
+      "-fno-slp-vectorize"
+    ],
+    "-funroll-loops": [
+      "-funroll-loops",
+      "-fno-unroll-loops"
+    ],
+    "-finline-functions": [
+      "-finline-functions",
+      "-fno-inline-functions"
+    ],
+    "-fstrict-aliasing": [
+      "-fstrict-aliasing",
+      "-fno-strict-aliasing"
+    ],
+    "-ffp-contract": [
+      "-ffp-contract=on",
+      "-ffp-contract=fast",
+      "-ffp-contract=off"
+    ],
+    "-fmath-errno": [
+      "-fmath-errno",
+      "-fno-math-errno"
+    ],
+    "-flto": [
+      "-fno-lto",
+      "-flto=thin"
+    ]
+  },
+  "invalid_combinations": [
+    {
+      "GMX_GPU": "CUDA",
+      "GMX_DOUBLE": "ON"
+    },
+    {
+      "GMX_SIMD": "None",
+      "GMX_USE_SIMD_KERNELS": "OFF"
+    },
+    {
+      "GMX_SIMD": "None",
+      "GMX_SIMD_ACCURACY_BITS_SINGLE": "16"
+    },
+    {
+      "GMX_DOUBLE": "ON",
+      "GMX_SIMD_ACCURACY_BITS_SINGLE": "16"
+    }
+  ]
+}

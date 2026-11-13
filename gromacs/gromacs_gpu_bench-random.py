@@ -172,6 +172,10 @@ def main():
     common.add_argument("--nsteps", type=positive_int, default=20000, help="MD steps per mdrun")
     common.add_argument("--repetitions", type=positive_int, default=3, help="measured mdruns")
     common.add_argument("--warmup", type=int, default=1, help="unmeasured mdruns before them")
+    common.add_argument("--cpu-tpr", type=Path,
+                        help="CUDA: also benchmark every build CPU-only on this input")
+    common.add_argument("--cpu-nsteps", type=positive_int, default=5000,
+                        help="MD steps per CPU-only mdrun")
     common.add_argument("--skip-cpu-perf", action="store_true",
                         help="no perf stat stage (hosts where perf counters are blocked)")
     common.add_argument("--skip-hpcstruct", action="store_true",
@@ -199,6 +203,9 @@ def main():
     fftw = args.fftw.expanduser().resolve()
     if not (source / "CMakeLists.txt").is_file() or not tpr.is_file() or not fftw.is_file():
         parser.error("--source must be a GROMACS source tree, --tpr a .tpr file, --fftw the FFTW tarball")
+    cpu_tpr = args.cpu_tpr.expanduser().resolve() if args.cpu_tpr else None
+    if cpu_tpr and (args.device != "cuda" or not cpu_tpr.is_file()):
+        parser.error("--cpu-tpr needs --device cuda and an existing .tpr")
     results = args.results_dir.expanduser().resolve()
     build = args.build_dir.expanduser().resolve()
     flags_file = args.flags_file.expanduser().resolve()
@@ -250,6 +257,9 @@ def main():
                             "gpu_hpctoolkit": args.device == "cuda" and not args.no_profile,
                             "hpcstruct": args.device == "cuda" and not args.skip_hpcstruct},
                 "build_dir": str(build)}
+    if cpu_tpr:   # only added when used, so older settings files still match
+        settings["cpu_benchmark"] = {"tpr": str(cpu_tpr), "tpr_sha256": file_hash(cpu_tpr),
+                                     "nsteps": args.cpu_nsteps}
     settings_file = results / f"{args.mode}-settings.json"
     if settings_file.exists() and json.loads(settings_file.read_text()) != settings:
         parser.error(f"Run settings changed: use a different --results-dir or remove {settings_file}")
@@ -275,7 +285,7 @@ def main():
     for index in range(len(plan)):
         if index < len(records) and records[index]["status"] == "completed":
             directory = results / records[index]["results_directory"]
-            required = ["benchmark.json", "build.json"]
+            required = ["benchmark.json", "build.json"] + (["benchmark-cpu.json"] if cpu_tpr else [])
             if not args.skip_cpu_perf:
                 required.append("cpu-metrics.json")
             if args.device == "cuda" and not args.no_profile:
@@ -296,6 +306,9 @@ def main():
                    "--workers", str(args.workers), "--threads", str(args.threads),
                    "--nsteps", str(args.nsteps), "--repetitions", str(args.repetitions),
                    "--warmup", str(args.warmup)]
+        if cpu_tpr:
+            command.extend(["--cpu-tpr", str(cpu_tpr), "--cpu-nsteps", str(args.cpu_nsteps),
+                            "--cpu-tpr-sha256", settings["cpu_benchmark"]["tpr_sha256"]])
         if args.skip_cpu_perf:
             command.append("--skip-cpu-perf")
         if args.skip_hpcstruct:

@@ -5,6 +5,8 @@ host with clang and benchmark a fixed .tpr input with gmx mdrun.
 Writes the same run folder as the llama script: source.yml, system.json,
 build.json, benchmark.json, cpu-metrics.json, gpu-metrics.json, build.log.
 benchmark.json holds ns/day (mean of the measured mdruns, higher is better).
+With --cpu-tpr (CUDA builds), the same binary is also benchmarked CPU-only
+(-nb cpu -pme cpu -update cpu, GPU detection off): benchmark-cpu.json.
 """
 
 import argparse
@@ -68,13 +70,13 @@ def run_logged(command, log, *, env=None, cwd=None):
                 raise subprocess.CalledProcessError(process.returncode, command)
 
 
-def mdrun_args(binary, tpr, args):
+def mdrun_args(binary, tpr, args, device=None, nsteps=None):
     return [str(binary), "mdrun", "-s", str(tpr),
             "-ntmpi", "1",                  # one rank: no domain decomposition
             "-ntomp", str(args.threads),    # fixed OpenMP thread count
             "-pin", "on",
-            *DEVICE_MDRUN_ARGS[args.device],
-            "-nsteps", str(args.nsteps),
+            *DEVICE_MDRUN_ARGS[device or args.device],
+            "-nsteps", str(nsteps or args.nsteps),
             "-resethway",                   # time only the second half: no startup/tuning
             "-notunepme",                   # same PME grid for every build
             "-noconfout", "-g", "md.log"]
@@ -227,6 +229,10 @@ def main():
     parser.add_argument("--nsteps", type=positive_int, default=20000)
     parser.add_argument("--repetitions", type=positive_int, default=3)
     parser.add_argument("--warmup", type=int, default=1)
+    parser.add_argument("--cpu-tpr", type=Path,
+                        help="CUDA builds: also benchmark CPU-only on this input (benchmark-cpu.json)")
+    parser.add_argument("--cpu-tpr-sha256", help="Precomputed hash of --cpu-tpr")
+    parser.add_argument("--cpu-nsteps", type=positive_int, help="MD steps per CPU-only mdrun")
     parser.add_argument("--skip-cpu-perf", action="store_true",
                         help="no perf stat stage (hosts where perf counters are blocked)")
     parser.add_argument("--skip-hpcstruct", action="store_true",
@@ -253,6 +259,9 @@ def main():
         parser.error("--compiler-flag/--cuda-flag must be a single compiler switch")
     if args.cuda_flag and args.device != "cuda":
         parser.error("--cuda-flag requires --device cuda")
+    cpu_tpr = args.cpu_tpr.expanduser().resolve() if args.cpu_tpr else None
+    if cpu_tpr and (args.device != "cuda" or not cpu_tpr.is_file() or not args.cpu_nsteps):
+        parser.error("--cpu-tpr needs --device cuda, an existing .tpr and --cpu-nsteps")
     flags_file = args.flags_file.expanduser().resolve()
     if not flags_file.is_file():
         parser.error(f"Flag catalog not found: {flags_file}")
@@ -305,7 +314,11 @@ def main():
               "profiling": {"cpu_perf": not args.skip_cpu_perf,
                             "gpu_hpctoolkit": args.device == "cuda" and not args.no_profile,
                             "hpcstruct": args.device == "cuda" and not args.skip_hpcstruct},
-              "stages": {"benchmark": "pending", "cpu_perf": "skipped" if args.skip_cpu_perf else "pending",
+              "cpu_benchmark": ({"tpr": str(cpu_tpr), "nsteps": args.cpu_nsteps,
+                                 "tpr_sha256": args.cpu_tpr_sha256 or sha256_file(cpu_tpr)}
+                                if cpu_tpr else None),
+              "stages": {"benchmark": "pending",
+                         "benchmark_cpu": "pending" if cpu_tpr else "not_applicable", "cpu_perf": "skipped" if args.skip_cpu_perf else "pending",
                          "gpu_hpctoolkit": ("not_applicable" if args.device != "cuda"
                                             else "skipped" if args.no_profile else "pending")},
               "script_sha256": sha256_file(Path(__file__).resolve())}
@@ -360,28 +373,27 @@ def main():
         bench = mdrun_args(binary, tpr, args)
         record["benchmark_command"] = bench
         save()
-        bench_dir = output / "benchmark"
-        runs = []
-        start = time.monotonic()
-        for index in range(args.warmup + args.repetitions):
-            kind = "warmup" if index < args.warmup else "measured"
-            number = index if kind == "warmup" else index - args.warmup
-            result = run_mdrun(bench, bench_dir / f"{kind}{number}", env)
-            verify_mdrun(bench_dir / f"{kind}{number}", args.device)
-            runs.append({"kind": kind, "index": number, **result})
-            print(f"{kind} {number}: {result['value']} ns/day", flush=True)
-        record["benchmark_wall_seconds"] = round(time.monotonic() - start, 3)
-        measured = [run["value"] for run in runs if run["kind"] == "measured"]
-        benchmark = {"metric": "ns_per_day", "unit": "ns/day", "higher_is_better": True,
-                     "aggregate": "mean", "mean": statistics.mean(measured),
-                     "std": statistics.stdev(measured) if len(measured) > 1 else 0.0,
-                     "n_runs": len(measured), "warmup_runs": args.warmup,
-                     "nsteps": args.nsteps, "threads": args.threads,
-                     "runs": [run for run in runs if run["kind"] == "measured"]}
+        benchmark, seconds = run_benchmark(bench, output / "benchmark", env, args, args.device,
+                                           args.nsteps)
+        record["benchmark_wall_seconds"] = seconds
         benchmark_file = output / "benchmark.json"
         benchmark_file.write_text(json.dumps(benchmark, indent=2) + "\n")
         record["stages"]["benchmark"] = "completed"
         save()
+        if cpu_tpr:
+            cpu_bench = mdrun_args(binary, cpu_tpr, args, "cpu", args.cpu_nsteps)
+            record["cpu_benchmark"]["command"] = cpu_bench
+            save()
+            # GPU detection off: the CUDA build runs exactly like a CPU-only build
+            cpu_result, seconds = run_benchmark(cpu_bench, output / "benchmark-cpu",
+                                                {**env, "GMX_DISABLE_GPU_DETECTION": "1"},
+                                                args, "cpu", args.cpu_nsteps)
+            cpu_result["mdrun_mode"] = "cpu_only"
+            record["benchmark_cpu_wall_seconds"] = seconds
+            (output / "benchmark-cpu.json").write_text(json.dumps(cpu_result, indent=2) + "\n")
+            record["stages"]["benchmark_cpu"] = "completed"
+            save()
+            print(f"CPU-only: mean {cpu_result['mean']:.3f} ns/day", flush=True)
         if not args.no_profile:
             profile(args, output, env, bench, record, save)
         if not args.skip_cpu_perf:
@@ -399,6 +411,27 @@ def main():
         print(f"Failed: {error}\nLogs and generated files: {output}", file=sys.stderr, flush=True)
         return 1
     return 0
+
+
+def run_benchmark(bench, bench_dir, env, args, device, nsteps):
+    """warmup + measured mdruns; returns (benchmark dict, wall seconds)."""
+    runs = []
+    start = time.monotonic()
+    for index in range(args.warmup + args.repetitions):
+        kind = "warmup" if index < args.warmup else "measured"
+        number = index if kind == "warmup" else index - args.warmup
+        result = run_mdrun(bench, bench_dir / f"{kind}{number}", env)
+        verify_mdrun(bench_dir / f"{kind}{number}", device)
+        runs.append({"kind": kind, "index": number, **result})
+        print(f"{bench_dir.name} {kind} {number}: {result['value']} ns/day", flush=True)
+    measured = [run["value"] for run in runs if run["kind"] == "measured"]
+    return ({"metric": "ns_per_day", "unit": "ns/day", "higher_is_better": True,
+             "aggregate": "mean", "mean": statistics.mean(measured),
+             "std": statistics.stdev(measured) if len(measured) > 1 else 0.0,
+             "n_runs": len(measured), "warmup_runs": args.warmup,
+             "nsteps": nsteps, "threads": args.threads,
+             "runs": [run for run in runs if run["kind"] == "measured"]},
+            round(time.monotonic() - start, 3))
 
 
 def profile(args, output, env, bench, record, save):
