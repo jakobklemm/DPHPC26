@@ -1,7 +1,7 @@
 {
   "run_id": "active-20261108T231911180515Z-0042",
   "config": {
-    "GGML_LTO": "ON",
+    "GGML_LTO": "OFF",
     "GGML_OPENMP": "OFF",
     "GGML_LLAMAFILE": "ON",
     "GGML_CPU_REPACK": "ON",
@@ -43,7 +43,7 @@
   "source": "/data/llama.cpp",
   "model": "/data/gguf/qwen2.5-3b-instruct-q4_k_m.gguf",
   "cmake_definitions_in_order": [
-    "-DGGML_LTO=ON",
+    "-DGGML_LTO=OFF",
     "-DGGML_OPENMP=OFF",
     "-DGGML_LLAMAFILE=ON",
     "-DGGML_CPU_REPACK=ON",
@@ -148,5 +148,8 @@
     "json"
   ],
   "status": "completed",
-  "performance": 44.93043052415682
+  "performance": 44.93043052415682,
+  "corrections": [
+    "GGML_LTO ON -> OFF: CMake reported 'IPO is not supported'"
+  ]
 }
