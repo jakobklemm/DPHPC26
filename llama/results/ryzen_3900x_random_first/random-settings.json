@@ -1,0 +1,153 @@
+{
+  "source": "/data/llama.cpp",
+  "model": "/data/gguf/qwen2.5-3b-instruct-q4_k_m.gguf",
+  "model_sha256": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
+  "device": "cpu",
+  "cuda_arch": null,
+  "workers": 4,
+  "prompt": 512,
+  "generate": 128,
+  "repetitions": 3,
+  "gpu_layers": 0,
+  "profile": false,
+  "build_dir": "/data/build/collection-random",
+  "fraction": 0.5,
+  "seed": 20261021,
+  "options": {
+    "cmake": {
+      "GGML_LLAMAFILE": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CPU_REPACK": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_NATIVE": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_LTO": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_OPENMP": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_SSE42": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_AVX": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_AVX2": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_FMA": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_F16C": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_BMI2": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_AVX_VNNI": [
+        "OFF"
+      ],
+      "GGML_AVX512": [
+        "OFF"
+      ],
+      "GGML_AVX512_VBMI": [
+        "OFF"
+      ],
+      "GGML_AVX512_VNNI": [
+        "OFF"
+      ],
+      "GGML_AVX512_BF16": [
+        "OFF"
+      ]
+    },
+    "device": {},
+    "compiler": {
+      "-O": [
+        "-O1",
+        "-O2",
+        "-Os",
+        "-Oz"
+      ],
+      "-fvectorize": [
+        "-fvectorize"
+      ],
+      "-fslp-vectorize": [
+        "-fslp-vectorize"
+      ],
+      "-funroll-loops": [
+        "-funroll-loops"
+      ],
+      "-finline-functions": [
+        "-finline-functions"
+      ],
+      "-fstrict-aliasing": [
+        "-fstrict-aliasing"
+      ],
+      "-funsafe-math-optimizations": [
+        "-funsafe-math-optimizations"
+      ],
+      "-ffp-contract": [
+        "-ffp-contract=fast",
+        "-ffp-contract=on"
+      ],
+      "-fmath-errno": [
+        "-fmath-errno"
+      ],
+      "-march": [
+        "-march=native",
+        "-march=x86-64-v2",
+        "-march=x86-64-v3"
+      ],
+      "-mprefer-vector-width": [
+        "-mprefer-vector-width=256"
+      ]
+    },
+    "invalid_combinations": [
+      {
+        "GGML_AVX2": "ON",
+        "GGML_NATIVE": "OFF",
+        "GGML_FMA": "OFF",
+        "-march": "-march=x86-64"
+      },
+      {
+        "GGML_AVX2": "ON",
+        "GGML_NATIVE": "OFF",
+        "GGML_F16C": "OFF",
+        "-march": "-march=x86-64"
+      },
+      {
+        "GGML_AVX2": "ON",
+        "GGML_NATIVE": "OFF",
+        "GGML_FMA": "OFF",
+        "-march": "-march=x86-64-v2"
+      },
+      {
+        "GGML_AVX2": "ON",
+        "GGML_NATIVE": "OFF",
+        "GGML_F16C": "OFF",
+        "-march": "-march=x86-64-v2"
+      },
+      {
+        "-O": "-O0"
+      },
+      {
+        "-O": "-Ofast"
+      }
+    ]
+  }
+}
