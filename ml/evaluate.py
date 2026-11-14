@@ -1,4 +1,8 @@
 """
+Sampling evaluation: evaluate_sampling writes per-round traces for all model pairs.
+The legacy leave_one_platform_out evaluation below remains available via
+`python -m ml.main evaluate --mode platform`.
+
 Step 3: how good are the predictions?
 
 # Leave-one-build-out (works with a single machine): for every build, train on
@@ -121,3 +125,53 @@ def leave_one_platform_out(table, random_trials=1000, seed=0):
               "three_way", "error_three_way", "random", "random_std"]
     result = pd.DataFrame(rows)
     return result[legacy + [c for c in result if c not in legacy]]
+
+
+def evaluate_sampling(table, output, *, models=None, historical=None, steps=25,
+                      initial=2, seeds=3, jobs=-1, seed=0):
+    """Evaluate every historical/local pair, holding out each target platform.
+
+    Random is a cold-only baseline because it cannot fit residual corrections.
+    Output is streamed per completed session; use a fresh directory per run.
+    """
+    from pathlib import Path
+    from joblib import Parallel, delayed
+    from .active_sampling import _session
+    from .evaluation_trace import save_tables, validate_budget
+    from .load import app_options
+
+    validate_budget(steps, initial)
+    if seeds < 1 or jobs == 0:
+        raise ValueError('require seeds >= 1 and jobs != 0')
+    models = models or list(MODEL_TYPES)
+    historical = historical or ['none'] + [name for name in MODEL_TYPES if name != 'random']
+    output = Path(output)
+    if output.exists() and any(output.glob('*.csv')):
+        raise ValueError(f'evaluation CSVs already exist in {output}; choose a fresh --output directory')
+    # Validate every fold before writing partial results.
+    for app, runs in table.groupby('application'):
+        if any(name != 'none' for name in historical) and runs.platform.nunique() < 2:
+            raise ValueError(f'{app}: historical evaluation requires at least two platforms')
+        if any(len(pool) < steps for _, pool in runs.groupby('platform')):
+            raise ValueError(f'{app}: every pool must contain at least {steps} builds after workload filtering')
+    output.mkdir(parents=True, exist_ok=True)
+    for app, runs in table.groupby('application'):
+        for platform, pool in runs.groupby('platform'):
+            pool = app_options(pool).reset_index(drop=True)
+            for source_name in historical:
+                source = None
+                if source_name != 'none':
+                    source = MODEL_TYPES[source_name]().fit(app_options(runs[runs.platform != platform]))
+                local = [name for name in models if source is None or name != 'random']
+                session_seeds = range(seed, seed + seeds) if source is None else [seed]
+                print(f'{app} / {platform}: historical={source_name}, {len(local) * len(session_seeds)} sessions', flush=True)
+                results = Parallel(n_jobs=jobs, return_as='generator_unordered')(
+                    delayed(_session)(name, pool, steps, initial, session_seed, source, evaluation=True)
+                    for name in local for session_seed in session_seeds)
+                for result in results:
+                    tables = result.pop('_evaluation')
+                    identity = dict(application=app, platform=platform, pretrained=source_name,
+                                    model=result['model'], seed=result['seed'],
+                                    workload=pool['workload'].iloc[0] if 'workload' in pool else '')
+                    save_tables(output / 'evaluation', tables, identity, append=True)
+    print(f'Saved evaluation CSVs in {output}', flush=True)

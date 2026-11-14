@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from ml.active_sampling import _session
+from ml.evaluation_trace import save_tables
 from ml.load import HW, app_options, columns, load_table, strip
 from ml.models import MODEL_TYPES
 from ml.models.common import configs
@@ -52,9 +53,14 @@ def run_case(local, pool, source, source_name, steps, initial, seed, compact):
     if compact:
         from compact_bayes import activate
         activate()
-    result = _session(local, pool, steps, initial, seed, source)
+    result = _session(local, pool, steps, initial, seed, source, evaluation=True)
+    for step in range(1, initial + 1):
+        del result[f'best@{step}']
+    if steps == initial:
+        result.pop('model_pick', None)
+        result.pop('rank_correlation', None)
     return dict(result, platform=pool.platform.iloc[0],
-                pretrained=source_name, application='llama.cpp')
+                pretrained=source_name, application='llama.cpp', workload=pool.workload.iloc[0])
 
 
 def sanitized_paths(paths, temporary):
@@ -87,8 +93,11 @@ def main():
     parser.add_argument('--data', nargs='+', default=[str(ROOT / 'llama/results')])
     parser.add_argument('--output', type=Path,
                         default=ROOT / 'active-sampling/llama-all-policies-replay.csv')
-    parser.add_argument('--seeds', type=int, default=3)
+    parser.add_argument('--seeds', type=int, default=3,
+                        help='cold-start sessions per policy; historical policies run once')
     parser.add_argument('--steps', type=int, default=25)
+    parser.add_argument('--prompt', type=int, default=512)
+    parser.add_argument('--generate', type=int, default=128)
     parser.add_argument('--initial', type=int, default=2)
     parser.add_argument('--jobs', type=int, default=6)
     parser.add_argument('--model', nargs='+', choices=MODEL_TYPES,
@@ -97,15 +106,16 @@ def main():
                         choices=['none'] + [name for name in MODEL_TYPES if name != 'random'],
                         help='Restrict historical models; default: none plus every learned model.')
     parser.add_argument('--compact-bayes', action='store_true',
-                        help='Use the experiment’s verified reduced-covariance Bayesian ridge fit.')
+                        help='Compatibility flag; compact Bayesian ridge is now always enabled.')
     args = parser.parse_args()
-    if args.seeds < 1 or not 2 <= args.initial <= args.steps or args.jobs == 0:
-        parser.error('require seeds >= 1, 2 <= initial <= steps, and jobs != 0')
+    if args.seeds < 1 or not 2 <= args.initial <= args.steps <= 25 or args.jobs == 0:
+        parser.error('require seeds >= 1, 2 <= initial <= steps <= 25, and jobs != 0')
     if args.compact_bayes:
         from compact_bayes import activate
         activate()
     with tempfile.TemporaryDirectory(prefix='llama-replay-') as temporary:
-        table = load_table(sanitized_paths(args.data, temporary), 'llama.cpp')
+        table = load_table(sanitized_paths(args.data, temporary), 'llama.cpp', skip_invalid_json=True,
+                           prompt=args.prompt, generate=args.generate)
     pools = [(platform, app_options(pool).reset_index(drop=True))
              for platform, pool in table.groupby('platform')]
     if any(len(pool) <= args.steps for _, pool in pools):
@@ -118,11 +128,11 @@ def main():
     # A sidecar prevents resuming an output with different data or sampling rules.
     canonical = table.reindex(columns=sorted(table.columns)).sort_values(
         ['application', 'platform'] + sorted(c for c in table if c.startswith('cfg.')))
-    metadata = {'budget': args.steps,  # key kept so existing outputs still resume
-                'initial': args.initial,
+    metadata = {'evaluation_schema': 8, 'budget': args.steps,  # new schema requires a fresh output
+                'initial': args.initial, 'prompt': args.prompt, 'generate': args.generate,
                 # Start builds: the pretrained model's top picks (earlier outputs: half random)
                 'start': 'pretrained-top-initial',
-                'compact_bayes': args.compact_bayes,
+                'compact_bayes': True,
                 'data_sha256': hashlib.sha256(canonical.to_csv(index=False).encode()).hexdigest()}
     manifest = args.output.with_suffix('.metadata.json')
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -140,14 +150,14 @@ def main():
                       row.model.removeprefix('corrected-'), row.seed))
     policies = [(source, local) for source in sources for local in local_models
                 if source == 'none' or local != 'random']
-    print(f'{len(policies)} policies, {len(pools)} targets, {args.seeds} seeds', flush=True)
-    fields = ['model', 'seed', *[f'best@{n}' for n in range(1, args.steps + 1)],
-              'model_pick', 'rank_correlation', 'seconds', 'platform', 'pretrained', 'application']
+    print(f'{len(policies)} policies, {len(pools)} targets, {args.seeds} cold-start seeds; historical policies run once', flush=True)
+    fields = ['model', 'seed', *[f'best@{n}' for n in range(args.initial + 1, args.steps + 1)],
+              'model_pick', 'rank_correlation', 'seconds', 'platform', 'pretrained', 'application', 'workload']
     with Parallel(n_jobs=args.jobs, return_as='generator_unordered', batch_size=1) as parallel:
         for platform, pool in pools:
             for source_name in sources:
                 pending = [(local, seed) for source, local in policies if source == source_name
-                           for seed in range(args.seeds)
+                           for seed in (range(args.seeds) if source == 'none' else [0])
                            if (platform, source_name, local, seed) not in seen]
                 if not pending:
                     continue
@@ -160,13 +170,16 @@ def main():
                                    args.steps, args.initial, seed, args.compact_bayes)
                                    for local, seed in pending)
                 for result in results:
+                    tables = result.pop('_evaluation')
+                    identity = {key: result[key] for key in ('application', 'platform', 'pretrained', 'model', 'seed', 'workload')}
+                    save_tables(args.output.with_suffix(''), tables, identity, append=True)
                     header = not args.output.exists()
                     with args.output.open('a', newline='') as output:
                         writer = csv.DictWriter(output, fieldnames=fields)
                         if header:
                             writer.writeheader()
                         writer.writerow(result)
-    print(f'Saved {args.output}', flush=True)
+    print(f'Saved {args.output} and .convergence/.improvement/.quality/.final/.timings.csv sidecars', flush=True)
 
 
 if __name__ == '__main__':

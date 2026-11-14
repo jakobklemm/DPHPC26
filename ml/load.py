@@ -192,12 +192,17 @@ def parse_run(files, app=None):
     if app not in APPS:
         print(f"skipping run {build.get('run_id', '?')}: no loader for application {app!r}")
         return None
+    benchmark = json.loads(files["benchmark.json"])
     row = {
         "run_id": build.get("run_id", ""),
         "application": app,
         "platform": platform_name(system),
-        "performance": APPS[app].performance(json.loads(files["benchmark.json"])),
+        "performance": APPS[app].performance(benchmark),
     }
+    if app == "llama.cpp":
+        # Preserve the exact phase list, including duplicate or combined phases.
+        row["workload"] = json.dumps(sorted(
+            (test["n_prompt"], test["n_gen"]) for test in benchmark))
     row.update({HW + k: v for k, v in hardware_features(system).items()})
     row.update({CFG + k: v for k, v in APPS[app].build_config(build).items()})
     return row
@@ -206,8 +211,11 @@ def parse_run(files, app=None):
 # --- The table -------------------------------------------------------------------
 
 # reads all runs (optionally only of one application) into a dataframe
-def load_table(paths=None, app=None):
+def load_table(paths=None, app=None, *, skip_invalid_json=False, prompt=512, generate=128):
     """
+    Select llama.cpp pp<prompt>/tg<generate> before aggregation (default 512/128).
+    Exact phase lists are retained in `workload`; other applications are unchanged.
+
     The same build measured more than once on a platform becomes one row with
     the mean performance; `runs` says how many measurements it is based on.
 
@@ -216,16 +224,37 @@ def load_table(paths=None, app=None):
     0.9 is 10 % slower.
 
     """
+    if prompt <= 0 or generate <= 0:
+        raise ValueError("prompt and generate must be positive token counts")
     # Only the selected project needs a flag catalog; importing the pipeline and
     # asking for CLI help must also work without any catalogs being present.
     if app is not None:
         flag_catalog(app)
     # Read each application's local results by default; explicit paths override them.
     paths = paths or ([DEFAULT_RESULTS[app]] if app else list(DEFAULT_RESULTS.values()))
-    rows = [parse_run(files, app) for files in read_runs(paths)]
+    rows = []
+    for index, files in enumerate(read_runs(paths), 1):
+        try:
+            rows.append(parse_run(files, app))
+        except json.JSONDecodeError as error:
+            if not skip_invalid_json:
+                raise
+            print(f"Skipping input run #{index}: malformed JSON ({error})", flush=True)
     rows = [r for r in rows if r]
     if not rows:
         raise ValueError(f"no runs{' of ' + app if app else ''} found in {list(map(str, paths))}")
+    # Filter raw runs BEFORE deduplication, averaging and target normalization.
+    expected = json.dumps(sorted([(prompt, 0), (0, generate)]))
+    llama = [r for r in rows if r["application"] == "llama.cpp"]
+    if llama:
+        for platform in sorted({r["platform"] for r in llama}):
+            target = [r for r in llama if r["platform"] == platform]
+            included = sum(r.get("workload") == expected for r in target)
+            print(f"llama.cpp / {platform}: workload pp{prompt}/tg{generate}: "
+                  f"included {included}, excluded {len(target) - included} raw runs", flush=True)
+        rows = [r for r in rows if r["application"] != "llama.cpp" or r.get("workload") == expected]
+        if not any(r["application"] == "llama.cpp" for r in rows):
+            raise ValueError(f"no llama.cpp runs match workload pp{prompt}/tg{generate}")
     for application_name in sorted({r["application"] for r in rows}):
         flag_catalog(application_name)
     table = pd.DataFrame(rows)

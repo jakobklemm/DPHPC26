@@ -14,10 +14,12 @@ import json
 import math
 import shlex
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 from .active_sampling import LiveActiveSampler
+from .evaluation_trace import EvaluationTrace, save_tables, validate_budget
 from .load import CFG, DEFAULT, app_options, columns, describe, hardware_features, platform_name, strip
 from .load_llama import APPLICATION, performance
 from .validation import compiler_flags
@@ -69,7 +71,17 @@ def commands(config, data, build, device="cuda"):
     return configure, compile_command, benchmark, flags
 
 
-def benchmark(config, data, build, output, system, device="cuda"):
+def benchmark(config, data, build, output, system, device="cuda", *, timings=None):
+    timings = timings if timings is not None else {}
+    timings.update(configure_seconds=None, compile_seconds=None, benchmark_execution_seconds=None)
+
+    def timed_run(key, command, **kwargs):
+        start = time.perf_counter()
+        try:
+            return subprocess.run(command, **kwargs)
+        finally:
+            timings[key] = time.perf_counter() - start
+
     configure, compile_command, bench, flags = commands(config, data, build, device)
     record = {"run_id": f"{output.parent.name}-{output.name}", "config": config,
               "device": device, "source": str(data / "llama.cpp"), "model": str(data / "gguf" / GGUF_NAME),
@@ -82,13 +94,13 @@ def benchmark(config, data, build, output, system, device="cuda"):
     write_json(output / "build.json", record)
     try:
         with (output / "build.log").open("w") as log:
-            for command in (configure, compile_command):
+            for key, command in (("configure_seconds", configure), ("compile_seconds", compile_command)):
                 print("+", shlex.join(command), flush=True)
-                subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=True)
+                timed_run(key, command, stdout=log, stderr=subprocess.STDOUT, check=True)
         # Only publish benchmark.json after validation; the loader must not ingest failed runs.
         raw = output / "benchmark.raw.json"
         with raw.open("w") as stdout, (output / "benchmark.log").open("w") as stderr:
-            subprocess.run(bench, stdout=stdout, stderr=stderr, check=True)
+            timed_run('benchmark_execution_seconds', bench, stdout=stdout, stderr=stderr, check=True)
         results = json.loads(raw.read_text())
         expected = {(512, 0), (0, 128)}
         if (not isinstance(results, list) or len(results) != 2
@@ -107,6 +119,7 @@ def benchmark(config, data, build, output, system, device="cuda"):
         record.update(status="failed", error=str(error))
         raise RuntimeError(f"build/benchmark failed; see {output}: {error}") from error
     finally:
+        record.update(timings)
         write_json(output / "build.json", record)
 
 
@@ -118,12 +131,13 @@ def detect_device(hardware):
 
 
 def run_session(model_type, system, table, *, pretrain, steps, initial, seed, device=None,
-                workdir, output=None, values=None, settings=None):
+                workdir, output=None, values=None, settings=None, evaluation=False):
     """Benchmark `steps` builds proposed by model_type (None: random); return the results folder.
 
     table: historical runs for the flag space; pretrain(platform): model fitted on
     the other machines, or None. values replaces the flag space from table.
     """
+    validate_budget(steps, initial)
     work = Path(workdir).expanduser().resolve()
     if not (work / "llama.cpp" / "CMakeLists.txt").is_file() or not (work / "gguf" / GGUF_NAME).is_file():
         raise ValueError(f"llama.cpp source or gguf/{GGUF_NAME} missing in {work}; "
@@ -137,8 +151,6 @@ def run_session(model_type, system, table, *, pretrain, steps, initial, seed, de
         values = {strip(c): sorted(runs[c].unique()) for c in columns(runs, CFG)}
     values = sampling_space(values, device)
     pretrained = pretrain(platform)
-    sampler = LiveActiveSampler(model_type, values, hardware, APPLICATION,
-                                initial=initial, seed=seed, pretrained=pretrained)
 
     # One results folder per session
     session = "active-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
@@ -153,20 +165,77 @@ def run_session(model_type, system, table, *, pretrain, steps, initial, seed, de
     print(f"== {APPLICATION} on {platform} ({device}): {steps} steps, model {model}, "
           f"pretrained {source}\n   results: {output}", flush=True)
 
+    trace = EvaluationTrace(initial, include_startup=not evaluation)
+    identity = dict(application=APPLICATION, platform=platform, pretrained=source, model=model, seed=seed,
+                    workload=json.dumps([[0, 128], [512, 0]]))
+
+    session_start = time.perf_counter()
+    sampler = LiveActiveSampler(model_type, values, hardware, APPLICATION,
+                                initial=initial, seed=seed, pretrained=pretrained)
+    trace.initialization_seconds = time.perf_counter() - session_start
+
+    def evaluate_round(step, ask_seconds, refit_seconds, status, benchmark_seconds, attempt_timings,
+                       attempted_build, attempted_performance=None):
+        prediction_seconds = 0.0
+        best_observed = max((value for _, value in sampler.measured.values()), default=None)
+        successful_before = len(sampler.measured) - (status == 'completed')
+        if len(sampler.measured) >= initial and (not evaluation or successful_before >= initial):
+            tick = time.perf_counter()
+            # Fixed evaluation RNG, isolated from active candidate generation.
+            state = sampler.search.rng.getstate()
+            try:
+                sampler.search.rng.seed(seed)
+                if sampler.model is not None:
+                    config, score = sampler.predict()
+                    first = trace.picks[0]['config'] if trace.picks else config
+                    first_scores, _ = sampler.model.predict_performance(hardware, [first])
+                    first_score = float(first_scores[0])
+                else:
+                    config, score, first_score = sampler.recommend(), None, None
+            finally:
+                sampler.search.rng.setstate(state)
+            prediction_seconds = time.perf_counter() - tick
+            measured = sampler.measured.get(sampler.search.key(config))
+            predicted_performance = None if score is None else score * getattr(
+                sampler.model, 'performance_scale', best_observed)
+            trace.record(step, len(sampler.measured), config, score, first_score,
+                         actual=None if measured is None else measured[1], best_observed=best_observed,
+                         predicted_performance=predicted_performance, unit='tokens/s')
+            if predicted_performance is not None:
+                print(f"   prediction round {trace.picks[-1]['round']}: "
+                      f"{predicted_performance:.3f} tokens/s estimated; "
+                      f"prediction took {prediction_seconds:.6f} s", flush=True)
+        trace.timing(step, len(sampler.measured), ask_seconds, refit_seconds, prediction_seconds, status,
+                     benchmark_seconds=benchmark_seconds, elapsed_seconds=time.perf_counter() - session_start,
+                     attempted_build=attempted_build, attempted_performance=attempted_performance,
+                     best_observed=best_observed, unit='tokens/s', **attempt_timings)
+        # Checkpoint after each attempt, including failures.
+        save_tables(output / 'evaluation', trace.tables(), identity)
+
     best_score = 0.0
     for step in range(1, steps + 1):
+        tick = time.perf_counter()
         config = sampler.ask()
+        ask_seconds = time.perf_counter() - tick
         print(f"\n-- build {step}/{steps} ({sampler.source}): {describe(APPLICATION, config)}", flush=True)
         step_output = output / f"{step:04d}"
         step_output.mkdir()
+        benchmark_start = time.perf_counter()
+        attempt_timings = {}
         try:
-            score = benchmark(config, work, build, step_output, system, device)
+            score = benchmark(config, work, build, step_output, system, device, timings=attempt_timings)
         except RuntimeError as error:
             # Failed builds count as a step and are not proposed again
             print(f"   failed: {error}", flush=True)
             sampler.fail(config)
+            evaluate_round(step, ask_seconds, 0.0, 'failed', time.perf_counter() - benchmark_start, attempt_timings, config)
             continue
+        benchmark_seconds = time.perf_counter() - benchmark_start
+        tick = time.perf_counter()
         sampler.tell(config, score)
+        refit_seconds = time.perf_counter() - tick if sampler.model is not None else 0.0
+        evaluate_round(step, ask_seconds, refit_seconds, 'completed', benchmark_seconds,
+                       attempt_timings, config, attempted_performance=score)
         best_score = max(best_score, score)
         write_json(output / "best.json", {"steps": step, "config": sampler.recommend(),
                                           "performance": best_score})
@@ -175,9 +244,9 @@ def run_session(model_type, system, table, *, pretrain, steps, initial, seed, de
     if not sampler.measured:
         raise ValueError(f"no build succeeded; see {output}")
     print(f"\nbest measured ({best_score:.3f} tokens/s): {describe(APPLICATION, sampler.recommend())}")
-    if sampler.model is not None:
-        config, score = sampler.predict()
-        print(f"model pick (predicted {score:.3f} of best measured, unmeasured if different): "
+    if sampler.model is not None and trace.picks:
+        config, score = trace.picks[-1]['config'], trace.picks[-1]['predicted_value']
+        print(f"model pick (prediction score {score:.3f}, may be unmeasured): "
               f"{describe(APPLICATION, config)}")
     print(f"details: {output / 'best.json'}")
     return output

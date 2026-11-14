@@ -25,11 +25,11 @@ Overfitting risk
 """
 
 from sklearn.feature_selection import VarianceThreshold
-from sklearn.linear_model import BayesianRidge
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 from .common import RegressionPerformanceModel, StandardizedTarget
+from .compact_bayes import CompactBayesianRidge
 
 
 class BayesPairsPerformanceModel(RegressionPerformanceModel):
@@ -40,4 +40,4 @@ class BayesPairsPerformanceModel(RegressionPerformanceModel):
         # Pairs of values of the same option are always zero: dropped as constant
         return make_pipeline(PolynomialFeatures(2, interaction_only=True, include_bias=False),
                              VarianceThreshold(),
-                             StandardizedTarget(BayesianRidge(**self.estimator_params)))
+                             StandardizedTarget(CompactBayesianRidge(**self.estimator_params)))

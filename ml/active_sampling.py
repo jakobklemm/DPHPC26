@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
+from .evaluation_trace import EvaluationTrace, validate_budget
 from .load import APPS, CFG, HW, columns, strip
 from .models import MODEL_TYPES, ResidualCorrection
 from .models.common import configs
@@ -198,23 +199,62 @@ class ActiveSampler:
         return max(self.measured, key=self.measured.get)
 
 
-def _session(name, pool, steps, initial, seed, pretrained=None):
+def _session(name, pool, steps, initial, seed, pretrained=None, evaluation=False):
+    validate_budget(steps, initial)
+    trace = EvaluationTrace(initial)
     start = time.perf_counter()
     sampler = ActiveSampler(None if name == "random" else MODEL_TYPES[name], pool, initial, seed, pretrained)
+    trace.initialization_seconds = time.perf_counter() - start
     performance = pool["performance"].to_numpy()
     relative = pool["relative"].to_numpy()
+    optimum = float(performance.max())
+    unit = 'tokens/s' if pool.application.iloc[0] == 'llama.cpp' else 'ns/day'
     best = {}
     for n in range(1, steps + 1):
+        tick = time.perf_counter()
         row = sampler.ask()
+        ask_seconds = time.perf_counter() - tick
+        tick = time.perf_counter()
         sampler.tell(row, performance[row])
-        best[f"best@{n}"] = relative[sampler.recommend()]
+        refit_seconds = time.perf_counter() - tick if sampler.model is not None else 0.0
+        best_row = sampler.recommend()
+        best_observed = float(performance[best_row])
+        prediction_seconds = 0.0
+        if evaluation and n > initial:
+            tick = time.perf_counter()
+            if sampler.model is not None:
+                mean, _ = sampler.predicted()
+                pick = int(np.argmax(mean))
+                if not trace.picks:
+                    first_pick = pick
+                score, first_score = float(mean[pick]), float(mean[first_pick])
+            else:
+                # Random has no predictor: report its best observed recommendation.
+                pick, score, first_score = sampler.recommend(), None, None
+            prediction_seconds = time.perf_counter() - tick
+            trace.record(n, n, sampler.candidates[pick], score, first_score,
+                         actual=float(performance[pick]), optimum=optimum,
+                         best_observed=best_observed,
+                         predicted_performance=None if score is None else score * getattr(
+                             sampler.model, 'performance_scale', best_observed),
+                         unit=unit)
+        trace.timing(n, n, ask_seconds, refit_seconds, prediction_seconds,
+                     elapsed_seconds=time.perf_counter() - start, attempted_build=sampler.candidates[row],
+                     attempted_performance=float(performance[row]), best_observed=best_observed,
+                     optimum=optimum, unit=unit)
+        best[f"best@{n}"] = relative[best_row]
     result = {"model": name if pretrained is None else f"corrected-{name}", "seed": seed, **best}
     if sampler.model is not None:
-        mean, _ = sampler.predicted()
+        if not trace.picks:
+            mean, _ = sampler.predicted()
         rest = np.setdiff1d(np.arange(len(pool)), list(sampler.measured))
         result["model_pick"] = relative[int(np.argmax(mean))]
-        result["rank_correlation"] = pd.Series(mean[rest]).rank().corr(pd.Series(relative[rest]).rank())
-    return {**result, "seconds": time.perf_counter() - start}
+        result["rank_correlation"] = (pd.Series(mean[rest]).rank().corr(pd.Series(relative[rest]).rank())
+                                      if len(rest) > 1 else np.nan)
+    result["seconds"] = time.perf_counter() - start
+    if evaluation:
+        result['_evaluation'] = trace.tables()
+    return result
 
 
 def simulate(pool, models, steps=25, initial=DEFAULT_INITIAL, seeds=30, jobs=-1, pretrained=None):
@@ -222,8 +262,10 @@ def simulate(pool, models, steps=25, initial=DEFAULT_INITIAL, seeds=30, jobs=-1,
 
     The same seed gives every model the same random start, so that differences
     between models do not come from a lucky start. A pretrained model adds a
-    corrected session per model, next to the sessions without pretraining.
+    single deterministic corrected session per model, next to the repeated
+    cold-start sessions without pretraining.
     """
+    validate_budget(steps, initial)
     if not initial <= steps < len(pool):
         raise ValueError(f"need initial <= steps < {len(pool)} measured builds")
     names = ["random"] + [name for name in models if name != "random"]
@@ -232,5 +274,6 @@ def simulate(pool, models, steps=25, initial=DEFAULT_INITIAL, seeds=30, jobs=-1,
         variants += [(name, pretrained) for name in names if name != "random"]
     sessions = Parallel(n_jobs=jobs)(delayed(_session)(name, pool, steps, initial, seed, source)
                                      for name, source in variants
-                                     for seed in range(SEARCH_SEED, SEARCH_SEED + seeds))
+                                     for seed in (range(SEARCH_SEED, SEARCH_SEED + seeds)
+                                                  if source is None else [SEARCH_SEED]))
     return pd.DataFrame(sessions)

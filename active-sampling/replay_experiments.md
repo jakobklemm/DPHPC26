@@ -18,6 +18,9 @@ Run from the repository root with the project's Python environment:
 
 The default output is `active-sampling/llama-all-policies-replay.csv`. Each completed
 session is appended immediately. Repeating the command resumes missing sessions.
+`--seeds` repeats cold-start policies only. Each historical/local policy runs once,
+with seed 0, because its choices are deterministic. The updated metadata schema
+requires a fresh output path for results generated before this change.
 A metadata sidecar checks the loaded data, steps, initial sample count, start rule, and numerical
 implementation before resuming. Use a new `--output` for different experiments.
 Run only one writer against a given output file at a time.
@@ -27,31 +30,34 @@ resource-fork metadata and malformed benchmark JSON. Exclusions are printed. Thi
 reproduces the treatment of the one malformed record in the additional Vulkan ZIP.
 The original archives remain the inputs for subsequent runs.
 
-The optional `compact_bayes.py` helper contains the reduced-covariance calculation
-used during the original sweep. It was checked against sklearn's predictive means
-and uncertainties and 15 existing replay curves. It checks sklearn's internal source
-layout and fails explicitly on unsupported versions. Omit `--compact-bayes` to run
-with standard sklearn, which can require substantially more memory and time.
+Compact Bayesian fitting is now integrated into the ridge models and `bayes-pairs`
+for all commands. It fits in the reduced training row space and preserves prior
+uncertainty outside that space, without a feature-by-feature covariance matrix.
+`--compact-bayes` remains accepted for compatibility but is no longer needed.
+The old helper no longer patches sklearn source code. Use a fresh output path
+when switching from results produced by the earlier implementation.
 
 For each target, the historical model is fitted only on the other targets. Its
 predictions are cached for the fixed replay pool. Every session selects builds,
 reveals their recorded performance, and refits the local model using the same UCB
-policy as the repository. `best@25` is a fraction of the target pool's recorded best
+policy as the repository. The CSV reports `best@n` for steps after startup.
+`best@25` is a fraction of the target pool's recorded best
 throughput; multiply it by 100 for a percentage. Average within each target and then
 across targets to give each target equal weight.
 
-## Extend a screened policy to ten seeds
+## Extend a cold-start policy to ten seeds
 
-Use the same output and data with a specific historical/local pair. Existing seeds
+Use the same output and data with a specific cold-start model. Existing seeds
 are reused and seeds 3–9 are added:
 
 ```bash
 .venv/bin/python active-sampling/run_all_policies.py \
   --data llama/results results-500-seed20261029.zip \
-  --historical no-hardware-small-mlp --model gaussian-process \
+  --historical none --model gaussian-process \
   --seeds 10 --steps 25 --initial 8 --jobs 6 --compact-bayes
 ```
 
+The following describes the earlier experiment, before redundant warm-start seed repeats were removed.
 For the reported experiment, the top five distinct pairings at 15 builds and the top
 five at 25 builds were selected from the three-seed screen. Local hardware/no-hardware
 variants were counted once during selection. Their union contained nine warm
@@ -59,4 +65,11 @@ policies. Together with earlier ten-seed runs, the final dataset contains 421
 three-seed policies and 39 ten-seed policies, totaling 4,608 distinct sessions.
 
 For a small execution check, use `--historical none --model random --seeds 1
---steps 8 --initial 8 --output /tmp/llama-replay-smoke.csv`.
+--steps 9 --initial 8 --output /tmp/llama-replay-smoke.csv`.
+
+## Workload filtering
+
+Replay now selects pp512/tg128 before aggregation by default. Use `--prompt` and
+`--generate` to evaluate a different workload separately. Included/excluded raw
+run counts are printed per target. Workload selection is recorded in resume
+metadata; use a fresh output path for results from before this change.

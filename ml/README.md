@@ -51,7 +51,7 @@ runner active-sampling --steps 10 --pretrained hardware       # transfer learnin
 
 | Option | Meaning |
 | --- | --- |
-| `--steps N` | Builds to benchmark (required); failed builds count and are never proposed again |
+| `--steps N` | Builds to benchmark (required, maximum 25); failed builds count and are never proposed again |
 | `--model` | Local model, refitted after every build; default `gaussian-process`; also `smac-forest`, `bayes-pairs`, `sparse-bayes`, `random` |
 | `--pretrained` | Transfer learning: this model is fitted on the **other** machines in the results; `--model` then learns its error here. Default: none (cold start) |
 | `--pretrain-on WORD…` | Pretrain only on platforms whose name contains one of these words |
@@ -83,7 +83,7 @@ python -m ml.main train --model random-forest --app llama.cpp          # Fit + s
 python -m ml.system --output system.json                            # Detect this machine's hardware (for --system)
 python -m ml.main predict --model random-forest --app llama.cpp --system system.json
 python -m ml.main suggest --model random-forest --app llama.cpp --system system.json -n 5
-python -m ml.main evaluate --app llama.cpp --random-trials 1000 --seed 42
+python -m ml.main evaluate --mode platform --app llama.cpp --random-trials 1000 --seed 42
 python -m ml.main active-sampling --steps 10 --pretrained hardware --workdir ~/dphpc-data   # Live active sampling (section 1)
 python -m ml.main simulate --app llama.cpp --steps 25                  # Active sampling on measured builds
 python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-hardware   # With transfer learning
@@ -95,7 +95,7 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 | `train` | Fit one model per application and save it to `models/` | — | `--model`, `--app` (`llama.cpp` or `gromacs`; default both), `--data` (folders or ZIPs; default `llama/results/`, `gromacs/results/`) |
 | `predict` | Load the saved model and output the best flags for a machine | `--system` (target machine's `system.json`) | `--model` (same as `train`), `--app`, `--search` (see below), `--space`, `--seed` |
 | `suggest` | Fit fresh; list unmeasured builds worth benchmarking next (performance + uncertainty) | `--system` | `--model`, `--app`, `--data`, `-n` (count, default 5), `--search`, `--space`, `--seed` |
-| `evaluate` | Compare all models, holding out one machine at a time; needs **≥ 2 platforms** per application | — | `--app`, `--data`, `--random-trials` (random baseline repeats), `--seed` |
+| `evaluate --mode platform` | Compare all models, holding out one machine at a time; needs **≥ 2 platforms** per application | — | `--app`, `--data`, `--random-trials` (random baseline repeats), `--seed` |
 | `active-sampling` | Live active sampling on this machine (section 1) | `--steps` | see section 1 |
 | `simulate` | Replay active sampling on each machine's measured builds, to compare models offline | — | `--model` (several allowed), `--steps`, `--initial`, `--seeds` (sessions per model), `--jobs`, `--pretrained` (adds `corrected-<model>` sessions), `--pretrain-on`, `--output` (CSV for plots), `--app`, `--data` |
 
@@ -113,14 +113,14 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 
 ## 3. Choose a model
 
-`--model` picks the model for train, predict and suggest (default hardware) and active-sampling (default gaussian-process); predict needs the same one train saved. simulate can take several (--model a b …); evaluate always compares all.
+`--model` picks the model for train, predict and suggest (default hardware) and active-sampling (default gaussian-process); predict needs the same one train saved. simulate can take several (--model a b …); evaluate defaults to all historical/local pairs; use --model and --historical to restrict them.
 
 
 | `--model` | What / why |
 | --- | --- |
 | `hardware` | Bayesian ridge; regularized option × hardware effects |
 | `hardware-interactions` | Ridge + option pairs; interacting flags |
-| `hardware-three-way` | Ridge + option-pair × hardware; machine-dependent pair effects. **Currently fails on llama.cpp** (~59k features, LAPACK overflow) |
+| `hardware-three-way` | Ridge + option-pair × hardware; machine-dependent pair effects. Uses compact Bayesian fitting to avoid a feature-by-feature covariance matrix |
 | `random-forest` | Nonlinear trees; automatic conditional interactions |
 | `catboost` | Boosted trees; native categorical settings |
 | `gaussian-process` | Kernel + native uncertainty; benchmark selection |
@@ -141,6 +141,9 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 | `random` | Uniform valid choice; baseline, no `suggest` |
 
 - Uncertainty (the ± and the exploration in active sampling): Bayesian predictive spread for the ridge models, `gaussian-process`, `bayes-pairs`, `sparse-bayes`; spread between trees for `smac-forest`; spread of 8 bootstrap fits for `random-forest`, `catboost`, `kernel-ridge`, `support-vector`, `small-mlp`. Tree and bootstrap spreads are rough, uncalibrated heuristics.
+- Ridge models and `bayes-pairs` fit in the reduced training row space and retain
+  prior uncertainty outside it. All commands use this compact implementation;
+  wide interaction matrices can still require substantial memory and computation.
 - `baseline` in evaluation: best-on-average measured configuration; no CLI model.
 - `no-hardware-*` baseline uses the corresponding model's estimator defaults,
   constructor overrides, and uncertainty method, learning from build options only
@@ -150,9 +153,9 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 
 | Command | Output | How to read it |
 | --- | --- | --- |
-| `active-sampling` | tokens/s per build; at the end "best measured" and "model pick (predicted X of best measured)" | **Best measured** is the safe answer (actually measured). The model pick may be unmeasured; X > 1: the model expects it to be faster |
+| `active-sampling` | tokens/s per build; at the end "best measured" and "model pick (prediction score X, may be unmeasured)" | **Best measured** is the safe answer (actually measured). The model pick may be unmeasured; its score is model-native and may change scale on refit |
 | `simulate` | Per model: `best@n`, `model_pick`, `rank_correlation`, `seconds` | `best@n`: best build after n builds, relative to the pool's best (**1.0** = found it). `model_pick`: final model's choice, same scale. `rank_correlation`: predicted vs. measured order on unmeasured builds. A model is only useful if it beats `random` |
-| `evaluate` | Per held-out machine: selection score per model, `error*` | Selection score: measured performance of the picked build / that machine's best (**1.0 best**). `error*`: mean absolute prediction error (**0 best**). All models choose from the same measured builds |
+| `evaluate --mode platform` | Per held-out machine: selection score per model, `error*` | Selection score: measured performance of the picked build / that machine's best (**1.0 best**). `error*`: mean absolute prediction error (**0 best**). All models choose from the same measured builds |
 | `train` | R², then option costs per machine | R²: fit on the training data only. Costs (e.g. `-12% ±3%`): predicted change from switching the best build to another value; exact for `hardware`/`no-hardware`, approximate for the others |
 
 ## 5. Edit code
@@ -173,3 +176,104 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 | Build validity; exclude builds/flag values | `validation.py` + application loaders; exclusions in `llama/flags.json`, `gromacs/flags.json` (repository root) |
 
 **Add a regressor:** create `models/<name>.py` → subclass `RegressionPerformanceModel` → implement `_make_regressor(seed, n_features)` → register in `MODEL_TYPES`. Shared workflows reused automatically.
+
+## Benchmark workload selection
+
+All data-loading commands select llama.cpp **pp512/tg128** by default, including
+historical training for live sampling. `train`, `suggest`, `simulate`, and
+`evaluate` accept `--prompt N --generate N` to select another workload. GROMACS
+is unaffected. For example:
+
+```bash
+python -m ml.main evaluate --app llama.cpp --prompt 512 --generate 128 \
+  --model hardware random --historical none --steps 25 --output evaluation-pp512-tg128
+```
+
+The loader retains each benchmark's exact list of prompt/generation phases and
+requires one prompt-only and one generation-only phase of the requested sizes.
+Filtering happens before duplicate removal, averaging repeated builds, and
+relative-performance normalization. It prints included/excluded raw-run counts
+for every target, including targets excluded entirely. No matching llama.cpp data,
+insufficient target pools, or missing requested historical platforms cause an error.
+
+For the supplied data, pp512/tg128 keeps 50 raw Intel runs, excludes its 24
+pp32/tg32 runs, and excludes the CPU Threadripper's pp128/tg1024 runs. Collect
+pp512/tg128 benchmarks to include that target in the same comparison. Evaluate
+other workloads separately with fresh output paths; do not pool their scores.
+The workload is included in evaluation CSVs and standalone simulation output.
+Model weights and other runtime settings must still be matched by the experimenter;
+these token-count filters do not establish their equivalence.
+
+Live commands use a fixed pp512/tg128 benchmark and reject other `--prompt` /
+`--generate` values, ensuring historical data matches the live token workload.
+Rebuild container images after updating the code. Previously saved models and
+replay outputs should be regenerated for the selected workload.
+
+## Per-round evaluation
+
+Startup uses `--initial 2` successful builds. For `evaluate`, reporting begins
+with the next attempt, which is round 1. The standalone `active-sampling`
+command records startup attempts and reports the first fitted prediction as
+round 0. The maximum 25 attempts includes
+startup and failed builds; predictions use no benchmark budget. CSVs identify
+application, target, historical/local models, seed, step and post-startup round.
+Convergence tracks build changes and first/sustained optimum selection;
+improvement counts changed flags versus first/final picks and compares the
+current and first build under the same current model. Simulation also records
+actual performance gains and fraction of the pool optimum. Final results contain
+the last build, prediction value and (simulation only) whether it is optimal.
+Live predictions are model-native scores, not new hardware measurements or a
+proof of global optimality. Timings separate prediction, next-sample selection
+and refitting (including fit-data preparation) for post-startup attempts.
+Use `--jobs 1` for timings without concurrent evaluation workers.
+The random baseline reports its best measured build and leaves prediction scores blank.
+
+Sampling evaluation defaults to three seeds for cold-start policies and every registered model combination.
+Historical/local policies run once because their startup and subsequent choices are deterministic;
+`--seeds` controls cold-start repeats only, in both `evaluate` and `simulate`.
+`--model hardware --historical none --seeds 1` gives a small smoke run.
+Historical evaluation needs at least two platforms and holds the target out.
+`active-sampling/run_all_policies.py` uses the same seed rule and also writes the five CSV sidecars beside its
+existing replay CSV. The former platform-only evaluation remains available with
+`python -m ml.main evaluate --mode platform`.
+
+Malformed JSON runs are skipped with a warning during sampling evaluation.
+
+`evaluation.quality.csv` has one row for **every post-startup prediction round**:
+- Simulation: `recommended_percent_of_pool_best` is 100 × the selected build's measured
+  performance / the best build in the entire simulation pool. `recommended_percent_of_best_observed`
+  instead compares with the best build sampled so far (and can exceed 100%).
+- Live: `recommended_predicted_performance` is estimated tokens/s, restored from the model's
+  training normalization; `recommended_predicted_value` retains the raw model score. Known
+  measured performance and absolute prediction error are included only if that
+  selected build has already been benchmarked; otherwise those cells are blank.
+- Both: `prediction_seconds`, `next_sample_seconds`, `refit_seconds`, and
+  `session_elapsed_seconds` give explicit wall-clock seconds in the same row.
+  Live `attempt_total_seconds` includes configuration, compilation and benchmarking
+  (including failed attempts); simulation leaves this field blank.
+  Live `attempt_configure_seconds`, `attempt_compile_seconds`, and `attempt_benchmark_execution_seconds`
+  separately time the three subprocesses. A failed phase retains its elapsed time;
+  phases never started are blank. These times describe the attempted build, not
+  necessarily the predicted winner shown in `recommended_build`. The total attempt also includes
+  file handling and result validation, and can exceed the sum of its phases.
+  Both modes start session timing immediately before sampler initialization,
+  including initial candidate generation/scoring but excluding historical fitting
+  and input/output setup. `initialization_seconds` reports this one-time startup
+  cost (repeated in each row, not an additional cost per round).
+
+Live estimated throughput is not a new measurement. Per-round reporting performs
+no additional benchmarks and does not consume the 25-attempt budget.
+
+CSV column naming: `recommended_build` is the model’s choice after refitting;
+`attempted_build` is the configuration tested in that round. `recommended_*`
+quality fields describe the recommendation, while `attempt_status` and
+`attempt_*_seconds` describe the attempted build. Simulation records the replayed
+build as `attempted_build` and leaves physical attempt durations blank.
+Both build columns contain JSON configurations. In evaluation mode the timing
+CSV has one row per post-startup attempt, including failures. It records `attempted_measured_performance`
+and `best_observed_performance`. A failed attempt leaves its own performance blank
+and carries forward the best successful measurement, if any. Simulation also
+records `pool_best_performance` and `best_observed_percent_of_pool_best` on every
+reported step. Best-so-far performance includes builds measured during startup.
+If the budget ends during startup or at its last attempt, only the session
+summary is written. Use a fresh output path for this CSV schema.

@@ -27,6 +27,8 @@ class ResidualCorrection:
     def fit(self, table):
         """table: the runs measured on the new machine so far."""
         ratio = table["performance"].to_numpy() / self._source(configs(table))
+        # Restore physical performance units for reporting, without changing ranking scores.
+        self.performance_scale = float(ratio.max())
         self.correction = self.model_type().fit(
             table.assign(performance=ratio, relative=ratio / ratio.max()))
         return self

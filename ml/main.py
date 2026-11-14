@@ -4,6 +4,7 @@ Command line interface. Run from the repository root.
   train     read runs, train one model per application, save to models/<application>.joblib
   predict   build configuration for a machine, given its system.json
   suggest   configurations worth benchmarking next on a machine
+  evaluate  per-round sampling evaluation (simulation grid or one live session)
   simulate  replay active-sampling sessions on measured builds
   active-sampling  build + benchmark llama.cpp on this machine, refit, repeat
 
@@ -29,7 +30,7 @@ import numpy as np
 import pandas as pd
 
 from .active_sampling import DEFAULT_INITIAL, simulate as simulate_sessions
-from .evaluate import leave_one_platform_out #, leave_one_build_out
+from .evaluate import evaluate_sampling, leave_one_platform_out #, leave_one_build_out
 from .load_llama import APPLICATION as LLAMA
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 # Single model registry for CLI and evaluation
@@ -54,7 +55,7 @@ def read_hardware(path):
 
 
 def train(args):
-    table = load_table(args.data, args.app)
+    table = load_table(args.data, args.app, prompt=args.prompt, generate=args.generate)
     Path(args.models).mkdir(parents=True, exist_ok=True) # create a models folder
     
     for app, runs in table.groupby("application"): # for each application (e.g. llama)
@@ -143,7 +144,7 @@ def predict(args):
 
 
 def suggest(args):
-    table = load_table(args.data, args.app)
+    table = load_table(args.data, args.app, prompt=args.prompt, generate=args.generate)
     platform, hardware = read_hardware(args.system)
     values = json.loads(Path(args.space).read_text()) if args.space else None
     # Fresh model and measured builds per application
@@ -161,7 +162,20 @@ def suggest(args):
 
 
 def evaluate(args):
-    table = load_table(args.data, args.app)
+    if args.mode == "live":
+        if args.app not in (None, LLAMA):
+            raise ValueError("live evaluation currently supports llama.cpp only")
+        if not args.model or len(args.model) != 1 or not args.historical or len(args.historical) != 1:
+            raise ValueError("live evaluation requires one --model and one --historical (use none for no history)")
+        args.model, args.pretrained = args.model[0], args.historical[0]
+        if args.model == "random" and args.pretrained != "none":
+            raise ValueError("random sampling cannot correct a historical model")
+        return active_sampling(args, evaluation=True)
+    table = load_table(args.data, args.app, skip_invalid_json=args.mode == "simulate",
+                       prompt=args.prompt, generate=args.generate)
+    if args.mode == "simulate":
+        return evaluate_sampling(table, args.output, models=args.model, historical=args.historical,
+                                 steps=args.steps, initial=args.initial, seeds=args.seeds, jobs=args.jobs, seed=args.seed)
     # print("== leave one build out: predict each build without having seen it")
     # result = leave_one_build_out(table)
     # print(result.round(3).to_string(index=False))
@@ -187,33 +201,33 @@ def evaluate(args):
 
 # Model fitted on the application's other machines, or None without --pretrained
 def pretrain(table, app, platform, args):
-    if not args.pretrained:
+    if not args.pretrained or args.pretrained == "none":
         return None
     others = table[(table["application"] == app) & (table["platform"] != platform)]
     if args.pretrain_on:
         others = others[others["platform"].map(lambda name: any(part in name for part in args.pretrain_on))]
     if others.empty:
-        print("no other machine to pretrain on, sessions without pretraining only")
-        return None
+        raise ValueError("requested historical model has no other platforms after workload filtering")
     print(f"pretrained {args.pretrained} on:", *others["platform"].unique())
     return MODEL_TYPES[args.pretrained]().fit(app_options(others))
 
 
 def simulate(args):
-    table = load_table(args.data, args.app)
+    table = load_table(args.data, args.app, skip_invalid_json=True,
+                       prompt=args.prompt, generate=args.generate)
     results = []
     for (app, platform), pool in table.groupby(["application", "platform"]):
         pool = app_options(pool).reset_index(drop=True)
-        print(f"== {app} on {platform}: {len(pool)} measured builds, {args.steps} steps, {args.seeds} sessions")
+        print(f"== {app} on {platform}: {len(pool)} measured builds, {args.steps} steps, {args.seeds} cold-start sessions per model; historical policies run once")
         if len(pool) <= args.steps:
-            print("the steps would measure the whole pool, skipped\n")
-            continue
+            raise ValueError(f"{app} / {platform}: need more than {args.steps} builds after workload filtering; found {len(pool)}")
         pretrained = pretrain(table, app, platform, args)
         result = simulate_sessions(pool, args.model, args.steps, args.initial, args.seeds, args.jobs, pretrained)
-        results.append(result.assign(application=app, platform=platform))
+        results.append(result.assign(application=app, platform=platform,
+                                     workload=pool["workload"].iloc[0] if "workload" in pool else ""))
         # best build found so far at a few steps, then the final model
         points = sorted({args.initial, args.steps, *range(10, args.steps, 5)})
-        shown = [f"best@{n}" for n in points] + ["model_pick", "rank_correlation", "seconds"]
+        shown = [f"best@{n}" for n in points] + [c for c in ("model_pick", "rank_correlation", "seconds") if c in result]
         print(result.groupby("model")[shown].mean().sort_values(f"best@{args.steps}", ascending=False)
               .round(4).to_string(), end="\n\n")
     if args.output and results:
@@ -221,13 +235,21 @@ def simulate(args):
 
 
 # Live active sampling of llama.cpp on this machine; the session itself is in live_llama.py
-def active_sampling(args):
+def active_sampling(args, *, evaluation=False):
     system = json.loads(Path(args.system).read_text()) if args.system else discover()
-    table = load_table(args.data, LLAMA)
+    table = load_table(args.data, LLAMA, skip_invalid_json=True,
+                       prompt=args.prompt, generate=args.generate)
+    if args.pretrained and args.pretrained != "none":
+        platform = platform_name(system)
+        others = table[table.platform != platform]
+        if args.pretrain_on:
+            others = others[others.platform.map(lambda name: any(part in name for part in args.pretrain_on))]
+        if others.empty:
+            raise ValueError("requested historical model has no training data from other platforms")
     run_session(None if args.model == "random" else MODEL_TYPES[args.model], system, table,
                 pretrain=lambda platform: pretrain(table, LLAMA, platform, args),
                 steps=args.steps, initial=args.initial, seed=args.seed, device=args.device,
-                workdir=args.workdir, output=args.output,
+                workdir=args.workdir, output=args.output, evaluation=evaluation,
                 values=json.loads(Path(args.space).read_text()) if args.space else None,
                 settings={name: value for name, value in vars(args).items() if name != "func"})
 
@@ -268,7 +290,21 @@ def main():
     p.add_argument("--space", help="JSON mapping flags to allowed values")
     p.set_defaults(func=suggest)
 
-    p = sub.add_parser("evaluate")
+    p = sub.add_parser("evaluate", help="per-round sampling evaluation; all model pairs by default")
+    p.add_argument("--mode", choices=("simulate", "live", "platform"), default="simulate")
+    p.add_argument("--model", nargs="+", choices=MODEL_TYPES, help="local models; default: all (live: specify one)")
+    p.add_argument("--historical", nargs="+", choices=["none"] + [n for n in MODEL_TYPES if n != "random"],
+                   help="historical models; default: all plus none (live: specify one)")
+    p.add_argument("--steps", type=int, default=25, help="benchmark-attempt budget, at most 25")
+    p.add_argument("--initial", type=int, default=DEFAULT_INITIAL)
+    p.add_argument("--seeds", type=int, default=3, help="cold-start sessions per model; historical policies run once")
+    p.add_argument("--jobs", type=int, default=-1)
+    p.add_argument("--output", default="evaluation-results", help="CSV directory (live: parent of session directory)")
+    p.add_argument("--system", help="live target system.json; default: detect")
+    p.add_argument("--device", choices=("cpu", "cuda"))
+    p.add_argument("--workdir", default=os.environ.get("DATA_DIR", "/data"))
+    p.add_argument("--space", help="live flag-space JSON")
+    p.add_argument("--pretrain-on", nargs="+")
     p.add_argument("--random-trials", type=int, default=1000, help="random selections per held-out platform (default: 1000)")
     p.add_argument("--seed", type=int, default=0, help="random evaluation seed (default: 0)")
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
@@ -282,9 +318,9 @@ def main():
     p.add_argument("--steps", type=int, default=25, help="builds measured per session (default: 25)")
     p.add_argument("--initial", type=int, default=DEFAULT_INITIAL,
                    help="start builds before the local model: random, or --pretrained top picks (default: 2)")
-    p.add_argument("--seeds", type=int, default=30, help="sessions per model (default: 30)")
+    p.add_argument("--seeds", type=int, default=30, help="cold-start sessions per model (default: 30); historical policies run once")
     p.add_argument("--jobs", type=int, default=-1, help="parallel sessions (default: all cores)")
-    p.add_argument("--pretrained", choices=[name for name in MODEL_TYPES if name != "random"],
+    p.add_argument("--pretrained", choices=["none"] + [name for name in MODEL_TYPES if name != "random"],
                    help="also run corrected sessions: this model, fitted on the other machines, "
                         "corrected by each --model")
     p.add_argument("--pretrain-on", nargs="+",
@@ -298,7 +334,7 @@ def main():
     p.add_argument("--steps", type=int, required=True, help="builds to benchmark, failed ones included")
     p.add_argument("--model", choices=MODEL_TYPES, default="gaussian-process",
                    help="local model refitted after every build (default: gaussian-process)")
-    p.add_argument("--pretrained", choices=[name for name in MODEL_TYPES if name != "random"],
+    p.add_argument("--pretrained", choices=["none"] + [name for name in MODEL_TYPES if name != "random"],
                    help="transfer learning: this model, fitted on the other machines, corrected by --model")
     p.add_argument("--pretrain-on", nargs="+",
                    help="pretrain only on platforms containing one of these words, e.g. Threadripper Cortex")
@@ -315,11 +351,29 @@ def main():
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.set_defaults(func=active_sampling)
 
+    for command in ("train", "suggest", "evaluate", "simulate", "active-sampling"):
+        command_parser = sub.choices[command]
+        command_parser.add_argument("--prompt", type=int, default=512,
+                                    help="llama.cpp prompt tokens to select (default: 512)")
+        command_parser.add_argument("--generate", type=int, default=128,
+                                    help="llama.cpp generated tokens to select (default: 128)")
+
     args = parser.parse_args()
+    if hasattr(args, "prompt"):
+        if args.prompt <= 0 or args.generate <= 0:
+            parser.error("--prompt and --generate must be positive")
+        if (args.command == "active-sampling" or
+                (args.command == "evaluate" and args.mode == "live")) and (args.prompt, args.generate) != (512, 128):
+            parser.error("live sampling uses pp512/tg128; require --prompt 512 --generate 128")
     if args.command == "predict" and args.space and (args.search != "bounded" or args.model == "random"):
         parser.error("predict --space requires --search bounded and a performance model")
     if args.command == "suggest" and args.space and args.search == "preset":
         parser.error("suggest --space requires --search bounded")
+    if args.command in ("simulate", "active-sampling") or (args.command == "evaluate" and args.mode != "platform"):
+        if not 2 <= args.initial <= args.steps <= 25:
+            parser.error("require 2 <= initial <= steps <= 25 (benchmark attempts)")
+        if args.command == "active-sampling" and args.model == "random" and args.pretrained not in (None, "none"):
+            parser.error("random sampling cannot correct a historical model")
     # Fresh GP warning log per run; fits (also parallel workers) then append
     reset_warning_log()
     args.func(args)

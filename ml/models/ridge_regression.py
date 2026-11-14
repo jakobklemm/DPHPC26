@@ -17,7 +17,7 @@ build on that machine and take the one with the highest prediction.
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import BayesianRidge
+from .compact_bayes import CompactBayesianRidge
 
 from ..load import DEFAULT, HW, columns, strip
 from .common import BaseModel
@@ -25,7 +25,7 @@ from .common import BaseModel
 
 def make_regressor():
     """Regularize weakly supported effects and provide predictive uncertainty."""
-    return BayesianRidge()
+    return CompactBayesianRidge()
 
 
 class PerformanceModel(BaseModel):
@@ -84,5 +84,9 @@ class PerformanceModel(BaseModel):
         X = self._encode(builds[self.hw_features + self.options]).to_numpy()
         diff = X[1:] - X[0]
         log_change = diff @ self.regressor.coef_
-        log_std = np.sqrt(np.einsum("ij,jk,ik->i", diff, self.regressor.sigma_, diff))
+        # Existing saved estimators may still store a dense covariance.
+        variance = (self.regressor.posterior_variance(diff)
+                    if hasattr(self.regressor, 'posterior_variance') else
+                    np.einsum("ij,jk,ik->i", diff, self.regressor.sigma_, diff))
+        log_std = np.sqrt(variance)
         return np.exp(log_change) - 1, np.exp(log_std) - 1
