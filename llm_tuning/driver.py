@@ -10,9 +10,8 @@ from urllib.request import Request, urlopen
 
 from ml.live_llama import sampling_space, write_json
 from ml.load import hardware_features, validation_errors
-from ml.load_llama import build_argument
 from ml.search import CandidateSearch
-from ml.validation import compiler_flags, flag_catalog
+from ml.validation import flag_catalog
 
 
 PROPOSE = """Recommend one fast llama.cpp build for the supplied system and workload.
@@ -100,9 +99,5 @@ def main():
         candidates.append({**candidate, **estimate, "id": f"c{len(candidates) + 1}"})
         print(f"Option {len(candidates)}/{args.count}: {seconds:g} estimated seconds", flush=True)
     winner = min(candidates, key=lambda candidate: candidate["estimated_seconds"])
-    compiler = compiler_flags(application["name"])
-    write_json(args.output, dict(model=model, inputs=evidence, candidates=candidates,
-        status="unbenchmarked_proposal", recommendation={**winner,
-            "cmake_definitions": [build_argument(k, v) for k, v in winner["config"].items() if k not in compiler],
-            "compiler_flags": [build_argument(k, v) for k, v in winner["config"].items() if k in compiler]}))
-    print(f"Selected {winner['id']}; results: {args.output}", flush=True)
+    write_json(args.output, winner["config"])
+    print(f"Selected {winner['id']}; build flags: {args.output}", flush=True)
