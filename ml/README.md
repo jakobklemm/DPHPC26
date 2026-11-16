@@ -113,7 +113,7 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 
 ## 3. Choose a model
 
-`--model` picks the model for train, predict and suggest (default hardware) and active-sampling (default gaussian-process); predict needs the same one train saved. simulate can take several (--model a b …); evaluate defaults to all historical/local pairs; use --model and --historical to restrict them.
+`--model` picks the model for train, predict and suggest (default hardware) and active-sampling (default gaussian-process); predict needs the same one train saved. simulate can take several (--model a b …); evaluate defaults to all historical/local pairs; use --model and --pretrained to restrict them.
 
 
 | `--model` | What / why |
@@ -153,127 +153,71 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 
 | Command | Output | How to read it |
 | --- | --- | --- |
-| `active-sampling` | tokens/s per build; at the end "best measured" and "model pick (prediction score X, may be unmeasured)" | **Best measured** is the safe answer (actually measured). The model pick may be unmeasured; its score is model-native and may change scale on refit |
+| `active-sampling` | tokens/s per build and a line per prediction round; at the end "best measured" and "model pick (prediction score X, may be unmeasured)"; the five evaluation CSVs in the session folder | **Best measured** is the safe answer (actually measured). The model pick may be unmeasured; its score is model-native and may change scale on refit |
 | `simulate` | Per model: `best@n`, `model_pick`, `rank_correlation`, `seconds` | `best@n`: best build after n builds, relative to the pool's best (**1.0** = found it). `model_pick`: final model's choice, same scale. `rank_correlation`: predicted vs. measured order on unmeasured builds. A model is only useful if it beats `random` |
+| `evaluate` (`--mode simulate` / `live`) | Five CSV files in `--output` (`evaluation.final.csv`, `.quality.csv`, `.timings.csv`, `.convergence.csv`, `.improvement.csv`) | One row per session, round or attempt; see section 6 for what each file and column means |
 | `evaluate --mode platform` | Per held-out machine: selection score per model, `error*` | Selection score: measured performance of the picked build / that machine's best (**1.0 best**). `error*`: mean absolute prediction error (**0 best**). All models choose from the same measured builds |
-| `train` | R², then option costs per machine | R²: fit on the training data only. Costs (e.g. `-12% ±3%`): predicted change from switching the best build to another value; exact for `hardware`/`no-hardware`, approximate for the others |
+| `train` | Fit quality, then option costs per machine | Fit quality is on the training data only: ridge models (`hardware`, `no-hardware`, …) print "explains X% … estimated noise ±Y%", the others "training log-space R²" plus their uncertainty method. Costs (e.g. `-12% ±3%`): predicted change from switching the best build to another value, with `(with X=Y)` when another option must change too; exact for `hardware`/`no-hardware`, approximate for the others. `random` fits no model and prints no costs |
 
-## 5. Edit code
+## 5. Evaluation: Active sampling with benchmarking
 
-| Change | Where (`ml/`) |
-| --- | --- |
-| Estimator defaults / model details (affects all commands) | Individual files in `models/` (`_make_regressor()`) |
-| Shared encoding, fitting, uncertainty, selection | `models/common.py` |
-| Available models | `models/__init__.py` → `MODEL_TYPES` |
-| Commands / evaluation | `main.py` / `evaluate.py` |
-| Active sampling (`ask`, `tell`, `recommend`) and its simulation | `active_sampling.py` |
-| Live llama.cpp session: build, benchmark, device detection, results folders | `live_llama.py` |
-| Transfer learning (`--pretrained`): pretrained model + local error correction | `models/residual_correction.py` |
-| `no-hardware-*` variants and the `evaluate` baseline | `models/baseline_models.py` |
-| Hardware detection (`system.json`) | `system.py` |
-| Shared candidate generation, scoring budgets, and default seed | `search.py` |
-| Data and hardware extraction | `load.py`, `load_llama.py`, `load_gromacs.py` |
-| Build validity; exclude builds/flag values | `validation.py` + application loaders; exclusions in `llama/flags.json`, `gromacs/flags.json` (repository root) |
+### Benchmark workload selection
 
-**Add a regressor:** create `models/<name>.py` → subclass `RegressionPerformanceModel` → implement `_make_regressor(seed, n_features)` → register in `MODEL_TYPES`. Shared workflows reused automatically.
+A llama.cpp benchmark measures two phases: reading a prompt of N tokens (**pp**N, prompt processing) and generating N tokens (**tg**N, text generation). Tokens/s depends on these sizes, so runs with different sizes are not comparable.
 
-## Benchmark workload selection
-
-All data-loading commands select llama.cpp **pp512/tg128** by default, including
-historical training for live sampling. `train`, `suggest`, `simulate`, and
-`evaluate` accept `--prompt N --generate N` to select another workload. GROMACS
-is unaffected. For example:
+- **Default:** every data-loading command uses only llama.cpp **pp512/tg128** runs. This also applies to the historical (pretraining) data for live sampling. GROMACS is not affected.
+- **Live sampling** (`active-sampling`, `evaluate --mode live`) always uses pp512/tg128 and rejects other values, so the historical data matches what is benchmarked live.
 
 ```bash
 python -m ml.main evaluate --app llama.cpp --prompt 512 --generate 128 \
-  --model hardware random --historical none --steps 25 --output evaluation-pp512-tg128
+  --model hardware random --pretrained none --steps 25 --output evaluation-pp512-tg128
 ```
 
-The loader retains each benchmark's exact list of prompt/generation phases and
-requires one prompt-only and one generation-only phase of the requested sizes.
-Filtering happens before duplicate removal, averaging repeated builds, and
-relative-performance normalization. It prints included/excluded raw-run counts
-for every target, including targets excluded entirely. No matching llama.cpp data,
-insufficient target pools, or missing requested historical platforms cause an error.
+**Filter:** a run is kept only if it has exactly one prompt-only and one generation-only phase of the requested sizes. Filtering happens before averaging and normalization, and the loader prints the included/excluded run counts per platform.
 
-For the supplied data, pp512/tg128 keeps 50 raw Intel runs, excludes its 24
-pp32/tg32 runs, and excludes the CPU Threadripper's pp128/tg1024 runs. Collect
-pp512/tg128 benchmarks to include that target in the same comparison. Evaluate
-other workloads separately with fresh output paths; do not pool their scores.
-The workload is included in evaluation CSVs and standalone simulation output.
-Model weights and other runtime settings must still be matched by the experimenter;
-these token-count filters do not establish their equivalence.
+**Current data:** all data is used except the Intel i5 sweep (pp32/tg32) and the CPU-only Threadripper runs (`threadripper_cpu_*`, pp128/tg1024).
 
-Live commands use a fixed pp512/tg128 benchmark and reject other `--prompt` /
-`--generate` values, ensuring historical data matches the live token workload.
-Rebuild container images after updating the code. Previously saved models and
-replay outputs should be regenerated for the selected workload.
+### Metrics
 
-## Per-round evaluation
+`evaluate` runs whole sampling sessions and reports how good the model's choice is after every round. A session is one sampling run of one policy on one target platform.
 
-Startup uses `--initial 2` successful builds. For `evaluate`, reporting begins
-with the next attempt, which is round 1. The standalone `active-sampling`
-command records startup attempts and reports the first fitted prediction as
-round 0. The maximum 25 attempts includes
-startup and failed builds; predictions use no benchmark budget. CSVs identify
-application, target, historical/local models, seed, step and post-startup round.
-Convergence tracks build changes and first/sustained optimum selection;
-improvement counts changed flags versus first/final picks and compares the
-current and first build under the same current model. Simulation also records
-actual performance gains and fraction of the pool optimum. Final results contain
-the last build, prediction value and (simulation only) whether it is optimal.
-Live predictions are model-native scores, not new hardware measurements or a
-proof of global optimality. Timings separate prediction, next-sample selection
-and refitting (including fit-data preparation) for post-startup attempts.
-Use `--jobs 1` for timings without concurrent evaluation workers.
-The random baseline reports its best measured build and leaves prediction scores blank.
+| `--mode` | What it does |
+|---|---|
+| `simulate` (default) | Replays sessions offline on the already measured builds of each platform (the *pool*). No building or benchmarking |
+| `live` | Runs one real ative sampling session on this machine: build + benchmark each attempt, as in section 1. Requires exactly one `--model` and one `--pretrained` (`none` for no pretraining); `random` cannot correct a historical model |
+| `platform` | The former evaluation: holds out one machine at a time and compares models (section 4) |
 
-Sampling evaluation defaults to three seeds for cold-start policies and every registered model combination.
-Historical/local policies run once because their startup and subsequent choices are deterministic;
-`--seeds` controls cold-start repeats only, in both `evaluate` and `simulate`.
-`--model hardware --historical none --seeds 1` gives a small smoke run.
-Historical evaluation needs at least two platforms and holds the target out.
-`active-sampling/run_all_policies.py` uses the same seed rule and also writes the five CSV sidecars beside its
-existing replay CSV. The former platform-only evaluation remains available with
-`python -m ml.main evaluate --mode platform`.
+```bash
+python -m ml.main evaluate --app llama.cpp --steps 25 --output evaluation-results        # all policies, simulated
+python -m ml.main evaluate --app llama.cpp --model hardware --pretrained none --seeds 1  # small smoke run
+python active-sampling/run_all_policies.py                                               # same evaluation, plus its replay CSV
+```
 
-Malformed JSON runs are skipped with a warning during sampling evaluation.
+**Options** (`evaluate`; `run_all_policies.py` takes the same ones where they exist)
+- `--model`: local models (default: all). `--pretrained`: pretrained models (default: all plus `none`).
+- `--steps`: budget of benchmark attempts, at most 25 (default 25). `--initial`: startup builds (default 2).
+- `--seeds`: repeats of cold-start policies (default 3). `--jobs`: parallel sessions; use `--jobs 1` for timings without concurrent workers.
+- `--output`: CSV folder (default `evaluation-results`; live: parent of the session folder). Use a fresh path for this CSV format.
+- `--prompt` / `--generate`, `--data`, `--app`, `--pretrain-on`; live only: `--system`, `--device`, `--workdir`, `--space`.
 
-`evaluation.quality.csv` has one row for **every post-startup prediction round**:
-- Simulation: `recommended_percent_of_pool_best` is 100 × the selected build's measured
-  performance / the best build in the entire simulation pool. `recommended_percent_of_best_observed`
-  instead compares with the best build sampled so far (and can exceed 100%).
-- Live: `recommended_predicted_performance` is estimated tokens/s, restored from the model's
-  training normalization; `recommended_predicted_value` retains the raw model score. Known
-  measured performance and absolute prediction error are included only if that
-  selected build has already been benchmarked; otherwise those cells are blank.
-- Both: `prediction_seconds`, `next_sample_seconds`, `refit_seconds`, and
-  `session_elapsed_seconds` give explicit wall-clock seconds in the same row.
-  Live `attempt_total_seconds` includes configuration, compilation and benchmarking
-  (including failed attempts); simulation leaves this field blank.
-  Live `attempt_configure_seconds`, `attempt_compile_seconds`, and `attempt_benchmark_execution_seconds`
-  separately time the three subprocesses. A failed phase retains its elapsed time;
-  phases never started are blank. These times describe the attempted build, not
-  necessarily the predicted winner shown in `recommended_build`. The total attempt also includes
-  file handling and result validation, and can exceed the sum of its phases.
-  Both modes start session timing immediately before sampler initialization,
-  including initial candidate generation/scoring but excluding historical fitting
-  and input/output setup. `initialization_seconds` reports this one-time startup
-  cost (repeated in each row, not an additional cost per round).
+**Policies, budget and rounds**
+- **Cold start** (`pretrained = none`): the local model starts from scratch. Runs `--seeds` times, because the start builds are random.
+- **Historical** (`pretrained = X`, local model shown as `corrected-<model>`): model X is fitted on all other platforms (the target is held out), and the local model learns its error on the target. Needs at least two platforms.
+- **Budget:** at most 25 attempts, counting the 2 startup builds and failed builds.
+- **Rounds:** `step` counts all attempts; `round` starts at 1 with the first attempt after startup. The standalone `active-sampling` command reports the first fitted prediction as round 0.
+- Malformed JSON runs are skipped with a warning.
 
-Live estimated throughput is not a new measurement. Per-round reporting performs
-no additional benchmarks and does not consume the 25-attempt budget.
+**The five CSV files.** Each row starts with `application`, `platform`, `pretrained`, `model`, `seed`, `workload`.
 
-CSV column naming: `recommended_build` is the model’s choice after refitting;
-`attempted_build` is the configuration tested in that round. `recommended_*`
-quality fields describe the recommendation, while `attempt_status` and
-`attempt_*_seconds` describe the attempted build. Simulation records the replayed
-build as `attempted_build` and leaves physical attempt durations blank.
-Both build columns contain JSON configurations. In evaluation mode the timing
-CSV has one row per post-startup attempt, including failures. It records `attempted_measured_performance`
-and `best_observed_performance`. A failed attempt leaves its own performance blank
-and carries forward the best successful measurement, if any. Simulation also
-records `pool_best_performance` and `best_observed_percent_of_pool_best` on every
-reported step. Best-so-far performance includes builds measured during startup.
-If the budget ends during startup or at its last attempt, only the session
-summary is written. Use a fresh output path for this CSV schema.
+| File | One row per | Answers | Key columns |
+|---|---|---|---|
+| `evaluation.final.csv` | session | How good is the result at the end? | `final_build`, `final_actual_performance` vs `pool_best_performance`, `final_is_pool_best`, `first_pool_best_round` (first time the best build is picked), `stable_pool_best_round` (from when it stays on it) |
+| `evaluation.quality.csv` | round | How good is the current recommendation? | `recommended_percent_of_pool_best`, `recommended_percent_of_best_observed`, `recommended_prediction_absolute_error`, `attempted_build`, timing columns |
+| `evaluation.timings.csv` | attempt (incl. failed) | What was tested, what is the best found so far, what did it cost? | `attempted_measured_performance`, `best_observed_performance`, `best_observed_percent_of_pool_best`, `attempt_status`, timing columns |
+| `evaluation.convergence.csv` | round | Does the recommendation still change? | `changed_from_previous`, `is_pool_best`, `same_as_final` |
+| `evaluation.improvement.csv` | round | How far does the recommendation move from the first pick, and does it pay off? | `flags_changed_from_first`, `flags_changed_from_final`, `prediction_gain`, `actual_gain_from_first`, `actual_fraction_of_best` |
+
+**Reading the columns**
+- **Recommended vs. attempted:** `recommended_*` is the model's current pick (what you would take if you stopped now). `attempted_*` / `attempt_*` is the build benchmarked in that round. quality.csv rates the pick; timings.csv rates the best build measured so far, which is the fair comparison with `random`.
+- **Performance:** in simulation, `*_percent_of_pool_best` compares with the best build in the pool (100 = found it). In live mode there is no pool, and `recommended_predicted_performance` is a predicted tokens/s, not a measurement.
+- **Time (seconds):** `prediction_seconds`, `next_sample_seconds` and `refit_seconds` are the model's own cost per round. `initialization_seconds` is a one-time startup cost, repeated in every row. `session_elapsed_seconds` is the running total. Live only: `attempt_*_seconds` time configure, compile and benchmark of the attempted build (blank in simulation).

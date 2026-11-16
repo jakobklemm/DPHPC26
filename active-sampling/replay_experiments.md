@@ -53,7 +53,7 @@ are reused and seeds 3–9 are added:
 ```bash
 .venv/bin/python active-sampling/run_all_policies.py \
   --data llama/results results-500-seed20261029.zip \
-  --historical none --model gaussian-process \
+  --pretrained none --model gaussian-process \
   --seeds 10 --steps 25 --initial 8 --jobs 6 --compact-bayes
 ```
 
@@ -64,7 +64,7 @@ variants were counted once during selection. Their union contained nine warm
 policies. Together with earlier ten-seed runs, the final dataset contains 421
 three-seed policies and 39 ten-seed policies, totaling 4,608 distinct sessions.
 
-For a small execution check, use `--historical none --model random --seeds 1
+For a small execution check, use `--pretrained none --model random --seeds 1
 --steps 9 --initial 8 --output /tmp/llama-replay-smoke.csv`.
 
 ## Workload filtering

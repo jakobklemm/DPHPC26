@@ -165,16 +165,16 @@ def evaluate(args):
     if args.mode == "live":
         if args.app not in (None, LLAMA):
             raise ValueError("live evaluation currently supports llama.cpp only")
-        if not args.model or len(args.model) != 1 or not args.historical or len(args.historical) != 1:
-            raise ValueError("live evaluation requires one --model and one --historical (use none for no history)")
-        args.model, args.pretrained = args.model[0], args.historical[0]
+        if not args.model or len(args.model) != 1 or not args.pretrained or len(args.pretrained) != 1:
+            raise ValueError("live evaluation requires one --model and one --pretrained (use none for no pretraining)")
+        args.model, args.pretrained = args.model[0], args.pretrained[0]
         if args.model == "random" and args.pretrained != "none":
             raise ValueError("random sampling cannot correct a historical model")
         return active_sampling(args, evaluation=True)
     table = load_table(args.data, args.app, skip_invalid_json=args.mode == "simulate",
                        prompt=args.prompt, generate=args.generate)
     if args.mode == "simulate":
-        return evaluate_sampling(table, args.output, models=args.model, historical=args.historical,
+        return evaluate_sampling(table, args.output, models=args.model, historical=args.pretrained,
                                  steps=args.steps, initial=args.initial, seeds=args.seeds, jobs=args.jobs, seed=args.seed)
     # print("== leave one build out: predict each build without having seen it")
     # result = leave_one_build_out(table)
@@ -293,8 +293,10 @@ def main():
     p = sub.add_parser("evaluate", help="per-round sampling evaluation; all model pairs by default")
     p.add_argument("--mode", choices=("simulate", "live", "platform"), default="simulate")
     p.add_argument("--model", nargs="+", choices=MODEL_TYPES, help="local models; default: all (live: specify one)")
-    p.add_argument("--historical", nargs="+", choices=["none"] + [n for n in MODEL_TYPES if n != "random"],
-                   help="historical models; default: all plus none (live: specify one)")
+    p.add_argument("--pretrained", "--historical", nargs="+", dest="pretrained",
+                   choices=["none"] + [n for n in MODEL_TYPES if n != "random"],
+                   help="pretrained models fitted on the other platforms; default: all plus none "
+                        "(live: specify one; --historical is an old alias)")
     p.add_argument("--steps", type=int, default=25, help="benchmark-attempt budget, at most 25")
     p.add_argument("--initial", type=int, default=DEFAULT_INITIAL)
     p.add_argument("--seeds", type=int, default=3, help="cold-start sessions per model; historical policies run once")

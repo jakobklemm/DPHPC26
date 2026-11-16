@@ -77,7 +77,7 @@ class WorkloadTests(unittest.TestCase):
 
     def test_live_rejects_nonmatching_workload_before_loading(self):
         for command in (['active-sampling', '--steps', '3'],
-                        ['evaluate', '--mode', 'live', '--model', 'hardware', '--historical', 'none']):
+                        ['evaluate', '--mode', 'live', '--model', 'hardware', '--pretrained', 'none']):
             with self.subTest(command=command), patch('sys.argv', ['ml.main', *command, '--prompt', '32']), \
                  patch('ml.main.load_table') as loader, patch('sys.stderr', new_callable=io.StringIO), \
                  self.assertRaises(SystemExit) as error:

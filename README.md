@@ -38,7 +38,7 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
 
    ```bash
    .venv/bin/python -m ml.main evaluate --app llama.cpp --data llama/results \
-     --model hardware gaussian-process random --historical none hardware \
+     --model hardware gaussian-process random --pretrained none hardware \
      --prompt 512 --generate 128 --steps 3 --seeds 1 --jobs 2 --output evaluation-smoke
    ```
 
@@ -72,7 +72,7 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
 5. **Live evaluation** (optional, inside the [prepared container](ml/README.md#1-run-active-sampling-currently-only-for-llama))
 
    ```bash
-   python -m ml.main evaluate --mode live --model gaussian-process --historical none \
+   python -m ml.main evaluate --mode live --model gaussian-process --pretrained none \
      --data /data/llama/results --workdir /data --steps 25 --output /data/live-evaluation
    ```
 

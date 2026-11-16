@@ -102,9 +102,10 @@ def main():
     parser.add_argument('--jobs', type=int, default=6)
     parser.add_argument('--model', nargs='+', choices=MODEL_TYPES,
                         help='Restrict local models for a small run; default: every model.')
-    parser.add_argument('--historical', nargs='+',
+    parser.add_argument('--pretrained', '--historical', nargs='+', dest='pretrained',
                         choices=['none'] + [name for name in MODEL_TYPES if name != 'random'],
-                        help='Restrict historical models; default: none plus every learned model.')
+                        help='Restrict pretrained models; default: none plus every learned model '
+                             '(--historical is an old alias).')
     parser.add_argument('--compact-bayes', action='store_true',
                         help='Compatibility flag; compact Bayesian ridge is now always enabled.')
     args = parser.parse_args()
@@ -121,7 +122,7 @@ def main():
     if any(len(pool) <= args.steps for _, pool in pools):
         parser.error('every target pool must contain more builds than --steps')
     local_models = args.model or list(MODEL_TYPES)
-    sources = args.historical or ['none'] + [m for m in MODEL_TYPES if m != 'random']
+    sources = args.pretrained or ['none'] + [m for m in MODEL_TYPES if m != 'random']
     if any(s != 'none' for s in sources) and len(pools) < 2:
         parser.error('historical fitting requires at least two target platforms')
 
