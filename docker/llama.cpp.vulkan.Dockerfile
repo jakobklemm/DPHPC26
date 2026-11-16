@@ -35,6 +35,7 @@ RUN python3 -m venv "$VIRTUAL_ENV" \
     && python -c "import catboost, joblib, numpy, pandas, sklearn"
 
 COPY ml/ ml/
+COPY llm_tuning/ llm_tuning/
 COPY llama/flags.json llama/flags.json
 COPY llama/llama_gpu_bench-random.py llama/llama_gpu_bench-profile.py llama/filter_llama_performance_flags.py llama/
 COPY --chmod=755 runner.sh /usr/local/bin/runner
