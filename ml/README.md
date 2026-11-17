@@ -62,7 +62,8 @@ runner active-sampling --steps 10 --pretrained hardware       # transfer learnin
 | `--space` | JSON flag → allowed values, may include values never benchmarked; default: values in the results |
 
 - Output: `<output>/active-<time>/` with one folder per build (loadable as training data), `session.json` and `best.json`.
-- At the end: the best **measured** build and the model's pick (may be unmeasured).
+- The last of the `--steps` builds is the model's final prediction, so it is measured too (if it was already built or failed, the last step samples normally). With `--model random` all builds are random.
+- At the end: one result, the fastest of all builds measured in the session (also in `best.json`).
 - Builds excluded by `flags.json` or invalid for the hardware are never proposed.
 
 ## 2. Run other commands (outside the container)
@@ -154,7 +155,7 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 
 | Command | Output | How to read it |
 | --- | --- | --- |
-| `active-sampling` | tokens/s per build and a line per prediction round; at the end "best measured" and "model pick (prediction score X, may be unmeasured)"; the five evaluation CSVs in the session folder | **Best measured** is the safe answer (actually measured). The model pick may be unmeasured; its score is model-native and may change scale on refit |
+| `active-sampling` | tokens/s per build and a line per prediction round; at the end "best build (X tokens/s)"; the five evaluation CSVs in the session folder | The best build is the fastest of all measured builds, including the model's final prediction (built as the last step). Prediction scores in the round lines are model-native and may change scale on refit |
 | `simulate` | Per model: `best@n`, `model_pick`, `rank_correlation`, `seconds` | `best@n`: best build after n builds, relative to the pool's best (**1.0** = found it). `model_pick`: final model's choice, same scale. `rank_correlation`: predicted vs. measured order on unmeasured builds. A model is only useful if it beats `random` |
 | `evaluate` (`--mode simulate` / `live`) | Five CSV files in `--output` (`evaluation.final.csv`, `.quality.csv`, `.timings.csv`, `.convergence.csv`, `.improvement.csv`) | One row per session, round or attempt; see section 6 for what each file and column means |
 | `evaluate --mode platform` | Per held-out machine: selection score per model, `error*` | Selection score: measured performance of the picked build / that machine's best (**1.0 best**). `error*`: mean absolute prediction error (**0 best**). All models choose from the same measured builds |

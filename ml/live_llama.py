@@ -212,10 +212,28 @@ def run_session(model_type, system, table, *, pretrain, steps, initial, seed, de
         # Checkpoint after each attempt, including failures.
         save_tables(output / 'evaluation', trace.tables(), identity)
 
+    def final_pick():
+        """The model's final prediction (as reported per round), or None if it was already attempted."""
+        state = sampler.search.rng.getstate()
+        try:
+            sampler.search.rng.seed(seed)
+            config, _ = sampler.predict()
+        finally:
+            sampler.search.rng.setstate(state)
+        key = sampler.search.key(config)
+        if key in sampler.measured or key in sampler.failed or not sampler.search.accepts(config):
+            return None
+        return config.copy()
+
     best_score = 0.0
     for step in range(1, steps + 1):
         tick = time.perf_counter()
-        config = sampler.ask()
+        # Last build of the budget: the model's final prediction, so the result is a measured build
+        config = final_pick() if step == steps and sampler.model is not None else None
+        if config is None:
+            config = sampler.ask()
+        else:
+            sampler.source = "final model prediction"
         ask_seconds = time.perf_counter() - tick
         print(f"\n-- build {step}/{steps} ({sampler.source}): {describe(APPLICATION, config)}", flush=True)
         step_output = output / f"{step:04d}"
@@ -243,10 +261,7 @@ def run_session(model_type, system, table, *, pretrain, steps, initial, seed, de
 
     if not sampler.measured:
         raise ValueError(f"no build succeeded; see {output}")
-    print(f"\nbest measured ({best_score:.3f} tokens/s): {describe(APPLICATION, sampler.recommend())}")
-    if sampler.model is not None and trace.picks:
-        config, score = trace.picks[-1]['config'], trace.picks[-1]['predicted_value']
-        print(f"model pick (prediction score {score:.3f}, may be unmeasured): "
-              f"{describe(APPLICATION, config)}")
+    # Fastest of all builds measured in the session, including the final model prediction
+    print(f"\nbest build ({best_score:.3f} tokens/s): {describe(APPLICATION, sampler.recommend())}")
     print(f"details: {output / 'best.json'}")
     return output

@@ -1,4 +1,5 @@
 """Evaluation must observe sessions without changing their sampling decisions."""
+import io
 import tempfile
 import json
 import unittest
@@ -222,6 +223,41 @@ class EvaluationTests(unittest.TestCase):
                 self.assertEqual(json.loads(row.attempted_build)['x'], choices[row.step - 1])
                 self.assertEqual(json.loads(row.recommended_build)['x'], '7')
             self.assertEqual([json.loads(build)['x'] for build in timings.attempted_build], choices[2:])
+
+    def test_live_builds_final_prediction_last(self):
+        # The last build of the budget is the model's final prediction if it was not built yet
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            (work / 'llama.cpp').mkdir()
+            (work / 'llama.cpp' / 'CMakeLists.txt').touch()
+            (work / 'gguf').mkdir()
+            (work / 'gguf' / GGUF_NAME).touch()
+            choices = []
+
+            def benchmark(config, *args, **kwargs):
+                choices.append(config['x'])
+                return float(config['x']) + 1
+
+            original = LiveActiveSampler.predict
+
+            def predict(self):
+                # Unbuilt prediction: the toy model's pick with x replaced by 1 (seed 0 builds 6, 0, 7 first)
+                config, score = original(self)
+                return {**config, 'x': '1'}, score
+
+            stdout = io.StringIO()
+            with patch('ml.live_llama.platform_name', return_value='target'), patch('ml.live_llama.hardware_features', return_value={}), patch('ml.live_llama.describe', side_effect=lambda app, config: config['x']), patch('ml.live_llama.benchmark', side_effect=benchmark), patch('ml.search.valid', return_value=True), patch('ml.active_sampling.APPS') as apps, \
+                 patch.object(LiveActiveSampler, 'predict', predict), patch('sys.stdout', stdout):
+                apps.__getitem__.return_value.HARDWARE_DETERMINED = ()
+                output = run_session(ToyModel, {}, pool(), pretrain=lambda _: None, steps=4,
+                                     initial=2, seed=0, device='cpu', workdir=tmp,
+                                     values={'x': list(map(str, range(8)))}, evaluation=True)
+            self.assertEqual(choices, ['6', '0', '7', '1'])
+            self.assertIn('-- build 4/4 (final model prediction): 1', stdout.getvalue())
+            # Only one result: the fastest measured build, not an unmeasured model pick
+            self.assertIn('best build (8.000 tokens/s): 7', stdout.getvalue())
+            self.assertNotIn('model pick', stdout.getvalue())
+            self.assertEqual(json.loads((output / 'best.json').read_text())['config']['x'], '7')
 
 
 if __name__ == '__main__':
