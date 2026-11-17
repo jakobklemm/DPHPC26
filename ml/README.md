@@ -73,6 +73,7 @@ runner active-sampling --steps 10 --pretrained hardware       # transfer learnin
 python3 -m venv .venv                    # Once
 source .venv/bin/activate               # Each terminal
 python -m pip install -r ml/requirements.txt
+python -m pip install -r requirements-notebook.txt   # Optional for evaluation-analysis.ipynb (then select the .venv kernel)
 ```
 
 ### Available Commands

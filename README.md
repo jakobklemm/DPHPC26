@@ -32,6 +32,7 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
    ```bash
    python3 -m venv .venv
    .venv/bin/python -m pip install -r ml/requirements.txt
+   .venv/bin/python -m pip install -r requirements-notebook.txt   # optional: analysis notebook
    ```
 
 2. **Smoke test** (optional)
@@ -60,14 +61,17 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
 
    - `evaluation.timings.csv` — `best_observed_percent_of_pool_best` vs. random per target.
    - `evaluation.quality.csv` — `recommended_percent_of_pool_best`.
-   - Cross-hardware comparisons — match model weights and workloads. [CSV definitions](ml/README.md#per-round-evaluation).
+   - Cross-hardware comparisons — match model weights and workloads. [CSV definitions](ml/README.md#metrics).
 
    [Evaluation analysis notebook](evaluation-analysis.ipynb) — top-five tables
    and plots for prediction accuracy, improvement, convergence and timing.
-   Open from the repository root in a Jupyter kernel with pandas, NumPy, SciPy
-   and Matplotlib. Set `HARDWARE` to an exact platform name, or leave it as
-   `None` for every observed platform and a shared-coverage average. Rerun the
-   notebook to refresh the snapshot as the evaluation writes more results.
+   Install `requirements-notebook.txt` (step 1), open the notebook from the
+   repository root and select the `.venv` kernel (VS Code: **Select Kernel** →
+   **Python Environments** → `.venv`). It reads
+   `evaluation-results-3seeds-25steps.zip`; set `RESULTS` to another ZIP, or to a
+   results folder to follow a running evaluation. Set `HARDWARE` to an exact
+   platform name, or leave it as `None` for every observed platform and a
+   shared-coverage average.
 
 5. **Live evaluation** (optional, inside the [prepared container](ml/README.md#1-run-active-sampling-currently-only-for-llama))
 
