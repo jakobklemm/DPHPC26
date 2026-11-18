@@ -240,6 +240,27 @@ def start_picks(table, models, seeds=5, jobs=8):
     return pd.DataFrame(Parallel(n_jobs=jobs)(delayed(_start_job)(table, *w) for w in work))
 
 
+def _ranked_job(table, name, seed, platform):
+    from ml.load import HW, columns, strip
+    from ml.models.common import configs
+    with quiet():
+        model = _historical(table, name, seed, platform)
+        pool = _pool(table, platform)
+        hardware = {strip(c): pool[c].iloc[0] for c in columns(pool, HW)}
+        mean, _ = model.predict_performance(hardware, configs(pool))
+    best = np.maximum.accumulate(100 * pool.relative.to_numpy()[np.argsort(-mean)])
+    return dict(historical=name, seed=seed, platform=SHORT.get(platform, platform),
+                **{f"best@{n}": best[n - 1] for n in STEPS})
+
+
+def pretrained_only(table, historical, seeds=5, jobs=8, vary=None):
+    """Baseline without a local model: measure the historical model's top-n predictions in order."""
+    vary = {h for h in historical if is_stochastic(h)} if vary is None else set(vary)
+    work = [(h, s, p) for h in historical for s in (range(seeds) if h in vary else [0])
+            for p in sorted(table.platform.unique())]
+    return pd.DataFrame(Parallel(n_jobs=jobs)(delayed(_ranked_job)(table, *w) for w in work))
+
+
 def _replay_job(table, name, seed, platform, locals_):
     from ml.active_sampling import _session
     rows = []
