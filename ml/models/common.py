@@ -228,6 +228,38 @@ def category(value):
     return "__missing__" if pd.isna(value) else str(value)
 
 
+def unseen_values(known, target):
+    """Values that vary on the new machine but were never seen in training, {option: [values]}.
+
+    known: {option: values} the model was fitted on (BaseModel.values, or a training table's).
+    target: {option: values} of the new machine (its pool or its search space).
+    A model cannot tell an unseen value from the known ones: one-hot encoding ignores it
+    (FeatureEncoder) and ridge treats it as the reference value. So pretraining says nothing
+    about these values; only the local correction can learn their effect. Options that are
+    constant on the new machine shift every build alike and are skipped, like the options
+    the hardware determines (CMAKE_CUDA_ARCHITECTURES).
+    """
+    result = {}
+    for option, values in target.items():
+        values = sorted({category(v) for v in values})
+        if option in HARDWARE_DETERMINED or len(values) < 2:
+            continue
+        seen = {category(v) for v in known.get(option, ())}
+        if new := [v for v in values if v not in seen]:
+            result[option] = new
+    return result
+
+
+def unseen_count(known, target):
+    """Number of unseen_values: the `unseen_values` column of the evaluation CSVs."""
+    return sum(map(len, unseen_values(known, target).values()))
+
+
+def option_values(table):
+    """{option: values} of the build options in a benchmark table."""
+    return {strip(c): table[c].unique() for c in columns(table, CFG)}
+
+
 def performance_space(log_prediction):
     """Exponentiate log predictions with finite numerical bounds, not a 1.0 cap."""
     # Bounded exponentiation; predictions above the measured best allowed

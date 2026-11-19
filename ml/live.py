@@ -21,6 +21,7 @@ from pathlib import Path
 from .active_sampling import LiveActiveSampler
 from .evaluation_trace import EvaluationTrace, save_tables, validate_budget
 from .load import CFG, app_options, columns, describe, hardware_features, platform_name, strip
+from .models.common import unseen_count
 
 
 def write_json(path, value):
@@ -74,7 +75,9 @@ def run_session(app, model_type, system, table, *, pretrain, steps, initial, see
           f"pretrained {source}\n   results: {output}", flush=True)
 
     trace = EvaluationTrace(initial, include_startup=not evaluation)
-    identity = dict(application=application, platform=platform, pretrained=source, model=model, seed=seed,
+    identity = dict(application=application, platform=platform, pretrained=source,
+                    unseen_values=None if pretrained is None else unseen_count(pretrained.values, values),
+                    model=model, seed=seed,
                     workload=app.workload(context))
 
     session_start = time.perf_counter()

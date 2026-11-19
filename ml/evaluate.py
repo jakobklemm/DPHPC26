@@ -153,6 +153,7 @@ def evaluate_sampling(table, output, *, models=None, historical=None, steps=25,
     from pathlib import Path
     from joblib import Parallel, delayed
     from .active_sampling import _session, seeded
+    from .models.common import option_values, unseen_count
     from .evaluation_trace import save_tables, validate_budget
     from .load import app_options
 
@@ -175,11 +176,13 @@ def evaluate_sampling(table, output, *, models=None, historical=None, steps=25,
     for app, runs in table.groupby('application'):
         for platform, pool in runs.groupby('platform'):
             pool = app_options(pool).reset_index(drop=True)
+            train = app_options(runs[runs.platform != platform])
+            # Same training data for every historical model: one count per target
+            unseen = unseen_count(option_values(train), option_values(pool))
             for source_name in historical:
                 # One historical fit per seed (a single fit for deterministic models)
                 sources = dict.fromkeys(session_seeds)
                 if source_name != 'none':
-                    train = app_options(runs[runs.platform != platform])
                     fits = {}
                     for session_seed in session_seeds:
                         model_type = seeded(source_name, session_seed)
@@ -197,6 +200,7 @@ def evaluate_sampling(table, output, *, models=None, historical=None, steps=25,
                 for result in results:
                     tables = result.pop('_evaluation')
                     identity = dict(application=app, platform=platform, pretrained=source_name,
+                                    unseen_values=None if source_name == 'none' else unseen,
                                     model=result['model'], seed=result['seed'],
                                     workload=pool['workload'].iloc[0] if 'workload' in pool else '')
                     save_tables(output / 'evaluation', tables, identity, append=True)

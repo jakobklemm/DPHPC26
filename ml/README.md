@@ -15,6 +15,7 @@
 - A pretrained model is fitted once on the other machines and then kept fixed.
 - It picks the first `--initial` builds (its top predictions) instead of random ones.
 - The local model (`--model`) learns only the pretrained model's error on this machine
+- Option values the other machines never had (e.g. AVX-512 flags on the i5, CUDA options for a CPU-only history) get no effect from the pretrained model. Only the local model can learn their effect. The evaluation CSVs (and the `simulate --output` CSV) count them per session in `unseen_values` (empty without pretraining); options that are constant on the machine do not count.
 
 Both run in the container. The work folder `~/dphpc-data` on the host (mounted as `/data`) keeps the llama.cpp source, model weights, builds and results between runs; any other path works if used consistently.
 

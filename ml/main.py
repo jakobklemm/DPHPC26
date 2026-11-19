@@ -37,7 +37,7 @@ from .load_llama import APPLICATION as LLAMA
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 # Single model registry for CLI and evaluation
 from .models import MODEL_TYPES, RandomBaseline
-from .models.common import BaseModel, configs
+from .models.common import BaseModel, configs, option_values, unseen_count
 from .models.gaussian_process import reset_warning_log
 from . import live_gromacs, live_llama
 from .live import detect_device, run_session
@@ -230,6 +230,10 @@ def simulate(args):
             raise ValueError(f"{app} / {platform}: need more than {args.steps} builds after workload filtering; found {len(pool)}")
         pretrained = pretrain(table, app, platform, args)
         result = simulate_sessions(pool, args.model, args.steps, args.initial, args.seeds, args.jobs, pretrained)
+        if pretrained is not None:
+            # Only the corrected-* sessions use the pretrained model
+            result["unseen_values"] = np.where(result["model"].str.startswith("corrected-"),
+                                               unseen_count(pretrained.values, option_values(pool)), np.nan)
         results.append(result.assign(application=app, platform=platform,
                                      workload=pool["workload"].iloc[0] if "workload" in pool else ""))
         # best build found so far at a few steps, then the final model
