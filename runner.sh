@@ -10,7 +10,7 @@ export DATA_DIR
 
 usage() {
     cat <<'EOF'
-Usage: runner [setup | sweep | random | train | active-sampling] [options]
+Usage: runner [setup | sweep | random | train | active-sampling | llm-tune] [options]
 
 setup (default): discover the system, clone llama.cpp, download weights, then train.
   --skip-system      Do not generate system.json
@@ -30,14 +30,18 @@ Mount one persistent folder at /data (override with DATA_DIR), containing:
   system.json       Container-visible hardware and toolchain snapshot for ML commands
 
 sweep [options] collects one configuration per eligible flag, without profiling.
-random [options] toggles each flag independently (--count 50 --fraction 0.5 by default).
---fraction must be between 0 and 1; invalid configurations are resampled.
+random [options] toggles a random number of flags, favoring small counts (--count 50 by default).
+Every toggle count is possible; invalid configurations are resampled.
 
 train [ML options] trains llama.cpp using /data/llama/results, saving to /data/models.
 active-sampling --steps N [--model NAME] [--pretrained NAME] [--device cpu|cuda] builds and
 benchmarks N configurations (python -m ml.main active-sampling --help for all options).
 --pretrained fits that model on the other machines in /data/llama/results (transfer learning).
 The CPU image defaults to --device cpu; otherwise cuda if an NVIDIA GPU is detected.
+
+llm-tune --application APP.json --output RESULT.json [--count N] proposes build flags
+using an OpenAI-compatible LLM. Defaults to /data/system.json and the existing flag catalog.
+No setup, builds, benchmark execution, or model training is performed by llm-tune.
 EOF
 }
 
@@ -126,6 +130,7 @@ case "$mode" in
             --results-dir "$DATA_DIR/llama/results/$mode" --device cpu --no-profile "$@"
         ;;
     train) exec python -m ml.main --models "$DATA_DIR/models" train --app llama.cpp --data "$DATA_DIR/llama/results" "$@" ;;
+    llm-tune) exec python -m llm_tuning --system "$DATA_DIR/system.json" "$@" ;;
     active-sampling) exec python -m ml.main active-sampling --workdir "$DATA_DIR" \
         --system "$DATA_DIR/system.json" --data "$DATA_DIR/llama/results" "$@" ;;
     -h|--help) usage ;;
