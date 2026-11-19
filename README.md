@@ -47,7 +47,7 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
 
    ```bash
    .venv/bin/python -m ml.main evaluate --app llama.cpp --data llama/results \
-     --prompt 512 --generate 128 --steps 25 --initial 2 --seeds 3 --jobs 2 --output evaluation-results-3seeds-25steps
+     --prompt 512 --generate 128 --steps 25 --initial 2 --seeds 3 --jobs 2 --output evaluation/results/llama.cpp/3seeds-25steps
    ```
 
    The loader selects pp512/tg128 before averaging or normalization and prints
@@ -63,15 +63,15 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
    - `evaluation.quality.csv` — `recommended_percent_of_pool_best`.
    - Cross-hardware comparisons — match model weights and workloads. [CSV definitions](ml/README.md#metrics).
 
-   [Evaluation analysis notebook](evaluation/evaluation-analysis.ipynb) — top-five tables
-   and plots for prediction accuracy, improvement, convergence and timing.
+   [Active sampling evaluation notebook](evaluation/active-sampling-evaluation.ipynb) — ranks all
+   historical → local pairs by AUC (best build so far over steps 3–25) and shows the top 10, the pair
+   grid, the spread of measured builds per hardware, and tuning time vs. gain.
    Install `evaluation/requirements-notebook.txt` (step 1), open the notebook
    and select the `.venv` kernel (VS Code: **Select Kernel** →
-   **Python Environments** → `.venv`). It reads
-   `evaluation-results-3seeds-25steps.zip` next to it; set `RESULTS` to another ZIP, or to a
-   results folder to follow a running evaluation. Set `HARDWARE` to an exact
-   platform name, or leave it as `None` for every observed platform and a
-   shared-coverage average.
+   **Python Environments** → `.venv`). It reads every evaluation run below
+   `evaluation/results/<app>/` (folders or ZIPs, simulated or live `active-*` sessions); set `APP` to
+   `gromacs` for GROMACS and `DEFAULT_BUILD` once the default build is fixed.
+   The previous notebooks and the 3-seed ZIP are in `archive/evaluation-2026-11-17/`.
 
 5. **Live evaluation** (optional, inside the [prepared container](ml/README.md#1-run-active-sampling-llamacpp-and-gromacs))
 
