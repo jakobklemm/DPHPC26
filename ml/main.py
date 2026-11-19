@@ -6,7 +6,7 @@ Command line interface. Run from the repository root.
   suggest   configurations worth benchmarking next on a machine
   evaluate  per-round sampling evaluation (simulation grid or one live session)
   simulate  replay active-sampling sessions on measured builds
-  active-sampling  build + benchmark llama.cpp on this machine, refit, repeat
+  active-sampling  build + benchmark llama.cpp or GROMACS on this machine, refit, repeat
 
 Data defaults to each application's local results folder (llama/results or
 gromacs/results). --data overrides it with local folders or ZIP files.
@@ -18,6 +18,7 @@ Examples:
   python -m ml.main suggest --system system.json
   python -m ml.main simulate --app llama.cpp --steps 25
   python -m ml.main active-sampling --steps 10 --pretrained hardware
+  python -m ml.main active-sampling --app gromacs --steps 10 --pretrained hardware
 
 """
 
@@ -31,16 +32,24 @@ import pandas as pd
 
 from .active_sampling import DEFAULT_INITIAL, simulate as simulate_sessions
 from .evaluate import evaluate_sampling, leave_one_platform_out #, leave_one_build_out
+from .load_gromacs import APPLICATION as GROMACS
 from .load_llama import APPLICATION as LLAMA
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
 # Single model registry for CLI and evaluation
 from .models import MODEL_TYPES, RandomBaseline
 from .models.common import BaseModel, configs
 from .models.gaussian_process import reset_warning_log
-from .live_llama import run_session
+from . import live_gromacs, live_llama
+from .live import detect_device, run_session
 from .search import SEARCH_SEED, SEARCH_STARTS
 from .system import discover
 from .validation import flag_catalog
+
+
+# Live build + benchmark module per application
+LIVE = {LLAMA: live_llama, GROMACS: live_gromacs}
+# Options of GROMACS live sampling only
+GROMACS_LIVE_OPTIONS = ("source", "fftw", "tpr", "threads")
 
 
 def model_path(models, app, kind="hardware"):
@@ -163,8 +172,6 @@ def suggest(args):
 
 def evaluate(args):
     if args.mode == "live":
-        if args.app not in (None, LLAMA):
-            raise ValueError("live evaluation currently supports llama.cpp only")
         if not args.model or len(args.model) != 1 or not args.pretrained or len(args.pretrained) != 1:
             raise ValueError("live evaluation requires one --model and one --pretrained (use none for no pretraining)")
         args.model, args.pretrained = args.model[0], args.pretrained[0]
@@ -234,10 +241,21 @@ def simulate(args):
         pd.concat(results).to_csv(args.output, index=False)
 
 
-# Live active sampling of llama.cpp on this machine; the session itself is in live_llama.py
+# Live active sampling on this machine; the session itself is in live.py,
+# building and benchmarking in live_llama.py / live_gromacs.py
 def active_sampling(args, *, evaluation=False):
+    app = args.app or LLAMA
     system = json.loads(Path(args.system).read_text()) if args.system else discover()
-    table = load_table(args.data, LLAMA, skip_invalid_json=True,
+    options = {}
+    if app == GROMACS:
+        # One benchmark with a fixed device, the same as in the history (live_gromacs.py)
+        if args.device not in (None, live_gromacs.DEVICE):
+            raise ValueError(f"the GROMACS benchmark runs on --device {live_gromacs.DEVICE}, got {args.device}")
+        device = live_gromacs.DEVICE
+        options = {name: getattr(args, name) for name in GROMACS_LIVE_OPTIONS if getattr(args, name) is not None}
+    else:
+        device = args.device or detect_device(hardware_features(system))
+    table = load_table(args.data, app, skip_invalid_json=True,
                        prompt=args.prompt, generate=args.generate)
     if args.pretrained and args.pretrained != "none":
         platform = platform_name(system)
@@ -246,12 +264,13 @@ def active_sampling(args, *, evaluation=False):
             others = others[others.platform.map(lambda name: any(part in name for part in args.pretrain_on))]
         if others.empty:
             raise ValueError("requested historical model has no training data from other platforms")
-    run_session(None if args.model == "random" else MODEL_TYPES[args.model], system, table,
-                pretrain=lambda platform: pretrain(table, LLAMA, platform, args),
-                steps=args.steps, initial=args.initial, seed=args.seed, device=args.device,
+    run_session(LIVE[app], None if args.model == "random" else MODEL_TYPES[args.model], system, table,
+                pretrain=lambda platform: pretrain(table, app, platform, args),
+                steps=args.steps, initial=args.initial, seed=args.seed, device=device,
                 workdir=args.workdir, output=args.output, evaluation=evaluation,
                 values=json.loads(Path(args.space).read_text()) if args.space else None,
-                settings={name: value for name, value in vars(args).items() if name != "func"})
+                settings={name: value for name, value in vars(args).items() if name != "func"},
+                options=options)
 
 
 def main():
@@ -332,7 +351,8 @@ def main():
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.set_defaults(func=simulate)
 
-    p = sub.add_parser("active-sampling", help="live active sampling of llama.cpp on this machine")
+    p = sub.add_parser("active-sampling", help="live active sampling of llama.cpp or GROMACS on this machine")
+    p.add_argument("--app", choices=sorted(APPS), help="application to build and benchmark (default: llama.cpp)")
     p.add_argument("--steps", type=int, required=True, help="builds to benchmark, failed ones included")
     p.add_argument("--model", choices=MODEL_TYPES, default="gaussian-process",
                    help="local model refitted after every build (default: gaussian-process)")
@@ -347,8 +367,9 @@ def main():
                    help="benchmark backend (default: cuda if an NVIDIA GPU and the CUDA toolkit are found, else cpu)")
     p.add_argument("--system", help="system.json of this machine (default: detect now)")
     p.add_argument("--workdir", default=os.environ.get("DATA_DIR", "/data"),
-                   help="folder with llama.cpp/, gguf/ and build/ (default: $DATA_DIR or /data)")
-    p.add_argument("--output", help="results folder for the session (default: <workdir>/llama/results)")
+                   help="folder with build/ and llama.cpp/ + gguf/ or gromacs/ (default: $DATA_DIR or /data)")
+    p.add_argument("--output", help="results folder for the session (default: <workdir>/llama/results "
+                                    "or <workdir>/gromacs/results)")
     p.add_argument("--space", help="JSON mapping flags to allowed values; default: values in --data")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.set_defaults(func=active_sampling)
@@ -359,14 +380,28 @@ def main():
                                     help="llama.cpp prompt tokens to select (default: 512)")
         command_parser.add_argument("--generate", type=int, default=128,
                                     help="llama.cpp generated tokens to select (default: 128)")
+    for command in ("active-sampling", "evaluate"):
+        command_parser = sub.choices[command]
+        group = command_parser.add_argument_group("GROMACS live sampling")
+        group.add_argument("--source", help="GROMACS source tree (default: <workdir>/gromacs/gromacs-src)")
+        group.add_argument("--fftw", help="FFTW tarball (default: <workdir>/gromacs/fftw-3.3.10.tar.gz)")
+        group.add_argument("--tpr", help="benchmark input, the same as in the history "
+                                         "(default: <workdir>/gromacs/inputs/water_0096.tpr)")
+        group.add_argument("--threads", type=int, help="OpenMP threads of mdrun and build jobs "
+                                                        "(default: all available cores)")
 
     args = parser.parse_args()
     if hasattr(args, "prompt"):
         if args.prompt <= 0 or args.generate <= 0:
             parser.error("--prompt and --generate must be positive")
-        if (args.command == "active-sampling" or
-                (args.command == "evaluate" and args.mode == "live")) and (args.prompt, args.generate) != (512, 128):
+        live = args.command == "active-sampling" or (args.command == "evaluate" and args.mode == "live")
+        if live and (args.app or LLAMA) == LLAMA and (args.prompt, args.generate) != (512, 128):
             parser.error("live sampling uses pp512/tg128; require --prompt 512 --generate 128")
+        if ((not live or args.app != GROMACS) and
+                any(getattr(args, name, None) is not None for name in GROMACS_LIVE_OPTIONS)):
+            parser.error("--source, --fftw, --tpr and --threads require live sampling with --app gromacs")
+        if getattr(args, "threads", None) is not None and args.threads <= 0:
+            parser.error("--threads must be positive")
     if args.command == "predict" and args.space and (args.search != "bounded" or args.model == "random"):
         parser.error("predict --space requires --search bounded and a performance model")
     if args.command == "suggest" and args.space and args.search == "preset":

@@ -6,7 +6,7 @@
 - **Offline comparison:** `simulate` replays sampling sessions on measured builds (vs. random, with/without pretraining).
 
 
-## 1. Run active sampling (currently only for llama)
+## 1. Run active sampling (llama.cpp and GROMACS)
 
 **Active sampling** finds a fast build for this machine with few benchmarks. Each step: the model proposes the next build (high predicted performance + high uncertainty) → build + benchmark it → refit the model on all results so far → repeat. The first `--initial` builds (default 2, the minimum a model needs) are random, since there is no model yet. The model learns from this machine's builds only.
 
@@ -65,6 +65,42 @@ runner active-sampling --steps 10 --pretrained hardware       # transfer learnin
 - The last of the `--steps` builds is the model's final prediction, so it is measured too (if it was already built or failed, the last step samples normally). With `--model random` all builds are random.
 - At the end: one result, the fastest of all builds measured in the session (also in `best.json`).
 - Builds excluded by `flags.json` or invalid for the hardware are never proposed.
+
+### GROMACS
+
+`--app gromacs` runs the same session for GROMACS (`ml/live_gromacs.py`). Each build is
+configured, compiled and benchmarked exactly like `gromacs/gromacs_gpu_bench-profile.py --no-profile`
+(same CMake settings, `mdrun` arguments, 1 warmup + 3 measured runs, `benchmark.json`), so the
+session folders load as training data next to the campaign runs. Performance is ns/day.
+
+```bash
+python -m ml.main active-sampling --app gromacs --steps 10 --pretrained hardware \
+  --workdir /data --data /data/gromacs/results
+```
+
+There is one GROMACS benchmark, the same as in the GB10 and RTX 5060 Ti campaigns: CUDA builds
+(`GMX_GPU=CUDA`, GPU architecture of this machine), GPU-resident `mdrun`
+(`-nb gpu -pme gpu -bonded cpu -update gpu`), input `water_0096.tpr`, 50000 steps; the loader reads its
+`benchmark.json` (the CPU-only `benchmark-cpu.json` of the 5060 Ti is not used). It is defined in one block,
+"The benchmark", at the top of `ml/live_gromacs.py`; to switch to another benchmark, change that block and
+measure the history the same way. GROMACS live sampling therefore runs on `--device cuda` only.
+
+Work folder (`--workdir`, default `$DATA_DIR` or `/data`); the paths can be overridden:
+
+| Path | Option | What |
+| --- | --- | --- |
+| `gromacs/gromacs-src/` | `--source` | GROMACS source tree (the campaigns used 2026.4) |
+| `gromacs/fftw-3.3.10.tar.gz` | `--fftw` | FFTW tarball, built by GROMACS for `GMX_FFT_LIBRARY=fftw3` |
+| `gromacs/inputs/water_0096.tpr` | `--tpr` | benchmark input, made once with `gromacs/prepare_input.sh`; must be the same input as in the history |
+| `gromacs/flags.json` | — | flag catalog (read from `$DATA_DIR` if set) |
+| `gromacs/results/` | `--output` | session results (default) |
+
+- `--threads` (OpenMP threads of `mdrun` and build jobs, default: all available cores) is GROMACS-only.
+- Compiler: clang/clang++; `cuda` also needs `nvcc` (on `PATH` or `CUDACXX`).
+- `GMX_BUILD_OWN_FFTW` and `GMX_SIMD_ARM_SVE_LENGTH` are not tuning options: as in the harness, they follow from
+  `GMX_FFT_LIBRARY` and from the CPU's SVE length. The loader leaves them out of the build configuration, so
+  `predict`/`suggest` do not print them either. `CMAKE_CUDA_ARCHITECTURES` follows from the GPU, like for llama.cpp.
+- A build that silently differs from the configuration (e.g. other SIMD reported by `gmx --version`) counts as failed.
 
 ## 2. Run other commands (outside the container)
 
@@ -155,7 +191,7 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 
 | Command | Output | How to read it |
 | --- | --- | --- |
-| `active-sampling` | tokens/s per build and a line per prediction round; at the end "best build (X tokens/s)"; the five evaluation CSVs in the session folder | The best build is the fastest of all measured builds, including the model's final prediction (built as the last step). Prediction scores in the round lines are model-native and may change scale on refit |
+| `active-sampling` | tokens/s (llama.cpp) or ns/day (GROMACS) per build and a line per prediction round; at the end "best build (X tokens/s)"; the five evaluation CSVs in the session folder | The best build is the fastest of all measured builds, including the model's final prediction (built as the last step). Prediction scores in the round lines are model-native and may change scale on refit |
 | `simulate` | Per model: `best@n`, `model_pick`, `rank_correlation`, `seconds` | `best@n`: best build after n builds, relative to the pool's best (**1.0** = found it). `model_pick`: final model's choice, same scale. `rank_correlation`: predicted vs. measured order on unmeasured builds. A model is only useful if it beats `random` |
 | `evaluate` (`--mode simulate` / `live`) | Five CSV files in `--output` (`evaluation.final.csv`, `.quality.csv`, `.timings.csv`, `.convergence.csv`, `.improvement.csv`) | One row per session, round or attempt; see section 6 for what each file and column means |
 | `evaluate --mode platform` | Per held-out machine: selection score per model, `error*` | Selection score: measured performance of the picked build / that machine's best (**1.0 best**). `error*`: mean absolute prediction error (**0 best**). All models choose from the same measured builds |
@@ -200,7 +236,7 @@ python active-sampling/run_all_policies.py                                      
 - `--steps`: budget of benchmark attempts, at most 25 (default 25). `--initial`: startup builds (default 2).
 - `--seeds`: repeats of cold-start policies (default 3). `--jobs`: parallel sessions; use `--jobs 1` for timings without concurrent workers.
 - `--output`: CSV folder (default `evaluation-results`; live: parent of the session folder). Use a fresh path for this CSV format.
-- `--prompt` / `--generate`, `--data`, `--app`, `--pretrain-on`; live only: `--system`, `--device`, `--workdir`, `--space`.
+- `--prompt` / `--generate` (llama.cpp), `--data`, `--app`, `--pretrain-on`; live only: `--system`, `--device`, `--workdir`, `--space`; GROMACS live only: `--source`, `--fftw`, `--tpr`, `--threads`.
 
 **Policies, budget and rounds**
 - **Cold start** (`pretrained = none`): the local model starts from scratch. Runs `--seeds` times, because the start builds are random.

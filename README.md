@@ -73,7 +73,7 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
    platform name, or leave it as `None` for every observed platform and a
    shared-coverage average.
 
-5. **Live evaluation** (optional, inside the [prepared container](ml/README.md#1-run-active-sampling-currently-only-for-llama))
+5. **Live evaluation** (optional, inside the [prepared container](ml/README.md#1-run-active-sampling-llamacpp-and-gromacs))
 
    ```bash
    python -m ml.main evaluate --mode live --model gaussian-process --pretrained none \
@@ -81,3 +81,4 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
    ```
 
    Warm start — replace `none` with a historical model. Results — `active-*` subdirectory.
+   GROMACS — add `--app gromacs --data /data/gromacs/results` ([work folder](ml/README.md#gromacs)).

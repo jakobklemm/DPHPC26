@@ -7,6 +7,10 @@ Runs come from the XaaS gromacs harness (gromacs_xaas_<date>.zip):
 
 `options` holds the CMake options (GMX_SIMD, GMX_DOUBLE, ...) and also the
 compiler settings the harness turns into flags: compiler, opt_level, native, lto.
+
+benchmark.json is the one GROMACS benchmark (GPU-resident mdrun, live_gromacs.py
+"The benchmark"). Other files, e.g. the CPU-only benchmark-cpu.json of the
+RTX 5060 Ti campaign, are not read.
 """
 
 from .validation import (BOOL, COMMON_SCHEMA, enabled, isa_errors, cuda_errors,
@@ -16,7 +20,12 @@ from .validation import (BOOL, COMMON_SCHEMA, enabled, isa_errors, cuda_errors,
 APPLICATION = "gromacs"  # project_name in source.yml
 
 # Options whose value follows from the hardware, {option: rule(hardware) -> value or None if not passed}
-HARDWARE_DETERMINED = {}
+# The GPU architecture of the machine, as for llama.cpp (the campaigns built for it, too).
+HARDWARE_DETERMINED = {
+    "CMAKE_CUDA_ARCHITECTURES":
+        lambda hw: str(round(hw["gpu_compute_capability"] * 10))
+        if hw.get("n_gpus", 0) > 0 and hw.get("gpu_compute_capability", 0) > 0 else None,
+}
 
 # Supported harness profile. Source for option domains and dependencies:
 # https://manual.gromacs.org/documentation/current/install-guide/index.html
@@ -109,6 +118,13 @@ def valid(config, hardware):
 # options that are not CMake definitions but compiler settings of the harness
 HARNESS_OPTIONS = {"compiler", "opt_level", "native", "lto", "extra_flags"}
 
+# Options the harness derives from other options and the machine (gromacs_gpu_bench-profile.py), not tuned:
+#   GMX_BUILD_OWN_FFTW       ON exactly with GMX_FFT_LIBRARY=fftw3
+#   GMX_SIMD_ARM_SVE_LENGTH  the CPU's SVE vector length, only with GMX_SIMD=ARM_SVE
+# They are left out of the build configuration, so models and searches never vary
+# them independently; live sampling sets them when it builds (live_gromacs.py).
+DERIVED_OPTIONS = {"GMX_BUILD_OWN_FFTW", "GMX_SIMD_ARM_SVE_LENGTH"}
+
 
 # extract build config from build-<run>.json
 def build_config(build):
@@ -118,6 +134,8 @@ def build_config(build):
             value = "ON" if value else "OFF"
         # only some runs list extra_flags, and always empty
         if option == "extra_flags" and not value:
+            continue
+        if option in DERIVED_OPTIONS:
             continue
         config[option] = str(value)
     return config
