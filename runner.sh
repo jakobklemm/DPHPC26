@@ -30,8 +30,8 @@ Mount one persistent folder at /data (override with DATA_DIR), containing:
   system.json       Container-visible hardware and toolchain snapshot for ML commands
 
 sweep [options] collects one configuration per eligible flag, without profiling.
-random [options] toggles each flag independently (--count 50 --fraction 0.5 by default).
---fraction must be between 0 and 1; invalid configurations are resampled.
+random [options] toggles a random number of flags, favoring small counts (--count 50 by default).
+Every toggle count is possible; invalid configurations are resampled.
 
 train [ML options] trains llama.cpp using /data/llama/results, saving to /data/models.
 active-sampling --steps N [--model NAME] [--pretrained NAME] [--device cpu|cuda] builds and

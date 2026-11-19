@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run reproducible one-hot sweeps or independently randomized flag configurations."""
+"""Run reproducible one-hot sweeps or small-change-weighted random configurations."""
 
 import argparse
 import json
@@ -19,7 +19,6 @@ from filter_llama_performance_flags import (cpu_info, filter_catalog, find_cuda_
 ROOT = Path(__file__).resolve().parent
 SEED = 20261021
 DEFAULT_COUNT = 50
-DEFAULT_FRACTION = 0.5
 
 
 def valid(cmake, rules):
@@ -89,22 +88,26 @@ def execution_plan(options, device, cuda_arch=None):
     return plan
 
 
-def random_configurations(options, device, cuda_arch=None, count=DEFAULT_COUNT,
-                          fraction=DEFAULT_FRACTION):
-    if count < 0 or not 0 <= fraction <= 1:
-        raise ValueError("count must be non-negative and fraction must be between 0 and 1")
+def random_configurations(options, device, cuda_arch=None, count=DEFAULT_COUNT):
+    if count < 0:
+        raise ValueError("count must be non-negative")
     rng = random.Random(SEED)
     space = configuration_space(options, device, cuda_arch)
+    candidates = space[3]
+    counts = range(len(candidates) + 1)
+    # Harmonic weights favor small changes without excluding any toggle count.
+    weights = [1 / (k + 1) for k in counts]
     for _ in range(count):
         for _attempt in range(10_000):
-            choices = [candidate for candidate in space[3] if rng.random() < fraction]
+            toggles = rng.choices(counts, weights=weights, k=1)[0]
+            choices = rng.sample(candidates, toggles)
             config = configuration(options, device, space, choices, rng)
             if valid_configuration(config, options):
                 yield {"phase": "random", "config": config}
                 break
         else:
             raise ValueError("Could not sample a valid configuration after 10000 attempts; "
-                             "check --fraction and the invalid-combination rules")
+                              "check the invalid-combination rules")
 
 
 def save_json(path, data):
@@ -139,13 +142,6 @@ def positive_int(value):
     return number
 
 
-def fraction_value(value):
-    number = float(value)
-    if not 0 <= number <= 1:
-        raise argparse.ArgumentTypeError("must be between 0 and 1")
-    return number
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="mode", required=True)
@@ -170,10 +166,9 @@ def main():
     common.add_argument("--no-profile", action="store_true",
                         help="Build and benchmark only; do not require perf or HPCToolkit")
     commands.add_parser("sweep", parents=[common], help="One hot: enable each flag once")
-    randomized = commands.add_parser("random", parents=[common], help="Toggle each flag independently")
+    randomized = commands.add_parser("random", parents=[common],
+                                     help="Toggle a random number of flags, favoring small counts")
     randomized.add_argument("--count", type=int, default=DEFAULT_COUNT)
-    randomized.add_argument("--fraction", type=fraction_value, default=DEFAULT_FRACTION,
-                            help="Probability of enabling each flag, from 0 to 1 (default: 0.5)")
     args = parser.parse_args()
     if (args.device == "cuda") != (args.cuda_arch is not None):
         parser.error("--cuda-arch is required for CUDA and only accepted with CUDA")
@@ -200,7 +195,7 @@ def main():
     total = len(plan) if plan is not None else args.count
     configurations = (iter(plan) if plan is not None else
                       random_configurations(options, args.device, args.cuda_arch,
-                                            args.count, args.fraction))
+                                            args.count))
     # Random configurations are generated lazily, not stored in a future plan.
     record_file = results / f"{args.mode}-executions.json"
     plan_file = results / f"{args.mode}-plan.json"
@@ -247,7 +242,7 @@ def main():
                 "gpu_layers": 0 if args.device == "cpu" else args.gpu_layers,
                  "profile": not args.no_profile, "build_dir": str(build)}
     if args.mode == "random":
-        settings.update({"fraction": args.fraction, "seed": SEED, "options": options})
+        settings.update({"sampling": "harmonic-toggle-count-v1", "seed": SEED, "options": options})
     settings_file = results / f"{args.mode}-settings.json"
     if settings_file.exists() and json.loads(settings_file.read_text()) != settings:
         parser.error(f"Run settings changed: use a different --results-dir or remove {settings_file}")
