@@ -151,7 +151,7 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 
 ## 3. Choose a model
 
-`--model` picks the model for train, predict and suggest (default hardware) and active-sampling (default gaussian-process); predict needs the same one train saved. simulate can take several (--model a b …); evaluate defaults to all historical/local pairs; use --model and --pretrained to restrict them.
+`--model` picks the model for train, predict and suggest (default hardware) and active-sampling (default gaussian-process); predict needs the same one train saved. simulate can take several (--model a b …); evaluate defaults to all historical/local pairs, except that hardware local models with a `no-hardware-*` twin (and `hardware-three-way`) are skipped: the local model only sees one machine, so its hardware inputs are constant and these variants duplicate the no-hardware ones. Use --model and --pretrained to restrict (or explicitly re-add) them.
 
 
 | `--model` | What / why |

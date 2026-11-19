@@ -311,7 +311,8 @@ def main():
 
     p = sub.add_parser("evaluate", help="per-round sampling evaluation; all model pairs by default")
     p.add_argument("--mode", choices=("simulate", "live", "platform"), default="simulate")
-    p.add_argument("--model", nargs="+", choices=MODEL_TYPES, help="local models; default: all (live: specify one)")
+    p.add_argument("--model", nargs="+", choices=MODEL_TYPES, help="local models; default: all except hardware variants with a no-hardware twin, "
+                        "which are identical on one machine (live: specify one)")
     p.add_argument("--pretrained", "--historical", nargs="+", dest="pretrained",
                    choices=["none"] + [n for n in MODEL_TYPES if n != "random"],
                    help="pretrained models fitted on the other platforms; default: all plus none "

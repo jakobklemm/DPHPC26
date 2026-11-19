@@ -58,6 +58,16 @@ EVALUATION_NAMES = {
 }
 
 
+# Local models in evaluate_sampling only see one machine, so their hardware
+# inputs are constant: these duplicate their no-hardware-* twins (three-way
+# reduces to option pairs). Excluded from the default local list; --model can
+# still request them.
+SINGLE_MACHINE_DUPLICATES = {
+    "hardware", "hardware-interactions", "hardware-three-way", "random-forest", "catboost",
+    "gaussian-process", "kernel-ridge", "support-vector", "small-mlp",
+}
+
+
 def leave_one_platform_out(table, random_trials=1000, seed=0):
     """Compare all registered models on identical eligible measured candidates.
 
@@ -132,6 +142,8 @@ def evaluate_sampling(table, output, *, models=None, historical=None, steps=25,
     """Evaluate every historical/local pair, holding out each target platform.
 
     Random is a cold-only baseline because it cannot fit residual corrections.
+    Default local models skip SINGLE_MACHINE_DUPLICATES (hardware variants that
+    match their no-hardware twins on a single machine); pass models to override.
     Output is streamed per completed session; use a fresh directory per run.
     """
     from pathlib import Path
@@ -143,7 +155,7 @@ def evaluate_sampling(table, output, *, models=None, historical=None, steps=25,
     validate_budget(steps, initial)
     if seeds < 1 or jobs == 0:
         raise ValueError('require seeds >= 1 and jobs != 0')
-    models = models or list(MODEL_TYPES)
+    models = models or [name for name in MODEL_TYPES if name not in SINGLE_MACHINE_DUPLICATES]
     historical = historical or ['none'] + [name for name in MODEL_TYPES if name != 'random']
     output = Path(output)
     if output.exists() and any(output.glob('*.csv')):
