@@ -57,6 +57,26 @@ def sha256_file(path):
     return digest.hexdigest()
 
 
+def describe_input(command, run_dir):
+    """What was simulated: input file, atom count, steps, time step, mdrun options.
+    Read from the mdrun command and md.log, so it can also be filled in for old runs."""
+    tpr = Path(command[command.index("-s") + 1])
+    log = (Path(run_dir) / "md.log").read_text(errors="replace")
+    atoms = re.search(r"There are: +(\d+) Atoms", log)
+    dt = re.search(r"^ +dt += +([0-9.eE+-]+)", log, re.MULTILINE)
+    nsteps = int(command[command.index("-nsteps") + 1])
+    info = Path(str(tpr) + ".info")
+    return {"name": tpr.stem,
+            "source": info.read_text().strip() if info.is_file() else None,
+            "tpr_sha256": sha256_file(tpr) if tpr.is_file() else None,
+            "atoms": int(atoms.group(1)) if atoms else None,
+            "nsteps": nsteps,
+            "dt_ps": float(dt.group(1)) if dt else None,
+            "simulated_ps": round(nsteps * float(dt.group(1)), 6) if dt else None,
+            "mdp": "bench.mdp",
+            "mdrun_options": [str(a) for a in command[2:] if str(a) not in ("-s", str(tpr))]}
+
+
 def run_logged(command, log, *, env=None, cwd=None):
     print("+", shlex.join(map(str, command)), flush=True)
     with log.open("a", encoding="utf-8") as destination:
@@ -430,6 +450,7 @@ def run_benchmark(bench, bench_dir, env, args, device, nsteps):
              "std": statistics.stdev(measured) if len(measured) > 1 else 0.0,
              "n_runs": len(measured), "warmup_runs": args.warmup,
              "nsteps": nsteps, "threads": args.threads,
+             "input": describe_input(bench, bench_dir / "measured0"),
              "runs": [run for run in runs if run["kind"] == "measured"]},
             round(time.monotonic() - start, 3))
 
