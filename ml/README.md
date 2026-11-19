@@ -234,13 +234,13 @@ python active-sampling/run_all_policies.py                                      
 **Options** (`evaluate`; `run_all_policies.py` takes the same ones where they exist)
 - `--model`: local models (default: all). `--pretrained`: pretrained models (default: all plus `none`).
 - `--steps`: budget of benchmark attempts, at most 25 (default 25). `--initial`: startup builds (default 2).
-- `--seeds`: repeats of cold-start policies (default 3). `--jobs`: parallel sessions; use `--jobs 1` for timings without concurrent workers.
+- `--seeds`: repeats of every policy, cold and historical (default 3; 3–5 is enough for now). Seed `s` (from `--seed` on) sets the random start builds and the `random_state` of the historical and local model fits, so stochastic models (forests, MLPs, bootstraps) vary between seeds; ridge models are deterministic and repeat identically. The seed is recorded in the `seed` column. `--jobs`: parallel sessions; use `--jobs 1` for timings without concurrent workers.
 - `--output`: CSV folder (default `evaluation-results`; live: parent of the session folder). Use a fresh path for this CSV format.
 - `--prompt` / `--generate` (llama.cpp), `--data`, `--app`, `--pretrain-on`; live only: `--system`, `--device`, `--workdir`, `--space`; GROMACS live only: `--source`, `--fftw`, `--tpr`, `--threads`.
 
 **Policies, budget and rounds**
 - **Cold start** (`pretrained = none`): the local model starts from scratch. Runs `--seeds` times, because the start builds are random.
-- **Historical** (`pretrained = X`, local model shown as `corrected-<model>`): model X is fitted on all other platforms (the target is held out), and the local model learns its error on the target. Needs at least two platforms.
+- **Historical** (`pretrained = X`, local model shown as `corrected-<model>`): model X is fitted on all other platforms (the target is held out), and the local model learns its error on the target. Runs `--seeds` times, with X refitted per seed. Needs at least two platforms.
 - **Budget:** at most 25 attempts, counting the 2 startup builds and failed builds.
 - **Rounds:** `step` counts all attempts; `round` starts at 1 with the first attempt after startup. The standalone `active-sampling` command reports the first fitted prediction as round 0.
 - Malformed JSON runs are skipped with a warning.

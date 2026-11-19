@@ -26,6 +26,7 @@ Reported per model, averaged over repeated sessions with different random starts
 `corrected-<model>` uses <model> to correct the pretrained model.
 """
 
+import inspect
 import time
 from functools import partial
 
@@ -199,11 +200,20 @@ class ActiveSampler:
         return max(self.measured, key=self.measured.get)
 
 
-def _session(name, pool, steps, initial, seed, pretrained=None, evaluation=False):
+def seeded(name, seed):
+    """Model constructor with random_state=seed; unchanged for deterministic models."""
+    model_type = MODEL_TYPES[name]
+    if seed is None or "random_state" not in inspect.signature(model_type).parameters:
+        return model_type
+    return partial(model_type, random_state=seed)
+
+
+def _session(name, pool, steps, initial, seed, pretrained=None, evaluation=False, random_state=None):
+    """random_state: seed for the local model fits (None: the model's default)."""
     validate_budget(steps, initial)
     trace = EvaluationTrace(initial)
     start = time.perf_counter()
-    sampler = ActiveSampler(None if name == "random" else MODEL_TYPES[name], pool, initial, seed, pretrained)
+    sampler = ActiveSampler(None if name == "random" else seeded(name, random_state), pool, initial, seed, pretrained)
     trace.initialization_seconds = time.perf_counter() - start
     performance = pool["performance"].to_numpy()
     relative = pool["relative"].to_numpy()

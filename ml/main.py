@@ -319,7 +319,9 @@ def main():
                         "(live: specify one; --historical is an old alias)")
     p.add_argument("--steps", type=int, default=25, help="benchmark-attempt budget, at most 25")
     p.add_argument("--initial", type=int, default=DEFAULT_INITIAL)
-    p.add_argument("--seeds", type=int, default=3, help="cold-start sessions per model; historical policies run once")
+    p.add_argument("--seeds", type=int, default=3,
+                   help="sessions per policy, cold and historical (default: 3); each seed also seeds "
+                        "the historical and local model fits")
     p.add_argument("--jobs", type=int, default=-1)
     p.add_argument("--output", default="evaluation-results", help="CSV directory (live: parent of session directory)")
     p.add_argument("--system", help="live target system.json; default: detect")

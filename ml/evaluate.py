@@ -144,11 +144,15 @@ def evaluate_sampling(table, output, *, models=None, historical=None, steps=25,
     Random is a cold-only baseline because it cannot fit residual corrections.
     Default local models skip SINGLE_MACHINE_DUPLICATES (hardware variants that
     match their no-hardware twins on a single machine); pass models to override.
+    Every policy, cold or historical, runs once per seed in seed..seed+seeds-1.
+    A seed sets the random start builds, the historical model's random_state and
+    the local model's random_state, so seeds also vary stochastic fits (forests,
+    MLPs, bootstraps). Deterministic models (ridge) ignore random_state.
     Output is streamed per completed session; use a fresh directory per run.
     """
     from pathlib import Path
     from joblib import Parallel, delayed
-    from .active_sampling import _session
+    from .active_sampling import _session, seeded
     from .evaluation_trace import save_tables, validate_budget
     from .load import app_options
 
@@ -167,18 +171,28 @@ def evaluate_sampling(table, output, *, models=None, historical=None, steps=25,
         if any(len(pool) < steps for _, pool in runs.groupby('platform')):
             raise ValueError(f'{app}: every pool must contain at least {steps} builds after workload filtering')
     output.mkdir(parents=True, exist_ok=True)
+    session_seeds = range(seed, seed + seeds)
     for app, runs in table.groupby('application'):
         for platform, pool in runs.groupby('platform'):
             pool = app_options(pool).reset_index(drop=True)
             for source_name in historical:
-                source = None
+                # One historical fit per seed (a single fit for deterministic models)
+                sources = dict.fromkeys(session_seeds)
                 if source_name != 'none':
-                    source = MODEL_TYPES[source_name]().fit(app_options(runs[runs.platform != platform]))
-                local = [name for name in models if source is None or name != 'random']
-                session_seeds = range(seed, seed + seeds) if source is None else [seed]
+                    train = app_options(runs[runs.platform != platform])
+                    fits = {}
+                    for session_seed in session_seeds:
+                        model_type = seeded(source_name, session_seed)
+                        stochastic = model_type is not MODEL_TYPES[source_name]
+                        key = session_seed if stochastic else None
+                        if key not in fits:
+                            fits[key] = model_type().fit(train)
+                        sources[session_seed] = fits[key]
+                local = [name for name in models if source_name == 'none' or name != 'random']
                 print(f'{app} / {platform}: historical={source_name}, {len(local) * len(session_seeds)} sessions', flush=True)
                 results = Parallel(n_jobs=jobs, return_as='generator_unordered')(
-                    delayed(_session)(name, pool, steps, initial, session_seed, source, evaluation=True)
+                    delayed(_session)(name, pool, steps, initial, session_seed, sources[session_seed],
+                                      evaluation=True, random_state=session_seed)
                     for name in local for session_seed in session_seeds)
                 for result in results:
                     tables = result.pop('_evaluation')
