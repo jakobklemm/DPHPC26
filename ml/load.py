@@ -178,6 +178,10 @@ def hardware_features(system):
 def platform_name(system):
     cpu = system.get("CPU Info", {}).get("Model Name", "unknown CPU")
     gpus = [g["gpu"] for g in _accelerators(system).get("nvidia", [])]
+    # Non-NVIDIA GPUs have no accelerator entry: a Vulkan backend still makes it its own platform,
+    # like CPU-only vs. CUDA runs on the same CPU (e.g. Ryzen 5800X CPU-only vs. RX 6600 XT Vulkan).
+    if not gpus and "Vulkan" in (system.get("GPU Backends") or {}):
+        gpus = ["Vulkan device"]
     return " + ".join([cpu] + gpus)
 
 
