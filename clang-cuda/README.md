@@ -1,0 +1,59 @@
+# clang for the GPU code (CUDA)
+
+**Problem:** with nvcc our compiler flags only reach the CPU code. The runners pass them in
+`CMAKE_C/CXX_FLAGS_RELEASE`; nvcc reads `CMAKE_CUDA_FLAGS`, which stayed fixed (`-lineinfo`,
+plus `-Xptxas -O` for GROMACS). So the GPU kernels were identical in every build and GPU
+runtimes clump.
+
+**Fix:** let clang compile the CUDA code too (`--cuda-compiler clang`). The default stays
+`nvcc`, and nvcc plans are byte-identical to before.
+
+## Test on GB10 (sm_121, CUDA 13.1), same config, GPU code only changed
+
+| GPU build | llama pp512 | llama tg128 | GROMACS ns/day |
+|---|---|---|---|
+| nvcc (old setup) | 5699 | 99.4 | 240 |
+| clang -O3 | 5481 (-4%) | 98.3 (-1%) | 233 (-3%) |
+| clang -O1 | 1156 (-79%) | 96.6 (-2%) | 225 (-3.5%) |
+| clang + -fno-inline-functions | 900 (-84%)* | 57.2 (-42%)* | 131 (-44%) |
+
+\* llama: old all-OFF baseline flags (no-inline, no-unroll, no-vectorize, ...) on the GPU code.
+Correctness: llama test-backend-ops (MUL_MAT/SOFT_MAX/ROPE/RMS_NORM) GPU vs CPU all OK;
+GROMACS energies match nvcc (~1e-4).
+
+## What changed
+
+- `llama/` and `gromacs/` runners + profiles: `--cuda-compiler nvcc|clang`. With clang the
+  flag file's `cuda_compiler` section is varied too (GPU flags, first value = baseline):
+  `cuda:-O` (O3/O2/O1), `cuda:-finline-functions`, `cuda:-funroll-loops`
+  (+ `cuda:-ffp-contract` for GROMACS; llama's fixed fast-math would override it).
+  Catalogs: `llama/flags-clang.json`, `gromacs/flags-clang.json`.
+- GROMACS got the llama `random` sampler (harmonic toggle count, weights 1/(k+1)).
+- Both samplers: `--min-flags` (default 0 = unchanged; with 1 no build is an exact baseline
+  repeat, otherwise ~29% are).
+- GROMACS `build.json` `options` gets `gpu_compiler: clang` and the `cuda:*` names.
+  **`ml/validation.py` does not know these names yet.**
+
+## Toolchain (what is needed and why)
+
+- **clang 22.1.8** (official LLVM release). clang 19 does not know sm_120/121 and supports
+  CUDA only up to 12.5.
+- **CMake 3.31.6.** 3.28 cannot identify clang as a CUDA compiler.
+- CMake's CUDA check builds for a default arch that CUDA 13 dropped, so the scripts pass
+  `--cuda-gpu-arch=sm_XX` themselves.
+- **llama.cpp:** apply `llama/clang-cuda.patch`. The ggml CUDA CMake only knows nvcc flags.
+  CUDA 13.1's `cub` headers do not compile with clang 22, so the existing HIP fallback is used
+  for argsort/sum/mean/cumsum/top-k/ssm-scan; these are not in the llama-bench path.
+- **GROMACS:** `-DGMX_CLANG_CUDA=ON`. It needs `cub`, so use **CCCL v3.4.3** (header-only,
+  github.com/NVIDIA/cccl) via `--cccl`, with FP4/6/8 off. OpenMP for CUDA sources is given
+  explicitly.
+- nvcc with clang 22 as host compiler needs `-allow-unsupported-compiler`.
+
+## Files here (student cluster paths)
+
+- `env-gb10-clang.sh`: toolchain environment for GB10 jobs.
+- `campaign_gb10_clang.sbatch <llama|gromacs> <subdir> <sweep|random> [args]`: one run.
+- `chain_gb10_clang.sbatch <llama|gromacs> <count>`: sweep, then random in one job (same node).
+
+Other GPUs: AMD -> ROCm/HIP (hipcc is clang, so flags reach the GPU code). Vulkan and Metal
+compile shaders with their own compilers (see team chat for proposals).

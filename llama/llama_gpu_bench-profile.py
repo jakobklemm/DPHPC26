@@ -77,6 +77,26 @@ def verify_metrics(path, required=()):
         raise RuntimeError(f"Missing required metrics in {path}")
 
 
+def clang_cuda_configure(cmake, cuda_flags):
+    """CMake arguments that make clang (not nvcc) compile the CUDA code.
+
+    Tested with clang 22.1.8 + CMake 3.31.6 + CUDA 13.1 on GB10 (sm_121). CMake's compiler
+    check builds for a default arch that CUDA 13 no longer supports, so the real arch is
+    passed in CMAKE_CUDA_FLAGS too (ggml turns 12X into 12Xa; mirror that to avoid
+    compiling twice). CUDA 13 keeps cub/thrust in include/cccl, which nvcc adds itself.
+    """
+    nvcc = find_cuda_compiler()
+    cuda_root = Path(nvcc).resolve().parent.parent
+    arch = cmake["CMAKE_CUDA_ARCHITECTURES"].split(";")[0]
+    arch = arch + "a" if re.fullmatch(r"12[0-9]", arch) else arch
+    base = [f"--cuda-path={cuda_root}", f"--cuda-gpu-arch=sm_{arch}", "--no-offload-new-driver",
+            "-Wno-unknown-cuda-version", f"-I{cuda_root / 'include' / 'cccl'}"]
+    optimization = [] if any(flag.startswith("-O") for flag in cuda_flags) else ["-O3"]
+    return [f"-DCMAKE_CUDA_COMPILER={shutil.which('clang++')}", f"-DCUDAToolkit_ROOT={cuda_root}",
+            "-DCMAKE_CUDA_FLAGS=" + " ".join(base),
+            "-DCMAKE_CUDA_FLAGS_RELEASE=" + " ".join(["-DNDEBUG", *optimization, *cuda_flags])]
+
+
 def positive_int(value):
     number = int(value)
     if number <= 0:
@@ -110,6 +130,9 @@ def main():
     parser.add_argument("--cmake-arg", action="append", default=[])
     parser.add_argument("--runtime-arg", action="append", default=[])
     parser.add_argument("--compiler-flag", action="append", default=[])
+    parser.add_argument("--cuda-compiler", choices=("nvcc", "clang"), default="nvcc")
+    parser.add_argument("--cuda-flag", action="append", default=[],
+                        help="clang switch for the GPU code (only with --cuda-compiler clang)")
     parser.add_argument("--workers", type=positive_int, default=4)
     parser.add_argument("--prompt", type=positive_int, default=512)
     parser.add_argument("--generate", type=positive_int, default=128)
@@ -140,6 +163,16 @@ def main():
         parser.error("--compiler-flag must be a single compiler switch")
     if any(flag in {"-O0", "-Ofast", "-ffast-math"} for flag in args.compiler_flag):
         parser.error("-O0 is unoptimized; fast-math/Ofast conflicts with ggml non-finite arithmetic")
+    if args.cuda_compiler == "clang" and args.device != "cuda":
+        parser.error("--cuda-compiler clang requires --device cuda")
+    if args.cuda_flag and args.cuda_compiler != "clang":
+        parser.error("--cuda-flag requires --cuda-compiler clang")
+    if any(not re.fullmatch(r"-[^\s]+", flag) for flag in args.cuda_flag):
+        parser.error("--cuda-flag must be a single compiler switch")
+    if args.cuda_compiler == "clang" and 'CMAKE_CUDA_COMPILER_ID STREQUAL "Clang"' not in (
+            source / "ggml" / "src" / "ggml-cuda" / "CMakeLists.txt").read_text():
+        parser.error("--cuda-compiler clang needs a llama.cpp tree with the clang-CUDA patch "
+                     "(llama/clang-cuda.patch)")
     if any(not name.startswith("GGML_VK_") for name in runtime):
         parser.error("--runtime-arg only accepts GGML_VK_* settings")
     flags_file = args.flags_file.expanduser().resolve()
@@ -181,6 +214,8 @@ def main():
               "run_id": output.name,
               "cmake_definitions_in_order": ["-D" + arg for arg in args.cmake_arg],
               "cmake": cmake, "runtime": runtime, "compiler_flags": args.compiler_flag,
+              **({"cuda_compiler": "clang", "cuda_flags": args.cuda_flag}
+                 if args.cuda_compiler == "clang" else {}),
               "profiling": {"cpu_perf": not args.no_profile,
                             "gpu_hpctoolkit": not args.no_profile and args.device == "cuda"},
               "stages": {"benchmark": "pending",
@@ -203,7 +238,9 @@ def main():
                      "-DCMAKE_CXX_FLAGS_RELEASE=" + " ".join(flags),
                      "-DLLAMA_BUILD_TESTS=OFF", "-DLLAMA_BUILD_EXAMPLES=OFF", "-DLLAMA_BUILD_SERVER=OFF",
                      *[f"-D{name}={value}" for name, value in cmake.items()]]
-        if args.device == "cuda":
+        if args.device == "cuda" and args.cuda_compiler == "clang":
+            configure.extend(clang_cuda_configure(cmake, args.cuda_flag))
+        elif args.device == "cuda":
             configure.extend(["-DCMAKE_CUDA_HOST_COMPILER=clang++",
                               "-DCMAKE_CUDA_FLAGS=-lineinfo"])
         record["configure_command"] = configure
