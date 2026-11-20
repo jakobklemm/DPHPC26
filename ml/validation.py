@@ -122,6 +122,18 @@ for language in ("C", "CXX", "CUDA"):
     for suffix in ("", "_DEBUG", "_RELEASE", "_RELWITHDEBINFO", "_MINSIZEREL"):
         COMMON_SCHEMA[f"CMAKE_{language}_FLAGS{suffix}"] = lambda text: "\x00" not in text
 
+# GPU code compiled by clang instead of nvcc (runners with --cuda-compiler clang,
+# catalog flags-clang.json "cuda_compiler"). The GPU flags are options "cuda:<group>",
+# e.g. "cuda:-funroll-loops": "-fno-unroll-loops". nvcc builds leave these options
+# out, so they are "default" there (gpu_compiler default = nvcc).
+CLANG_CUDA_FLAGS = {
+    "cuda:-O": {"-O1", "-O2", "-O3"},
+    "cuda:-finline-functions": {"-finline-functions", "-fno-inline-functions"},
+    "cuda:-funroll-loops": {"-funroll-loops", "-fno-unroll-loops"},
+    "cuda:-ffp-contract": {"-ffp-contract=fast", "-ffp-contract=on", "-ffp-contract=off"},
+}
+GPU_COMPILER_SCHEMA = {"gpu_compiler": {"nvcc", "clang"}, **CLANG_CUDA_FLAGS}
+
 
 def schema_errors(config, schema):
     errors = []

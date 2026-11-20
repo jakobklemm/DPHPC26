@@ -5,12 +5,13 @@ Runs come from llama_gpu_bench.py (build-<run id>.json) or llama_gpu_bench-profi
     cmake_definitions_in_order -> CMake options
     configure_command          -> compiler and build type (build.json only)
     compiler_flags             -> one option per flag group of flags.json, e.g. "-fvectorize" (build.json only)
+    cuda_compiler, cuda_flags  -> gpu_compiler and one "cuda:<group>" option per GPU flag (clang-CUDA builds only)
     benchmark.json             llama-bench output -> performance (tokens per second)
 """
 
 import shlex
 
-from .validation import (BOOL, COMMON_SCHEMA, cuda_errors, enabled,
+from .validation import (BOOL, COMMON_SCHEMA, CLANG_CUDA_FLAGS, GPU_COMPILER_SCHEMA, cuda_errors, enabled,
                          isa_errors, require, schema_errors, toolchain_errors, value,
                          compiler_flags, compiler_flag_option)
 
@@ -54,7 +55,7 @@ BOOLEAN_OPTIONS = set(CPU_FEATURES) | {
 # Loaded lazily by compiler_flags(APPLICATION), not when importing this module.
 # Toolchain choices read from configure_command; the tuned options come from the other fields
 TOOLCHAIN = {"CMAKE_BUILD_TYPE", "CMAKE_C_COMPILER", "CMAKE_CXX_COMPILER"}
-SCHEMA = {**COMMON_SCHEMA, **dict.fromkeys(BOOLEAN_OPTIONS, BOOL),
+SCHEMA = {**COMMON_SCHEMA, **GPU_COMPILER_SCHEMA, **dict.fromkeys(BOOLEAN_OPTIONS, BOOL),
           "GGML_BLAS_VENDOR": {"Generic", "OpenBLAS", "FLAME", "Intel10_64lp", "Apple", "All"}}
 
 
@@ -131,6 +132,12 @@ def build_config(build):
             config[name] = value
     for flag in build.get("compiler_flags", []):
         config[compiler_flag_option(flag)] = flag
+    # clang-CUDA builds (--cuda-compiler clang): GPU flags as "cuda:<group>" options,
+    # like GROMACS. nvcc builds record neither field and keep the defaults.
+    if build.get("cuda_compiler", "nvcc") != "nvcc":
+        config["gpu_compiler"] = build["cuda_compiler"]
+        for flag in build.get("cuda_flags", []):
+            config["cuda:" + compiler_flag_option(flag)] = flag
     return config
 
 
@@ -155,4 +162,6 @@ def performance(benchmark):
 
 # how to pass one option to the build: compiler flags as they are, the rest as CMake definitions
 def build_argument(option, value):
-    return value if option in compiler_flags(APPLICATION) else f"-D{option}={value}"
+    if option in compiler_flags(APPLICATION) or option in CLANG_CUDA_FLAGS:
+        return value
+    return f"{option}={value}" if option == "gpu_compiler" else f"-D{option}={value}"
