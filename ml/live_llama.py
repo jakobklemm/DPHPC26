@@ -11,6 +11,7 @@ Work folder layout (container setup creates it; DATA_DIR, default /data):
 
 import json
 import math
+import os
 import shlex
 import subprocess
 import time
@@ -51,6 +52,15 @@ def sampling_space(values, device, hardware=None):
     return values
 
 
+def build_jobs():
+    """Parallel compile jobs (-j): all logical CPUs this process may use, like nproc
+    and the default of llama_gpu_bench-profile.py --workers."""
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:  # not available on macOS
+        return os.cpu_count() or 1
+
+
 def commands(config, data, build, device="cuda"):
     compiler = compiler_flags(APPLICATION)
     cmake = {name: str(value) for name, value in config.items()
@@ -69,7 +79,7 @@ def commands(config, data, build, device="cuda"):
     configure.extend(f"-D{name}={value}" for name, value in cmake.items())
     if device == "cuda":
         configure.extend(["-DCMAKE_CUDA_HOST_COMPILER=clang++", "-DCMAKE_CUDA_FLAGS=-lineinfo"])
-    compile_command = ["cmake", "--build", str(build), "--target", "llama-bench", "-j", "4"]
+    compile_command = ["cmake", "--build", str(build), "--target", "llama-bench", "-j", str(build_jobs())]
     benchmark = [str(build / "bin" / "llama-bench"), "-m", str(data / "gguf" / GGUF_NAME),
                  "-ngl", "99" if device == "cuda" else "0",
                  "-p", "512", "-n", "128", "-r", "3", "-o", "json"]
@@ -93,7 +103,8 @@ def benchmark(config, data, build, output, system, device="cuda", *, timings=Non
               "cmake_definitions_in_order": [f"-D{k}={v}" for k, v in config.items()
                                              if k not in compiler_flags(APPLICATION) and v != DEFAULT],
               "compiler_flags": flags, "configure_command": configure,
-              "build_command": compile_command, "benchmark_command": bench, "status": "running"}
+              "build_command": compile_command, "build_jobs": int(compile_command[-1]),
+              "benchmark_command": bench, "status": "running"}
     write_json(output / "system.json", system)
     (output / "source.yml").write_text("project_name: llama.cpp\n")
     write_json(output / "build.json", record)
