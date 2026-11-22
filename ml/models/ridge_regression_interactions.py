@@ -21,20 +21,27 @@ class InteractionPerformanceModel(PerformanceModel):
     reuse the original ridge implementation.
     """
 
-    def _encode(self, data, fit=False):
+    def _encode_inputs(self, data, fit=False):
         # Build settings are discrete choices, including numeric/boolean values.
         # Treat them categorically so they cannot be mistaken for hardware inputs.
         data = data.copy()
         for option in self.options:
             data[option] = data[option].astype(str)
+        return super()._encode_inputs(data, fit=fit)
+
+    def _cross_option_pairs(self):
+        owner = {f"{option}_{value}": option
+                 for option in self.options for value in self.values[option]}
+        return ((a, b) for a, b in itertools.combinations(self.option_columns, 2)
+                if owner[a] != owner[b])
+
+    def _encode(self, data, fit=False):
         X = super()._encode(data, fit=fit)
 
         if fit:
-            owner = {f"{option}_{value}": option
-                     for option in self.options for value in self.values[option]}
             self.option_pairs = [
-                (a, b) for a, b in itertools.combinations(self.option_columns, 2)
-                if owner[a] != owner[b] and (X[a] * X[b]).nunique() > 1
+                (a, b) for a, b in self._cross_option_pairs()
+                if (X[a] * X[b]).nunique() > 1
             ]
 
         # Save and reuse the training pairs, even when predicting just one build.

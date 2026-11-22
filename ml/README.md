@@ -159,7 +159,7 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 | --- | --- |
 | `hardware` | Bayesian ridge; regularized option × hardware effects |
 | `hardware-interactions` | Ridge + option pairs; interacting flags |
-| `hardware-three-way` | Ridge + option-pair × hardware; machine-dependent pair effects. Uses compact Bayesian fitting to avoid a feature-by-feature covariance matrix |
+| `hardware-three-way` | Ridge + option-pair × hardware; machine-dependent pair effects. Uses a kernel over benchmark rows to fit without expanding three-way features |
 | `random-forest` | Nonlinear trees; automatic conditional interactions |
 | `catboost` | Boosted trees; native categorical settings |
 | `gaussian-process` | Kernel + native uncertainty; benchmark selection |
@@ -180,9 +180,11 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 | `random` | Uniform valid choice; baseline, no `suggest` |
 
 - Uncertainty (the ± and the exploration in active sampling): Bayesian predictive spread for the ridge models, `gaussian-process`, `bayes-pairs`, `sparse-bayes`; spread between trees for `smac-forest`; spread of 8 bootstrap fits for `random-forest`, `catboost`, `kernel-ridge`, `support-vector`, `small-mlp`. Tree and bootstrap spreads are rough, uncalibrated heuristics.
-- Ridge models and `bayes-pairs` fit in the reduced training row space and retain
-  prior uncertainty outside it. All commands use this compact implementation;
-  wide interaction matrices can still require substantial memory and computation.
+- Ridge models and `bayes-pairs` fit in the training row space and retain prior
+  uncertainty outside it. `hardware-three-way` computes feature dot products
+  directly and uses a square matrix indexed by training builds. Other ridge
+  variants use a reduced SVD of their feature matrices, which can still require
+  substantial memory and computation for wide interaction matrices.
 - `baseline` in evaluation: best-on-average measured configuration; no CLI model.
 - `no-hardware-*` baseline uses the corresponding model's estimator defaults,
   constructor overrides, and uncertainty method, learning from build options only

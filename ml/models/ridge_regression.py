@@ -46,13 +46,11 @@ class PerformanceModel(BaseModel):
         self.noise = np.exp(np.sqrt(1 / self.regressor.alpha_)) - 1
         return self
 
-    def _encode(self, data, fit=False):
+    def _encode_inputs(self, data, fit=False):
         """
         Turn the inputs into numbers
 
         True/False become 1/0. Text (e.g. gpu_vendor, or an option like GGML_LTO=ON) becomes one 0/1 column per value, e.g. "GGML_LTO_ON"
-        
-        Interactions: every option column times every hardware column so that the effect of an option can differ between machines
         """
         X = pd.get_dummies(data.astype({c: float for c in data.select_dtypes(bool).columns}), dtype=float)
         if fit:
@@ -61,7 +59,11 @@ class PerformanceModel(BaseModel):
             kept = [c for c in X.columns if X[c].nunique() > 1 and c not in reference]
             self.option_columns = [c for c in kept if c in option_values]
             self.hw_columns = [c for c in kept if c not in option_values]
-        X = X.reindex(columns=self.option_columns + self.hw_columns, fill_value=0)
+        return X.reindex(columns=self.option_columns + self.hw_columns, fill_value=0)
+
+    def _encode(self, data, fit=False):
+        X = self._encode_inputs(data, fit=fit)
+        # Option effects can differ between machines.
         # All interaction columns built first and added at once, one insert per column fragments the frame
         interactions = {f"{o} x {h}": X[o] * X[h] for o in self.option_columns for h in self.hw_columns}
         X = pd.concat([X, pd.DataFrame(interactions, index=X.index)], axis=1)
