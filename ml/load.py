@@ -83,6 +83,7 @@ def valid(config, hardware, app=None):
 
 # files to analyze
 RUN_FILES = ["source.yml", "system.json", "build.json", "benchmark.json"]
+EVALUATION_ONLY = "evaluation-only"
 
 
 # --- Finding runs ----------------------------------------------------------------
@@ -106,6 +107,8 @@ def read_runs(paths):
 def _runs_in_folder(folder):
     for system in sorted(folder.rglob("system.json")):
         run = system.parent
+        if (run / EVALUATION_ONLY).is_file():
+            continue
         builds = list(run.glob("build-*.json"))
         files = {
             "source.yml": run / "source.yml",
@@ -125,6 +128,8 @@ def _runs_in_zip(path):
             # Files directly in the run folder, not in its subfolders.
             top_level = {n[len(prefix):]: n for n in names
                          if n.startswith(prefix) and "/" not in n[len(prefix):]}
+            if EVALUATION_ONLY in top_level:
+                continue
             top_level["build.json"] = next(
                 (n for name, n in top_level.items() if re.fullmatch(r"build-.*\.json", name)),
                 top_level.get("build.json"))

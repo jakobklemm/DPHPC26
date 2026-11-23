@@ -32,6 +32,7 @@ import pandas as pd
 
 from .active_sampling import DEFAULT_INITIAL, simulate as simulate_sessions
 from .evaluate import evaluate_sampling, leave_one_platform_out #, leave_one_build_out
+from .evaluation_trace import save_tables
 from .load_gromacs import APPLICATION as GROMACS
 from .load_llama import APPLICATION as LLAMA
 from .load import APPS, HW, app_options, columns, describe, hardware_features, load_table, platform_name, strip
@@ -229,7 +230,8 @@ def simulate(args):
         if len(pool) <= args.steps:
             raise ValueError(f"{app} / {platform}: need more than {args.steps} builds after workload filtering; found {len(pool)}")
         pretrained = pretrain(table, app, platform, args)
-        result = simulate_sessions(pool, args.model, args.steps, args.initial, args.seeds, args.jobs, pretrained)
+        result = simulate_sessions(pool, args.model, args.steps, args.initial, args.seeds, args.jobs, pretrained,
+                                   evaluation=bool(args.output))
         if pretrained is not None:
             # Only the corrected-* sessions use the pretrained model
             result["unseen_values"] = np.where(result["model"].str.startswith("corrected-"),
@@ -242,7 +244,17 @@ def simulate(args):
         print(result.groupby("model")[shown].mean().sort_values(f"best@{args.steps}", ascending=False)
               .round(4).to_string(), end="\n\n")
     if args.output and results:
-        pd.concat(results).to_csv(args.output, index=False)
+        sessions = pd.concat(results, ignore_index=True)
+        traces = sessions.pop('_evaluation')
+        trace_tables = {}
+        for session, tables in zip(sessions.to_dict('records'), traces):
+            identity = {key: session[key] for key in ('application', 'platform', 'model', 'seed', 'workload')}
+            identity['pretrained'] = args.pretrained if session['model'].startswith('corrected-') else 'none'
+            identity['unseen_values'] = session.get('unseen_values')
+            for name, rows in tables.items():
+                trace_tables.setdefault(name, []).extend({**identity, **row} for row in rows)
+        sessions.to_csv(args.output, index=False)
+        save_tables(Path(args.output).with_suffix(''), trace_tables, {})
 
 
 # Live active sampling on this machine; the session itself is in live.py,
@@ -321,7 +333,7 @@ def main():
                    choices=["none"] + [n for n in MODEL_TYPES if n != "random"],
                    help="pretrained models fitted on the other platforms; default: all plus none "
                         "(live: specify one; --historical is an old alias)")
-    p.add_argument("--steps", type=int, default=25, help="benchmark-attempt budget, at most 25")
+    p.add_argument("--steps", type=int, default=25, help="sampling-attempt budget, at most 25; prediction checks are separate")
     p.add_argument("--initial", type=int, default=DEFAULT_INITIAL)
     p.add_argument("--seeds", type=int, default=3,
                    help="sessions per policy, cold and historical (default: 3); each seed also seeds "
@@ -343,7 +355,7 @@ def main():
     p.add_argument("--model", nargs="+", choices=MODEL_TYPES,
                    default=["gaussian-process", "smac-forest", "bayes-pairs", "sparse-bayes"],
                    help="models to compare; random sampling is always included")
-    p.add_argument("--steps", type=int, default=25, help="builds measured per session (default: 25)")
+    p.add_argument("--steps", type=int, default=25, help="sampling attempts per session (default: 25); prediction checks are separate")
     p.add_argument("--initial", type=int, default=DEFAULT_INITIAL,
                    help="start builds before the local model: random, or --pretrained top picks (default: 2)")
     p.add_argument("--seeds", type=int, default=30, help="cold-start sessions per model (default: 30); historical policies run once")
@@ -353,14 +365,14 @@ def main():
                         "corrected by each --model")
     p.add_argument("--pretrain-on", nargs="+",
                    help="pretrain only on platforms containing one of these words, e.g. Threadripper Cortex")
-    p.add_argument("--output", help="CSV file for all sessions, e.g. to plot best@n against n")
+    p.add_argument("--output", help="session CSV plus per-round evaluation CSVs with the same filename prefix")
     p.add_argument("--app", choices=sorted(APPS), help="default: all discovered applications")
     p.add_argument("--data", nargs="+", help="local folders/ZIPs; defaults to application results folders")
     p.set_defaults(func=simulate)
 
     p = sub.add_parser("active-sampling", help="live active sampling of llama.cpp or GROMACS on this machine")
     p.add_argument("--app", choices=sorted(APPS), help="application to build and benchmark (default: llama.cpp)")
-    p.add_argument("--steps", type=int, required=True, help="builds to benchmark, failed ones included")
+    p.add_argument("--steps", type=int, required=True, help="sampling attempts, including failures; prediction checks are separate")
     p.add_argument("--model", choices=MODEL_TYPES, default="gaussian-process",
                    help="local model refitted after every build (default: gaussian-process)")
     p.add_argument("--pretrained", choices=["none"] + [name for name in MODEL_TYPES if name != "random"],

@@ -1,7 +1,7 @@
 """Finish the interrupted llama.cpp test simulation (started 2026-11-19 with ml.main evaluate).
 
 Runs only the sessions (on targets not matching SKIP) that are not complete yet in test-subset/ or test-subset-rest/ and appends
-them to test-subset-rest/ (same five CSVs, same loop as ml/evaluate.py:evaluate_sampling).
+them to test-subset-rest/ (same evaluation loop as ml/evaluate.py:evaluate_sampling).
 Safe to interrupt and rerun: a session counts as done once all its timing rows are written
 (timings.csv is written last), and half-written sessions are removed from test-subset-rest/ at start.
 
@@ -31,7 +31,7 @@ HISTORICAL = ["none", "no-hardware-interactions", "support-vector", "small-mlp",
 SEEDS, STEPS, INITIAL, JOBS = range(0, 3), 25, 2, 3
 SKIP = ("CUDA",)   # target platforms left out: their GPU measurements will be redone (2026-11-19)
 KEY = ["platform", "pretrained", "model", "seed"]
-TABLES = ["convergence", "improvement", "quality", "final", "timings"]
+TABLES = ["convergence", "improvement", "quality", "final", "sampling", "timings"]
 
 
 def complete_sessions(folder):

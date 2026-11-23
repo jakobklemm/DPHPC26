@@ -1,4 +1,4 @@
-"""Per-session evaluation, without consuming benchmark budget or sampling RNG.
+"""Per-session evaluation of sampling and recommendation measurements.
 
 Prediction scores are model-native (not necessarily calibrated across refits).
 Improvement therefore compares the current pick and the first pick under the
@@ -12,6 +12,11 @@ import numpy as np
 
 
 MAX_BUDGET = 25
+PREDICTION_TIMING_FIELDS = (
+    'prediction_measurement_status', 'prediction_measurement_seconds',
+    'prediction_configure_seconds', 'prediction_compile_seconds',
+    'prediction_benchmark_execution_seconds',
+)
 
 
 def validate_budget(steps, initial):
@@ -38,8 +43,10 @@ class EvaluationTrace:
     def timing(self, step, successful, ask, refit, prediction, status='completed',
                benchmark_seconds=None, elapsed_seconds=None, configure_seconds=None,
                compile_seconds=None, benchmark_execution_seconds=None, attempted_build=None,
-               attempted_performance=None, best_observed=None, optimum=None, unit=None):
+               attempted_performance=None, best_observed=None, optimum=None, unit=None,
+               best_build=None, prediction_measurement=None):
         successful_before = self.timings[-1]['successful_builds'] if self.timings else 0
+        measurement = prediction_measurement or {}
         self.timings.append(dict(step=step, round=self.picks[-1]['round'] if self.picks else 0,
                                  phase='startup' if successful_before < self.initial else 'evaluation',
                                  attempted_build=None if attempted_build is None else build_json(attempted_build),
@@ -52,15 +59,26 @@ class EvaluationTrace:
                                  initialization_seconds=self.initialization_seconds,
                                  attempt_configure_seconds=configure_seconds, attempt_compile_seconds=compile_seconds,
                                  attempt_benchmark_execution_seconds=benchmark_execution_seconds,
-                                 attempt_total_seconds=benchmark_seconds, session_elapsed_seconds=elapsed_seconds))
+                                 attempt_total_seconds=benchmark_seconds, session_elapsed_seconds=elapsed_seconds,
+                                 best_observed_build=None if best_build is None else build_json(best_build),
+                                 **{field: measurement.get(field) for field in PREDICTION_TIMING_FIELDS}))
 
     def record(self, step, successful, config, score, first_score, *, actual=None, optimum=None,
-               best_observed=None, predicted_performance=None, unit=None):
+               best_before, predicted_performance=None, unit=None):
+        before_build, before_performance = best_before
+        improved = actual is not None and actual > before_performance
+        output_build, output_performance = (config, actual) if improved else best_before
+        output_source = 'prediction' if improved else 'active_sampling'
         self.picks.append(dict(step=step, round=len(self.picks) + int(not self.include_startup),
                                successful_builds=successful, config=dict(config), predicted_value=score,
                                first_build_current_prediction=first_score,
-                               actual_performance=actual, optimum=optimum, best_observed=best_observed,
+                               actual_performance=actual, optimum=optimum, best_observed=before_performance,
+                               best_before_prediction_build=build_json(before_build),
+                               output_build=build_json(output_build),
+                               output_measured_performance=output_performance,
+                               output_source=output_source,
                                predicted_performance=predicted_performance, performance_unit=unit))
+        return output_build, output_performance, output_source
 
     def tables(self):
         convergence, improvement, quality = [], [], []
@@ -91,11 +109,16 @@ class EvaluationTrace:
                                 recommended_prediction_absolute_error=None if actual is None or pick['predicted_performance'] is None
                                 else abs(pick['predicted_performance'] - actual),
                                 recommended_is_pool_best=is_best,
+                                best_before_prediction_build=pick['best_before_prediction_build'],
+                                best_before_prediction_performance=pick['best_observed'],
+                                output_build=pick['output_build'],
+                                output_measured_performance=pick['output_measured_performance'],
+                                output_source=pick['output_source'],
                                 **{key: timing.get(key) for key in (
                                     'attempted_build', 'attempt_status', 'prediction_seconds', 'next_sample_seconds', 'refit_seconds',
                                     'initialization_seconds', 'attempt_configure_seconds', 'attempt_compile_seconds',
                                     'attempt_benchmark_execution_seconds',
-                                    'attempt_total_seconds', 'session_elapsed_seconds')}))
+                                    'attempt_total_seconds', 'session_elapsed_seconds', *PREDICTION_TIMING_FIELDS)}))
             improvement.append(dict(base, flags_changed_from_first=distance(config, first['config']),
                                     flags_changed_from_final=distance(config, final['config']),
                                     predicted_value=score, first_build_current_prediction=first_score,
@@ -109,26 +132,37 @@ class EvaluationTrace:
         stable_best = next((p['step'] for i, p in enumerate(self.picks) if optimal[i] and all(optimal[i:])), None)
         stable_final = next((p['step'] for i, p in enumerate(self.picks)
                              if all(q['config'] == final['config'] for q in self.picks[i:])), None)
-        summary = dict(benchmark_attempts=len(self.timings), prediction_count=len(self.picks), final_step=final['step'] if final else None,
+        last = self.timings[-1] if self.timings else {}
+        final_output = final if final and final['step'] == last.get('step') else {}
+        sampled_build = last.get('best_observed_build')
+        summary = dict(benchmark_attempts=len(self.timings), prediction_count=len(self.picks), final_step=last.get('step'),
                        final_build=build_json(final['config']) if final else None,
                        final_prediction_value=final['predicted_value'] if final else None,
                        final_actual_performance=final['actual_performance'] if final else None,
-                       pool_best_performance=final['optimum'] if final else None,
+                       pool_best_performance=last.get('pool_best_performance'),
                        final_is_pool_best=optimal[-1] if optimal else None,
                        first_pool_best_step=first_best, stable_pool_best_step=stable_best,
                        sticks_to_pool_best=None if first_best is None else first_best == stable_best,
                        stable_final_build_step=stable_final,
                        first_pool_best_round=None if first_best is None else next(p['round'] for p in self.picks if p['step'] == first_best),
                        stable_pool_best_round=None if stable_best is None else next(p['round'] for p in self.picks if p['step'] == stable_best),
-                       stable_final_build_round=None if stable_final is None else next(p['round'] for p in self.picks if p['step'] == stable_final))
+                       stable_final_build_round=None if stable_final is None else next(p['round'] for p in self.picks if p['step'] == stable_final),
+                       prediction_benchmark_attempts=sum(
+                           row['prediction_measurement_status'] in ('completed', 'failed', 'replayed') for row in self.timings),
+                       final_output_build=final_output.get('output_build', sampled_build),
+                       final_output_measured_performance=final_output.get(
+                           'output_measured_performance', last.get('best_observed_performance')),
+                       final_output_source=final_output.get(
+                           'output_source', 'active_sampling' if sampled_build is not None else None))
         reported_timings = [row for row in self.timings
-                            if self.include_startup or row['phase'] == 'evaluation']
+                            if self.include_startup or row['phase'] == 'evaluation'
+                            or row['prediction_measurement_status'] is not None]
         return dict(convergence=convergence, improvement=improvement, quality=quality,
-                    final=[summary], timings=reported_timings)
+                    final=[summary], sampling=self.timings, timings=reported_timings)
 
 
 def save_tables(prefix, tables, identity, *, append=False):
-    """Five CSVs: <prefix>.{convergence,improvement,quality,final,timings}.csv."""
+    """Write the session summary, sampling history and per-round evaluation CSVs."""
     prefix = Path(prefix)
     prefix.parent.mkdir(parents=True, exist_ok=True)
     for name, rows in tables.items():

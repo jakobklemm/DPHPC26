@@ -57,10 +57,11 @@ docker run --rm -v ~/dphpc-data:/data dphpc26:cpu active-sampling --steps 10
 
    Fresh output directory per run. [Resumable replay](active-sampling/replay_experiments.md).
 
-4. **Results** (every step after startup, starting at step 3 with `--initial 2`)
+4. **Results**
 
-   - `evaluation.timings.csv` — `best_observed_percent_of_pool_best` vs. random per target.
-   - `evaluation.quality.csv` — `recommended_percent_of_pool_best`.
+   - `evaluation.sampling.csv` — every sampling attempt, including startup and failures.
+   - `evaluation.timings.csv` — `best_observed_percent_of_pool_best` vs. random per target after startup.
+   - `evaluation.quality.csv` — each prediction check and the build that would be returned at that step.
    - Cross-hardware comparisons — match model weights and workloads. [CSV definitions](ml/README.md#metrics).
 
    [Active sampling evaluation notebook](evaluation/active-sampling-evaluation.ipynb) — ranks all

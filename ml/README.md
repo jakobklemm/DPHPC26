@@ -52,7 +52,7 @@ runner active-sampling --steps 10 --pretrained hardware       # transfer learnin
 
 | Option | Meaning |
 | --- | --- |
-| `--steps N` | Builds to benchmark (required, maximum 25); failed builds count and are never proposed again |
+| `--steps N` | Sampling attempts (required, maximum 25), including startup and failed sampling builds. Prediction checks use a separate budget |
 | `--model` | Local model, refitted after every build; default `gaussian-process`; also `smac-forest`, `bayes-pairs`, `sparse-bayes`, `random` |
 | `--pretrained` | Transfer learning: this model is fitted on the **other** machines in the results; `--model` then learns its error here. Default: none (cold start) |
 | `--pretrain-on WORD…` | Pretrain only on platforms whose name contains one of these words |
@@ -63,8 +63,8 @@ runner active-sampling --steps 10 --pretrained hardware       # transfer learnin
 | `--space` | JSON flag → allowed values, may include values never benchmarked; default: values in the results |
 
 - Output: `<output>/active-<time>/` with one folder per build (loadable as training data), `session.json` and `best.json`.
-- The last of the `--steps` builds is the model's final prediction, so it is measured too (if it was already built or failed, the last step samples normally). With `--model random` all builds are random.
-- At the end: one result, the fastest of all builds measured in the session (also in `best.json`).
+- Each post-startup round benchmarks the model's recommendation in a fresh build tree, including after the final sampling attempt. These checks are for evaluation and leave subsequent sampling and predictions untouched. With `--model random` all builds are random.
+- `best.json` reports the faster of the best sampled build and the recommendation measured after the last sampling attempt, with `output_source` set to `active_sampling` or `prediction`.
 - Builds excluded by `flags.json` or invalid for the hardware are never proposed.
 
 ### GROMACS
@@ -194,9 +194,9 @@ python -m ml.main simulate --app llama.cpp --model sparse-bayes --pretrained no-
 
 | Command | Output | How to read it |
 | --- | --- | --- |
-| `active-sampling` | tokens/s (llama.cpp) or ns/day (GROMACS) per build and a line per prediction round; at the end "best build (X tokens/s)"; the five evaluation CSVs in the session folder | The best build is the fastest of all measured builds, including the model's final prediction (built as the last step). Prediction scores in the round lines are model-native and may change scale on refit |
-| `simulate` | Per model: `best@n`, `model_pick`, `rank_correlation`, `seconds` | `best@n`: best build after n builds, relative to the pool's best (**1.0** = found it). `model_pick`: final model's choice, same scale. `rank_correlation`: predicted vs. measured order on unmeasured builds. A model is only useful if it beats `random` |
-| `evaluate` (`--mode simulate` / `live`) | Five CSV files in `--output` (`evaluation.final.csv`, `.quality.csv`, `.timings.csv`, `.convergence.csv`, `.improvement.csv`) | One row per session, round or attempt; see section 6 for what each file and column means |
+| `active-sampling` | tokens/s (llama.cpp) or ns/day (GROMACS), with evaluation CSVs and `best.json` in the session folder | The final result is the faster of the best sampled build and the prediction measured after sampling ends |
+| `simulate` | Per model: `best@n`, `model_pick`, `rank_correlation`, `seconds` | `best@n`: best sampled build through step n, relative to the pool's best (**1.0** = found it). `model_pick`: final prediction, same scale. `rank_correlation`: predicted vs. measured order on unsampled builds. `--output` also writes the detailed evaluation CSVs with the same filename prefix |
+| `evaluate` (`--mode simulate` / `live`) | Evaluation CSV files in `--output` | One row per session, round or attempt; see section 6 for the file and column definitions |
 | `evaluate --mode platform` | Per held-out machine: selection score per model, `error*` | Selection score: measured performance of the picked build / that machine's best (**1.0 best**). `error*`: mean absolute prediction error (**0 best**). All models choose from the same measured builds |
 | `train` | Fit quality, then option costs per machine | Fit quality is on the training data only: ridge models (`hardware`, `no-hardware`, …) print "explains X% … estimated noise ±Y%", the others "training log-space R²" plus their uncertainty method. Costs (e.g. `-12% ±3%`): predicted change from switching the best build to another value, with `(with X=Y)` when another option must change too; exact for `hardware`/`no-hardware`, approximate for the others. `random` fits no model and prints no costs |
 
@@ -236,7 +236,7 @@ python active-sampling/run_all_policies.py                                      
 
 **Options** (`evaluate`; `run_all_policies.py` takes the same ones where they exist)
 - `--model`: local models (default: all). `--pretrained`: pretrained models (default: all plus `none`).
-- `--steps`: budget of benchmark attempts, at most 25 (default 25). `--initial`: startup builds (default 2).
+- `--steps`: budget of sampling attempts, at most 25 (default 25). `--initial`: startup builds (default 2).
 - `--seeds`: repeats of every policy, cold and historical (default 3; 3–5 is enough for now). Seed `s` (from `--seed` on) sets the random start builds and the `random_state` of the historical and local model fits, so stochastic models (forests, MLPs, bootstraps) vary between seeds; ridge models are deterministic and repeat identically. The seed is recorded in the `seed` column. `--jobs`: parallel sessions; use `--jobs 1` for timings without concurrent workers.
 - `--output`: CSV folder (default `evaluation-results`; live: parent of the session folder). Use a fresh path for this CSV format.
 - `--prompt` / `--generate` (llama.cpp), `--data`, `--app`, `--pretrain-on`; live only: `--system`, `--device`, `--workdir`, `--space`; GROMACS live only: `--source`, `--fftw`, `--tpr`, `--threads`.
@@ -244,21 +244,22 @@ python active-sampling/run_all_policies.py                                      
 **Policies, budget and rounds**
 - **Cold start** (`pretrained = none`): the local model starts from scratch. Runs `--seeds` times, because the start builds are random.
 - **Historical** (`pretrained = X`, local model shown as `corrected-<model>`): model X is fitted on all other platforms (the target is held out), and the local model learns its error on the target. Runs `--seeds` times, with X refitted per seed. Needs at least two platforms.
-- **Budget:** at most 25 attempts, counting the 2 startup builds and failed builds.
-- **Rounds:** `step` counts all attempts; `round` starts at 1 with the first attempt after startup. The standalone `active-sampling` command reports the first fitted prediction as round 0.
+- **Budget:** up to 25 sampling attempts, counting startup builds and failed sampling builds. Recommendation checks run after each post-startup attempt, including the last one. A fitted model also gets a terminal check when the sampling budget ends at startup. Simulation uses the recorded pool value to score each recommendation.
+- **Rounds:** `step` counts sampling attempts and indexes their prediction checks. The standalone `active-sampling` trace includes startup and numbers its first recommendation round 0.
 - Malformed JSON runs are skipped with a warning.
 
-**The five CSV files.** Each row starts with `application`, `platform`, `pretrained`, `model`, `seed`, `workload`.
+**Evaluation CSV files.** Each row includes `application`, `platform`, `pretrained`, `model`, `seed` and `workload`.
 
 | File | One row per | Answers | Key columns |
 |---|---|---|---|
-| `evaluation.final.csv` | session | How good is the result at the end? | `final_build`, `final_actual_performance` vs `pool_best_performance`, `final_is_pool_best`, `first_pool_best_round` (first time the best build is picked), `stable_pool_best_round` (from when it stays on it) |
-| `evaluation.quality.csv` | round | How good is the current recommendation? | `recommended_percent_of_pool_best`, `recommended_percent_of_best_observed`, `recommended_prediction_absolute_error`, `attempted_build`, timing columns |
-| `evaluation.timings.csv` | attempt (incl. failed) | What was tested, what is the best found so far, what did it cost? | `attempted_measured_performance`, `best_observed_performance`, `best_observed_percent_of_pool_best`, `attempt_status`, timing columns |
+| `evaluation.final.csv` | session | What was predicted and what did the session return? | `final_build` and `final_actual_performance` describe the prediction. `final_output_build`, `final_output_measured_performance` and `final_output_source` describe the result. `benchmark_attempts` counts sampling attempts and `prediction_benchmark_attempts` counts separate live benchmarks or replay lookups |
+| `evaluation.quality.csv` | round | Did the recommendation improve the output? | `recommended_build`, `recommended_predicted_performance`, `recommended_measured_performance`, `best_before_prediction_build`, `best_before_prediction_performance`, `output_build`, `output_measured_performance`, `output_source` and timing columns |
+| `evaluation.sampling.csv` | sampling attempt | What happened on every sampling attempt, including startup and failures? | `attempted_build`, `attempted_measured_performance`, `attempt_status`, `best_observed_performance` and timing columns |
+| `evaluation.timings.csv` | attempt reported for analysis | How did the best sampled build improve during the evaluation rounds? | Same columns as `evaluation.sampling.csv`; the evaluation command generally starts this file after startup |
 | `evaluation.convergence.csv` | round | Does the recommendation still change? | `changed_from_previous`, `is_pool_best`, `same_as_final` |
 | `evaluation.improvement.csv` | round | How far does the recommendation move from the first pick, and does it pay off? | `flags_changed_from_first`, `flags_changed_from_final`, `prediction_gain`, `actual_gain_from_first`, `actual_fraction_of_best` |
 
 **Reading the columns**
-- **Recommended vs. attempted:** `recommended_*` is the model's current pick (what you would take if you stopped now). `attempted_*` / `attempt_*` is the build benchmarked in that round. quality.csv rates the pick; timings.csv rates the best build measured so far, which is the fair comparison with `random`.
+- **Output:** `recommended_*` describes the predicted build and `attempted_*` describes the sampling attempt. `output_source` identifies whether the current prediction improved on the best sampled build. `best_observed_performance` in `timings.csv` tracks sampling measurements for the AUC comparison.
 - **Performance:** in simulation, `*_percent_of_pool_best` compares with the best build in the pool (100 = found it). In live mode there is no pool, and `recommended_predicted_performance` is a predicted tokens/s, not a measurement.
-- **Time (seconds):** `prediction_seconds`, `next_sample_seconds` and `refit_seconds` are the model's own cost per round. `initialization_seconds` is a one-time startup cost, repeated in every row. `session_elapsed_seconds` is the running total. Live only: `attempt_*_seconds` time configure, compile and benchmark of the attempted build (blank in simulation).
+- **Time (seconds):** `prediction_seconds` measures recommendation generation. `prediction_measurement_seconds` measures the separate live benchmark or the replay lookup. `prediction_measurement_status` records a completed or failed live check or a replayed pool lookup. The live breakdown includes configure, compile and benchmark execution time. `session_elapsed_seconds` includes the sampling attempts and prediction checks through that step.

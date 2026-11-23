@@ -56,9 +56,6 @@ def run_case(local, pool, source, source_name, steps, initial, seed, compact):
     result = _session(local, pool, steps, initial, seed, source, evaluation=True)
     for step in range(1, initial + 1):
         del result[f'best@{step}']
-    if steps == initial:
-        result.pop('model_pick', None)
-        result.pop('rank_correlation', None)
     return dict(result, platform=pool.platform.iloc[0],
                 pretrained=source_name, application='llama.cpp', workload=pool.workload.iloc[0])
 
@@ -129,7 +126,7 @@ def main():
     # A sidecar prevents resuming an output with different data or sampling rules.
     canonical = table.reindex(columns=sorted(table.columns)).sort_values(
         ['application', 'platform'] + sorted(c for c in table if c.startswith('cfg.')))
-    metadata = {'evaluation_schema': 8, 'budget': args.steps,  # new schema requires a fresh output
+    metadata = {'evaluation_schema': 9, 'budget': args.steps,  # new schema requires a fresh output
                 'initial': args.initial, 'prompt': args.prompt, 'generate': args.generate,
                 # Start builds: the pretrained model's top picks (earlier outputs: half random)
                 'start': 'pretrained-top-initial',
@@ -180,7 +177,7 @@ def main():
                         if header:
                             writer.writeheader()
                         writer.writerow(result)
-    print(f'Saved {args.output} and .convergence/.improvement/.quality/.final/.timings.csv sidecars', flush=True)
+    print(f'Saved {args.output} and .convergence/.improvement/.quality/.final/.sampling/.timings.csv sidecars', flush=True)
 
 
 if __name__ == '__main__':

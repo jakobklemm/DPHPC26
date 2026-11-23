@@ -2,11 +2,12 @@
 Step 4: how few builds are enough? Active sampling, by default without pretraining.
 
 A session on one machine and application starts with no model and a measurement
-number of steps, e.g. 25 builds:
+number of sampling steps, e.g. 25 attempts:
     ask        next build to measure: random at first, then the highest
                predicted performance + uncertainty (UCB)
     tell       add the measured performance and refit the model on all of them
-    recommend  the best measured build
+    predict    verify the highest predicted build after each post-startup step
+    recommend  the best sampled build, compared with the final prediction
 
 With a model pretrained on other machines (transfer learning), the start builds
 are that model's top builds instead of random ones, and the model learns only the
@@ -16,7 +17,7 @@ error of the pretrained model on this machine (see models/residual_correction.py
 sessions on previously measured builds and compares choices with that pool.
 
 Reported per model, averaged over repeated sessions with different random starts:
-  best@n          relative performance of the best build among the first n measured
+  best@n          relative performance of the best sampled build through step n
                   (1.0 is the best build of the pool)
   model_pick      relative performance of the build the final model rates best
   rank_correlation  Spearman correlation of predicted and measured performance
@@ -228,9 +229,10 @@ def _session(name, pool, steps, initial, seed, pretrained=None, evaluation=False
         sampler.tell(row, performance[row])
         refit_seconds = time.perf_counter() - tick if sampler.model is not None else 0.0
         best_row = sampler.recommend()
-        best_observed = float(performance[best_row])
+        best_before = (sampler.candidates[best_row], float(performance[best_row]))
         prediction_seconds = 0.0
-        if evaluation and n > initial:
+        measurement = {}
+        if n > initial or n == steps:
             tick = time.perf_counter()
             if sampler.model is not None:
                 mean, _ = sampler.predicted()
@@ -238,25 +240,28 @@ def _session(name, pool, steps, initial, seed, pretrained=None, evaluation=False
                 if not trace.picks:
                     first_pick = pick
                 score, first_score = float(mean[pick]), float(mean[first_pick])
+                predicted_performance = score * getattr(sampler.model, 'performance_scale', best_before[1])
+                prediction_seconds = time.perf_counter() - tick
+                tick = time.perf_counter()
+                actual = float(performance[pick])
+                measurement = dict(prediction_measurement_status='replayed',
+                                   prediction_measurement_seconds=time.perf_counter() - tick)
             else:
-                # Random has no predictor: report its best observed recommendation.
-                pick, score, first_score = sampler.recommend(), None, None
-            prediction_seconds = time.perf_counter() - tick
+                # Random has no predictor: report its best sampled build.
+                pick, score, first_score = best_row, None, None
+                actual, predicted_performance = best_before[1], None
             trace.record(n, n, sampler.candidates[pick], score, first_score,
-                         actual=float(performance[pick]), optimum=optimum,
-                         best_observed=best_observed,
-                         predicted_performance=None if score is None else score * getattr(
-                             sampler.model, 'performance_scale', best_observed),
+                         actual=actual, optimum=optimum,
+                         best_before=best_before, predicted_performance=predicted_performance,
                          unit=unit)
         trace.timing(n, n, ask_seconds, refit_seconds, prediction_seconds,
                      elapsed_seconds=time.perf_counter() - start, attempted_build=sampler.candidates[row],
-                     attempted_performance=float(performance[row]), best_observed=best_observed,
-                     optimum=optimum, unit=unit)
+                     attempted_performance=float(performance[row]), best_observed=float(performance[best_row]),
+                     optimum=optimum, unit=unit, best_build=sampler.candidates[best_row],
+                     prediction_measurement=measurement)
         best[f"best@{n}"] = relative[best_row]
     result = {"model": name if pretrained is None else f"corrected-{name}", "seed": seed, **best}
     if sampler.model is not None:
-        if not trace.picks:
-            mean, _ = sampler.predicted()
         rest = np.setdiff1d(np.arange(len(pool)), list(sampler.measured))
         result["model_pick"] = relative[int(np.argmax(mean))]
         result["rank_correlation"] = (pd.Series(mean[rest]).rank().corr(pd.Series(relative[rest]).rank())
@@ -267,7 +272,8 @@ def _session(name, pool, steps, initial, seed, pretrained=None, evaluation=False
     return result
 
 
-def simulate(pool, models, steps=25, initial=DEFAULT_INITIAL, seeds=30, jobs=-1, pretrained=None):
+def simulate(pool, models, steps=25, initial=DEFAULT_INITIAL, seeds=30, jobs=-1, pretrained=None,
+             *, evaluation=False):
     """Replay sessions on one machine's measured builds; one result row per session.
 
     The same seed gives every model the same random start, so that differences
@@ -282,7 +288,8 @@ def simulate(pool, models, steps=25, initial=DEFAULT_INITIAL, seeds=30, jobs=-1,
     variants = [(name, None) for name in names]
     if pretrained is not None:
         variants += [(name, pretrained) for name in names if name != "random"]
-    sessions = Parallel(n_jobs=jobs)(delayed(_session)(name, pool, steps, initial, seed, source)
+    sessions = Parallel(n_jobs=jobs)(delayed(_session)(name, pool, steps, initial, seed, source,
+                                                       evaluation=evaluation)
                                      for name, source in variants
                                      for seed in (range(SEARCH_SEED, SEARCH_SEED + seeds)
                                                   if source is None else [SEARCH_SEED]))
