@@ -211,6 +211,12 @@ def main():
                          "-j", str(args.workers)]
         record["build_command"] = build_command
         save()
+        # Forget the previous build's CMake settings (like `cmake --fresh`, which needs
+        # CMake 3.24): an option this build does not pass would otherwise keep the value
+        # the previous build set instead of its default. Object files are kept, so
+        # unchanged sources are not recompiled.
+        (build / "CMakeCache.txt").unlink(missing_ok=True)
+        shutil.rmtree(build / "CMakeFiles", ignore_errors=True)
         start = time.monotonic()
         run_logged(configure, output / "build.log")
         run_logged(build_command, output / "build.log")
