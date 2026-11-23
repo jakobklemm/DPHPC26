@@ -47,6 +47,7 @@ BOOLEAN_OPTIONS = set(CPU_FEATURES) | {
     "GGML_CUDA_NO_VMM", "GGML_CUDA_FA", "GGML_CUDA_FA_ALL_QUANTS", "GGML_CUDA_GRAPHS",
     "GGML_CUDA_NO_PEER_COPY", "GGML_CUDA_F16", "GGML_HIP", "GGML_SYCL", "GGML_VULKAN",
     "GGML_METAL", "GGML_BLAS", "GGML_BACKEND_DL", "LLAMA_CURL",
+    "GGML_ACCELERATE", "GGML_CPU_KLEIDIAI",
 }
 # Compiler flags of the harness: the flag groups of flags.json "compiler", {option: check(flag)}.
 # The option is the flag group, its value the flag passed, e.g. "-fvectorize": "-fno-vectorize".

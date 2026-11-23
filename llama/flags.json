@@ -34,7 +34,8 @@
     "GGML_AVX512": ["ON", "OFF"],
     "GGML_AVX512_VBMI": ["ON", "OFF"],
     "GGML_AVX512_VNNI": ["ON", "OFF"],
-    "GGML_AVX512_BF16": ["ON", "OFF"]
+    "GGML_AVX512_BF16": ["ON", "OFF"],
+    "GGML_CPU_KLEIDIAI": ["ON", "OFF"]
   },
   "compiler": {
     "-O": ["-O3", "-O1", "-O2", "-Os", "-Oz", "-Ofast"],
@@ -48,7 +49,9 @@
     "-ffp-contract": ["-ffp-contract=fast", "-ffp-contract=on"],
     "-fmath-errno": ["-fmath-errno", "-fno-math-errno"],
     "-march": ["-march=native", "-march=x86-64-v2", "-march=x86-64-v3", "-march=x86-64-v4"],
-    "-mprefer-vector-width": ["-mprefer-vector-width=256", "-mprefer-vector-width=512"]
+    "-mprefer-vector-width": ["-mprefer-vector-width=256", "-mprefer-vector-width=512"],
+    "-mcpu": ["-mcpu=native", "-mcpu=generic+dotprod", "-mcpu=generic+dotprod+fp16",
+              "-mcpu=generic+dotprod+fp16+i8mm", "-mcpu=generic+dotprod+fp16+i8mm+sve"]
   },
   "invalid_combinations": [
     {"GGML_CUDA_FORCE_MMQ": "ON", "GGML_CUDA_FORCE_CUBLAS": "ON"},

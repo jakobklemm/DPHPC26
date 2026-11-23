@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -68,7 +69,8 @@ class PlanTests(unittest.TestCase):
             config = item["config"]
             self.assertEqual(config["cmake"]["GGML_CUDA"], "OFF")
             self.assertEqual(config["cmake"]["GGML_VULKAN"], "OFF")
-            self.assertEqual(len(config["cmake"]), 4)
+            # macOS adds fixed GGML_METAL/GGML_BLAS/GGML_ACCELERATE=OFF
+            self.assertEqual(len(config["cmake"]), 7 if platform.system() == "Darwin" else 4)
             self.assertEqual(len(config["compiler_flags"]), 2)
             self.assertNotEqual(config["compiler_flags"]["-O"], "-O0")
             self.assertEqual(sum(value == "ON" for value in config["cmake"].values()) +

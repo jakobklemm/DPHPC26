@@ -12,8 +12,9 @@ import tempfile
 import time
 from pathlib import Path
 
-from filter_llama_performance_flags import (cpu_info, filter_catalog, find_cuda_compiler,
-                                            off_value, profile_prerequisite_error)
+from filter_llama_performance_flags import (cpu_info, cpu_model_name, filter_catalog,
+                                            find_cuda_compiler, off_value,
+                                            profile_prerequisite_error)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -33,6 +34,11 @@ def configuration_space(options, device, cuda_arch=None):
     cmake_base = {name: "OFF" for name in cpu}
     cmake_base.update({"GGML_NATIVE": "OFF", "GGML_CUDA": "ON" if device == "cuda" else "OFF",
                        "GGML_VULKAN": "ON" if device == "vulkan" else "OFF"})
+    if platform.system() == "Darwin":
+        # llama.cpp enables Metal and Apple's Accelerate/BLAS by default on macOS.
+        # Keep them OFF so the measured code is ggml's own, compiler-built CPU
+        # code, as on the Linux hosts.
+        cmake_base.update({"GGML_METAL": "OFF", "GGML_BLAS": "OFF", "GGML_ACCELERATE": "OFF"})
     if device == "cuda":
         cmake_base["CMAKE_CUDA_ARCHITECTURES"] = cuda_arch
     runtime_base = {}
@@ -88,13 +94,13 @@ def execution_plan(options, device, cuda_arch=None):
     return plan
 
 
-def random_configurations(options, device, cuda_arch=None, count=DEFAULT_COUNT):
+def random_configurations(options, device, cuda_arch=None, count=DEFAULT_COUNT, min_flags=0):
     if count < 0:
         raise ValueError("count must be non-negative")
     rng = random.Random(SEED)
     space = configuration_space(options, device, cuda_arch)
     candidates = space[3]
-    counts = range(len(candidates) + 1)
+    counts = range(min_flags, len(candidates) + 1)
     # Harmonic weights favor small changes without excluding any toggle count.
     weights = [1 / (k + 1) for k in counts]
     for _ in range(count):
@@ -169,6 +175,9 @@ def main():
     randomized = commands.add_parser("random", parents=[common],
                                      help="Toggle a random number of flags, favoring small counts")
     randomized.add_argument("--count", type=int, default=DEFAULT_COUNT)
+    randomized.add_argument("--min-flags", type=int, default=0,
+                            help="Smallest toggle count to sample (default 0 = may repeat the "
+                                 "all-OFF baseline; 1 skips it)")
     args = parser.parse_args()
     if (args.device == "cuda") != (args.cuda_arch is not None):
         parser.error("--cuda-arch is required for CUDA and only accepted with CUDA")
@@ -195,7 +204,7 @@ def main():
     total = len(plan) if plan is not None else args.count
     configurations = (iter(plan) if plan is not None else
                       random_configurations(options, args.device, args.cuda_arch,
-                                            args.count))
+                                            args.count, args.min_flags))
     # Random configurations are generated lazily, not stored in a future plan.
     record_file = results / f"{args.mode}-executions.json"
     plan_file = results / f"{args.mode}-plan.json"
@@ -243,6 +252,8 @@ def main():
                  "profile": not args.no_profile, "build_dir": str(build)}
     if args.mode == "random":
         settings.update({"sampling": "harmonic-toggle-count-v1", "seed": SEED, "options": options})
+        if args.min_flags:  # only added when used, so older settings files still match
+            settings["min_flags"] = args.min_flags
     settings_file = results / f"{args.mode}-settings.json"
     if settings_file.exists() and json.loads(settings_file.read_text()) != settings:
         parser.error(f"Run settings changed: use a different --results-dir or remove {settings_file}")
@@ -250,11 +261,8 @@ def main():
     if plan is not None:
         save_json(plan_file, plan)
     if not system_file.exists():
-        lscpu = subprocess.run(["lscpu"], capture_output=True, text=True, check=True).stdout
-        model_name = next((line.partition(":")[2].strip() for line in lscpu.splitlines()
-                           if line.partition(":")[0].strip().lower() == "model name"), "")
         system = {"CPU Info": {"Architecture": platform.machine(),
-                                "Model Name": model_name, "Flags": sorted(features)},
+                                "Model Name": cpu_model_name(), "Flags": sorted(features)},
                   "Compilers": {"c": {"clang": "installed"},
                                 "cxx": {"clang++": "installed"}},
                   "GPU Backends": {args.device.capitalize(): {"version": "enabled"}}

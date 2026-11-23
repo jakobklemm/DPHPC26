@@ -52,7 +52,42 @@ CPU_COMPILER_VALUES = {
     "-mprefer-vector-width=256": {"avx"},
     "-mprefer-vector-width=512": {"avx512f"},
 }
-COMPILER_OFF = {"-O": "-O3", "-march": "-march=x86-64",
+ARM = {"aarch64", "arm64"}
+# ARM instruction levels as -mcpu values, with the required features in Linux
+# /proc/cpuinfo spelling (macOS sysctl names are mapped in cpu_info). The
+# baseline -mcpu=generic is plain ARMv8-A NEON, like -march=x86-64 on x86.
+# -mcpu, not -march: clang ignores -mcpu=native once any -march is given, so a
+# -march baseline would silently disable GGML_NATIVE (ggml appends -mcpu=native
+# after our flags, and the last -mcpu wins).
+ARM_COMPILER_VALUES = {
+    "-mcpu=native": set(),
+    "-mcpu=generic+dotprod": {"asimddp"},
+    "-mcpu=generic+dotprod+fp16": {"asimddp", "asimdhp"},
+    "-mcpu=generic+dotprod+fp16+i8mm": {"asimddp", "asimdhp", "i8mm"},
+    "-mcpu=generic+dotprod+fp16+i8mm+sve": {"asimddp", "asimdhp", "i8mm", "sve"},
+}
+# CMake options that only exist for ARM hosts; left out entirely elsewhere so
+# x86 plans and configurations stay unchanged.
+ARM_CMAKE_FLAGS = {"GGML_CPU_KLEIDIAI"}
+# macOS reports CPU features through sysctl hw.optional.*; map them to the
+# Linux names used above and by lscpu on ARM Linux hosts.
+DARWIN_FEATURES = {
+    "neon": ("fp", "asimd"),
+    "arm.FEAT_FP16": ("fphp", "asimdhp"),
+    "arm.FEAT_DotProd": ("asimddp",),
+    "arm.FEAT_I8MM": ("i8mm",),
+    "arm.FEAT_BF16": ("bf16",),
+    "arm.FEAT_FHM": ("asimdfhm",),
+    "arm.FEAT_RDM": ("asimdrdm",),
+    "arm.FEAT_LSE": ("atomics",),
+    "arm.FEAT_CRC32": ("crc32",),
+    "arm.FEAT_AES": ("aes",),
+    "arm.FEAT_SHA256": ("sha2",),
+    "arm.FEAT_SHA3": ("sha3",),
+    "arm.FEAT_SME": ("sme",),
+    "arm.FEAT_SME2": ("sme2",),
+}
+COMPILER_OFF = {"-O": "-O3", "-march": "-march=x86-64", "-mcpu": "-mcpu=generic",
                 "-mprefer-vector-width": "-mprefer-vector-width=128",
                 "-ffp-contract": "-ffp-contract=off"}
 
@@ -115,6 +150,17 @@ def profile_prerequisite_error(device):
 
 def cpu_info() -> tuple[str, set[str]]:
     """Read the full CPU feature set."""
+    if platform.system() == "Darwin":
+        output = subprocess.check_output(["sysctl", "hw.optional"], text=True)
+        features = set()
+        for line in output.splitlines():
+            key, _, value = line.partition(":")
+            names = DARWIN_FEATURES.get(key.strip().removeprefix("hw.optional."))
+            if names and value.strip() == "1":
+                features.update(names)
+        if not features:
+            raise RuntimeError("sysctl hw.optional did not report CPU features")
+        return platform.machine().lower(), features
     output = subprocess.check_output(["lscpu"], text=True)
     features = set()
     for line in output.splitlines():
@@ -124,6 +170,25 @@ def cpu_info() -> tuple[str, set[str]]:
     if not features:
         raise RuntimeError("lscpu did not report CPU flags/features")
     return platform.machine().lower(), features
+
+
+def cpu_model_name() -> str:
+    """CPU model string for the host snapshot (lscpu does not exist on macOS)."""
+    if platform.system() == "Darwin":
+        return subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"],
+                              capture_output=True, text=True).stdout.strip()
+    lscpu = subprocess.run(["lscpu"], capture_output=True, text=True, check=True).stdout
+    return next((line.partition(":")[2].strip() for line in lscpu.splitlines()
+                 if line.partition(":")[0].strip().lower() == "model name"), "")
+
+
+def openmp_flags() -> list[str]:
+    """Apple clang has no -fopenmp driver flag: use libomp from OpenMP_ROOT
+    (e.g. Homebrew's), the same root CMake's FindOpenMP uses for GGML_OPENMP."""
+    root = os.environ.get("OpenMP_ROOT")
+    if platform.system() == "Darwin" and root:
+        return ["-Xclang", "-fopenmp", f"-I{root}/include", f"-L{root}/lib", "-lomp"]
+    return ["-fopenmp"]
 
 
 def compile_check(executable: str, flag: str, *, openmp: bool = False) -> bool:
@@ -136,7 +201,8 @@ def compile_check(executable: str, flag: str, *, openmp: bool = False) -> bool:
         if openmp
         else "int main(void) { return 0; }"
     )
-    command = [executable, "-x", language, "-", flag, "-o", "/dev/null"]
+    switches = openmp_flags() if openmp and flag == "-fopenmp" else [flag]
+    command = [executable, "-x", language, "-", *switches, "-o", "/dev/null"]
     if not openmp and flag != "-flto":
         command.insert(1, "-c")
     result = subprocess.run(command, input=source, text=True, capture_output=True, check=False)
@@ -152,8 +218,11 @@ def filter_catalog(catalog: dict, architecture: str, features: set[str], device:
     if not all(shutil.which(exe) for exe in COMPILERS):
         raise ValueError("clang and clang++ must be installed")
     x86 = architecture in {"x86_64", "amd64"}
+    arm = architecture in ARM
     cmake = {}
     for name, values in catalog["cpu"].items():
+        if name in ARM_CMAKE_FLAGS and not arm:
+            continue
         if name in CPU_CMAKE_FLAGS and (not x86 or not CPU_CMAKE_FLAGS[name] <= features):
             cmake[name] = ["OFF"]
             continue
@@ -171,10 +240,13 @@ def filter_catalog(catalog: dict, architecture: str, features: set[str], device:
     for name, values in catalog["compiler"].items():
         if not x86 and name in {"-march", "-mprefer-vector-width"}:
             continue
+        if not arm and name == "-mcpu":
+            continue
         eligible = [
             value
             for value in values
-            if (
+            if (value not in ARM_COMPILER_VALUES or ARM_COMPILER_VALUES[value] <= features)
+            and (
                 value not in CPU_COMPILER_VALUES
                 or (
                     x86
