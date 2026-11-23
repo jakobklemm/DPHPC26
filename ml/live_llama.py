@@ -109,14 +109,17 @@ def benchmark(config, data, build, output, system, device="cuda", *, timings=Non
     (output / "source.yml").write_text("project_name: llama.cpp\n")
     write_json(output / "build.json", record)
     try:
+        build_start = time.perf_counter()
         with (output / "build.log").open("w") as log:
             for key, command in (("configure_seconds", configure), ("compile_seconds", compile_command)):
                 print("+", shlex.join(command), flush=True)
                 timed_run(key, command, stdout=log, stderr=subprocess.STDOUT, check=True)
+        record["build_time_seconds"] = time.perf_counter() - build_start
         # Only publish benchmark.json after validation; the loader must not ingest failed runs.
         raw = output / "benchmark.raw.json"
         with raw.open("w") as stdout, (output / "benchmark.log").open("w") as stderr:
-            timed_run('benchmark_execution_seconds', bench, stdout=stdout, stderr=stderr, check=True)
+            benchmark_start = time.perf_counter()
+            timed_run("benchmark_execution_seconds", bench, stdout=stdout, stderr=stderr, check=True)
         results = json.loads(raw.read_text())
         expected = {(512, 0), (0, 128)}
         if (not isinstance(results, list) or len(results) != 2
@@ -128,6 +131,7 @@ def benchmark(config, data, build, output, system, device="cuda", *, timings=Non
         score = performance(results)
         if not math.isfinite(score) or score <= 0:
             raise ValueError("benchmark performance must be positive and finite")
+        record["benchmark_wall_seconds"] = time.perf_counter() - benchmark_start
         raw.replace(output / "benchmark.json")
         record.update(status="completed", performance=score)
         return score
