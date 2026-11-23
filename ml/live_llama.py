@@ -70,7 +70,8 @@ def commands(config, data, build, device="cuda"):
     # Match llama_gpu_bench-profile.py, called by the training-data subset runner.
     optimization = [] if any(flag.startswith("-O") for flag in flags) else ["-O3"]
     release_flags = " ".join(["-g", "-DNDEBUG", *optimization, *flags])
-    configure = ["cmake", "--fresh", "-S", str(data / "llama.cpp"), "-B", str(build),
+    fresh_args = ["--fresh"] if DEFAULT in config.values() else []
+    configure = ["cmake", *fresh_args, "-S", str(data / "llama.cpp"), "-B", str(build),
                  "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_C_COMPILER=clang",
                  "-DCMAKE_CXX_COMPILER=clang++", f"-DCMAKE_C_FLAGS_RELEASE={release_flags}",
                  f"-DCMAKE_CXX_FLAGS_RELEASE={release_flags}",
