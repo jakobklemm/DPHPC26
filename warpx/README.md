@@ -4,7 +4,9 @@ Builds and benchmarks WarpX for random flag configurations. x86-64 Linux with Do
 pinned inside the image. Run from the repository root:
 
 ```sh
-docker build -t dphpc26:warpx-cpu -f warpx/Dockerfile.cpu warpx
+docker pull ghcr.io/jakobklemm/dphpc26:warpx-cpu
+docker tag ghcr.io/jakobklemm/dphpc26:warpx-cpu dphpc26:warpx-cpu
+# or build it: docker build -t dphpc26:warpx-cpu -f warpx/Dockerfile.cpu warpx
 
 mkdir -p ~/dphpc-data/warpx
 docker run -d --name warpx-random -v ~/dphpc-data/warpx:/data dphpc26:warpx-cpu random \
