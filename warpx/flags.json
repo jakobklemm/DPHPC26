@@ -1,0 +1,60 @@
+{
+  "device": {
+    "CPU": {
+      "WarpX_COMPUTE": ["OMP", "NOACC"]
+    },
+    "CUDA": {
+      "WarpX_COMPUTE": ["CUDA"],
+      "CMAKE_CUDA_ARCHITECTURES": ["121-real", "121a-real", "121-virtual",
+                                   "120-real", "120a-real", "120-virtual",
+                                   "75-real", "75-virtual",
+                                   "61-real", "61-virtual"],
+      "AMReX_GPU_MAX_THREADS": ["256", "128", "512", "1024"],
+      "AMReX_CUDA_MAXREGCOUNT": ["255", "128", "64", "32"],
+      "AMReX_GPU_MIN_BLOCKS": ["default", "1", "2", "4"],
+      "AMReX_CUDA_FASTMATH": ["ON", "OFF"]
+    },
+    "HIP": {
+      "WarpX_COMPUTE": ["HIP"],
+      "AMReX_AMD_ARCH": ["gfx1030"],
+      "AMReX_GPU_MAX_THREADS": ["256", "128", "512", "1024"]
+    }
+  },
+  "cuda_compiler": {
+    "-Xptxas -O": ["-Xptxas=-O3", "-Xptxas=-O2", "-Xptxas=-O1"],
+    "-Xptxas -dlcm": ["default", "-Xptxas=-dlcm=ca", "-Xptxas=-dlcm=cg"],
+    "--extra-device-vectorization": ["default", "--extra-device-vectorization"]
+  },
+  "cpu": {
+    "WarpX_SIMD": ["OFF", "ON"],
+    "WarpX_FASTMATH": ["OFF", "ON"],
+    "WarpX_IPO": ["OFF", "ON"],
+    "WarpX_UNITY_BUILD": ["OFF", "ON"],
+    "WarpX_PRECISION": ["DOUBLE", "SINGLE"],
+    "WarpX_PARTICLE_PRECISION": ["DOUBLE", "SINGLE"],
+    "WarpX_EB": ["ON", "OFF"],
+    "WarpX_QED": ["ON", "OFF"],
+    "AMReX_FLATTEN_FOR": ["OFF", "ON"],
+    "AMReX_ARRAY4_64BIT_INDEX": ["OFF", "ON"],
+    "AMReX_MATH_ERRNO": ["OFF", "ON"],
+    "ABLASTR_POSITION_INDEPENDENT_CODE": ["ON", "OFF"],
+    "BUILD_SHARED_LIBS": ["OFF", "ON"]
+  },
+  "compiler": {
+    "-O": ["-O3", "-O2", "-O1", "-Os", "-Oz"],
+    "-march": ["-march=x86-64", "-march=x86-64-v2", "-march=x86-64-v3", "-march=x86-64-v4", "-march=native"],
+    "-mprefer-vector-width": ["default", "-mprefer-vector-width=128", "-mprefer-vector-width=256", "-mprefer-vector-width=512"],
+    "-fvectorize": ["-fvectorize", "-fno-vectorize"],
+    "-fslp-vectorize": ["-fslp-vectorize", "-fno-slp-vectorize"],
+    "-funroll-loops": ["-funroll-loops", "-fno-unroll-loops"],
+    "-finline-functions": ["-finline-functions", "-fno-inline-functions"],
+    "-fstrict-aliasing": ["-fstrict-aliasing", "-fno-strict-aliasing"],
+    "-ffp-contract": ["-ffp-contract=on", "-ffp-contract=fast", "-ffp-contract=off"]
+  },
+  "invalid_combinations": [
+    {"WarpX_COMPUTE": "CUDA", "WarpX_SIMD": "ON"},
+    {"WarpX_COMPUTE": "HIP", "WarpX_SIMD": "ON"},
+    {"AMReX_GPU_MAX_THREADS": "1024", "AMReX_GPU_MIN_BLOCKS": "4"},
+    {"WarpX_FASTMATH": "ON", "AMReX_CUDA_FASTMATH": "OFF"}
+  ]
+}

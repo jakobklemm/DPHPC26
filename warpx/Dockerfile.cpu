@@ -1,0 +1,29 @@
+# WarpX CPU build-and-benchmark image; build with:  docker build -t dphpc26:warpx-cpu -f warpx/Dockerfile.cpu warpx
+# Sources are pinned inside the image, so runs need no network.
+# WarpX development (not 26.11): AMReX_ARRAY4_64BIT_INDEX does not exist in the 26.11 release.
+FROM docker.io/library/ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1
+
+# lld + llvm (llvm-ar) are required for LTO with clang.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates clang cmake git libomp-dev lld llvm \
+    ninja-build pkg-config python3 util-linux \
+    && rm -rf /var/lib/apt/lists/*
+
+# name repository commit
+RUN set -e; get() { git init -q /opt/src/$1; git -C /opt/src/$1 fetch -q --depth 1 https://github.com/$2.git $3; \
+      git -C /opt/src/$1 checkout -q FETCH_HEAD; test "$(git -C /opt/src/$1 rev-parse HEAD)" = $3; }; \
+    get warpx BLAST-WarpX/warpx 2bb8b5011038e16901afd7383e67a2ea1184ccb6; \
+    get amrex AMReX-Codes/amrex 64a828cfcb32adf20607ac8137ab9959ae6b9cb2; \
+    get picsar ECP-WarpX/picsar 9eea6a765436e49d8334592126ddbee5ace3627f; \
+    get vir-simd mattkretz/vir-simd f936143148fbd8b9b2967238ab4aa267175f4d31; \
+    cmake -S /opt/src/vir-simd -B /tmp/vir -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_TESTING=OFF; \
+    cmake --install /tmp/vir; rm -rf /tmp/vir
+
+COPY patch_warpx.py /tmp/
+RUN python3 /tmp/patch_warpx.py /opt/src/warpx
+
+WORKDIR /workspace/warpx
+COPY . .
+ENTRYPOINT ["python3", "/workspace/warpx/warpx_bench-random.py"]
