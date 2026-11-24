@@ -1,0 +1,177 @@
++ cmake -S /home/pub/DPHPC26/llama.cpp -B /home/pub/DPHPC26/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ '-DCMAKE_C_FLAGS_RELEASE=-g -DNDEBUG -Oz -fvectorize -fno-slp-vectorize -fno-unroll-loops -finline-functions -fno-strict-aliasing -fno-unsafe-math-optimizations -ffp-contract=off -fno-math-errno -march=x86-64 -mprefer-vector-width=128' '-DCMAKE_CXX_FLAGS_RELEASE=-g -DNDEBUG -Oz -fvectorize -fno-slp-vectorize -fno-unroll-loops -finline-functions -fno-strict-aliasing -fno-unsafe-math-optimizations -ffp-contract=off -fno-math-errno -march=x86-64 -mprefer-vector-width=128' -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -DGGML_LLAMAFILE=OFF -DGGML_CPU_REPACK=ON -DGGML_NATIVE=OFF -DGGML_LTO=ON -DGGML_OPENMP=ON -DGGML_SSE42=ON -DGGML_AVX=OFF -DGGML_AVX2=ON -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BMI2=OFF -DGGML_AVX_VNNI=OFF -DGGML_AVX512=OFF -DGGML_AVX512_VBMI=OFF -DGGML_AVX512_VNNI=OFF -DGGML_AVX512_BF16=OFF -DGGML_CUDA=OFF -DGGML_VULKAN=OFF
+-- llama.cpp version: 0.7.0-dev
+CMAKE_BUILD_TYPE=Release
+-- ccache found, compilation results will be cached. Disable with GGML_CCACHE=OFF.
+-- CMAKE_SYSTEM_PROCESSOR: x86_64
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: -msse4.2;-mavx2 GGML_SSE42;GGML_AVX2
+-- ggml version: 0.27.0
+-- ggml commit:  922f53ed3
+-- OpenSSL found: 3.5.8
+-- Generating embedded license file for target: llama-app
+-- Configuring done (0.8s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/pub/DPHPC26/build
++ cmake --build /home/pub/DPHPC26/build --target llama-bench -j 4
+[  0%] Building CXX object common/CMakeFiles/llama-common-base.dir/build-info.cpp.o
+[  0%] Building CXX object vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/httplib.cpp.o
+[  0%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[  1%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[  1%] Linking CXX static library libllama-common-base.a
+[  1%] Built target llama-common-base
+[  3%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[  3%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[  3%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[  5%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[  5%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[  7%] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[  7%] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+[  7%] Linking CXX shared library ../../bin/libggml-base.so
+[  7%] Built target ggml-base
+[  9%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[  9%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[ 10%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[ 10%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[ 10%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[ 12%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[ 12%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[ 14%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[ 14%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled.cpp.o
+[ 14%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled-kernel.cpp.o
+[ 16%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[ 16%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[ 18%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[ 18%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+[ 18%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/quants.c.o
+[ 20%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/repack.cpp.o
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:601:25: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q1_0_q8_0' that is compiled without support for 'fma'
+  601 |             acc_block = _mm256_fmadd_ps(_mm256_set1_ps(GGML_CPU_FP16_TO_FP32(y_ptr[K].d)), _mm256_cvtepi32_ps(s32), acc_block);
+      |                         ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:603:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q1_0_q8_0' that is compiled without support for 'fma'
+  603 |         acc = _mm256_fmadd_ps(_mm256_set1_ps(d0), acc_block, acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:802:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q4_0_q8_0' that is compiled without support for 'fma'
+  802 |         acc = _mm256_fmadd_ps( d, q, acc );
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:966:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q4_1_q8_1' that is compiled without support for 'fma'
+  966 |         acc = _mm256_fmadd_ps( d0d1, xy, acc );
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1023:18: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_mxfp4_q8_0' that is compiled without support for 'fma'
+ 1023 |         accum1 = _mm256_fmadd_ps(scale0, _mm256_cvtepi32_ps(p_1), accum1);
+      |                  ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1024:18: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_mxfp4_q8_0' that is compiled without support for 'fma'
+ 1024 |         accum2 = _mm256_fmadd_ps(scale1, _mm256_cvtepi32_ps(p_2), accum2);
+      |                  ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1124:17: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_nvfp4_q8_0' that is compiled without support for 'fma'
+ 1124 |         accum = _mm256_fmadd_ps(scales01, _mm256_cvtepi32_ps(p_1), accum);
+      |                 ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1125:17: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_nvfp4_q8_0' that is compiled without support for 'fma'
+ 1125 |         accum = _mm256_fmadd_ps(scales23, _mm256_cvtepi32_ps(p_2), accum);
+      |                 ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1242:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q5_0_q8_0' that is compiled without support for 'fma'
+ 1242 |         acc = _mm256_fmadd_ps(d, q, acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1325:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q5_1_q8_1' that is compiled without support for 'fma'
+ 1325 |         acc = _mm256_fmadd_ps(q, _mm256_mul_ps(dx, dy), acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1403:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q8_0_q8_0' that is compiled without support for 'fma'
+ 1403 |         acc = _mm256_fmadd_ps( d, q, acc );
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1671:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q2_K_q8_K' that is compiled without support for 'fma'
+ 1671 |         acc = _mm256_fmadd_ps(_mm256_broadcast_ss(&dmin), _mm256_cvtepi32_ps(prod), acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1710:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q2_K_q8_K' that is compiled without support for 'fma'
+ 1710 |         acc = _mm256_fmadd_ps(_mm256_broadcast_ss(&d), _mm256_cvtepi32_ps(sumi), acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:1944:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q3_K_q8_K' that is compiled without support for 'fma'
+ 1944 |         acc = _mm256_fmadd_ps(_mm256_broadcast_ss(&d), _mm256_cvtepi32_ps(sumi), acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:2148:17: error: always_inline function '_mm_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q4_K_q8_K' that is compiled without support for 'fma'
+ 2148 |         acc_m = _mm_fmadd_ps(_mm_set1_ps(dmin), _mm_cvtepi32_ps(prod), acc_m);
+      |                 ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:2177:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q4_K_q8_K' that is compiled without support for 'fma'
+ 2177 |         acc = _mm256_fmadd_ps(vd, _mm256_cvtepi32_ps(sumi), acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:2372:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q5_K_q8_K' that is compiled without support for 'fma'
+ 2372 |         acc = _mm256_fmadd_ps(vd, _mm256_cvtepi32_ps(sumi), acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:2569:15: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_q6_K_q8_K' that is compiled without support for 'fma'
+ 2569 |         acc = _mm256_fmadd_ps(_mm256_broadcast_ss(&d), _mm256_cvtepi32_ps(sumi), acc);
+      |               ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/quants.c:2773:18: error: always_inline function '_mm256_fmadd_ps' requires target feature 'fma', but would be inlined into function 'ggml_vec_dot_iq2_xxs_q8_K' that is compiled without support for 'fma'
+ 2773 |         accumf = _mm256_fmadd_ps(_mm256_set1_ps(d), _mm256_cvtepi32_ps(_mm256_add_epi32(sumi1, sumi2)), accumf);
+      |                  ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
+gmake[3]: *** [ggml/src/CMakeFiles/ggml-cpu.dir/build.make:275: ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/quants.c.o] Error 1
+gmake[3]: *** Waiting for unfinished jobs....
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:1258:50: error: no matching function for call to '__avx_repeat_f32cx8_load'
+ 1258 |                     const __m256 row_scale_f32 = GGML_F32Cx8_REPEAT_LOAD(a_ptrs[rp][b].d, loadMask);
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:99:50: note: expanded from macro 'GGML_F32Cx8_REPEAT_LOAD'
+   99 | #define GGML_F32Cx8_REPEAT_LOAD(x, loadMask)     __avx_repeat_f32cx8_load(x)
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:76:22: note: candidate function not viable: no known conversion from 'const ggml_half[4]' (aka 'const unsigned short[4]') to 'ggml_fp16_t *' (aka 'unsigned short *') for 1st argument
+   76 | static inline __m256 __avx_repeat_f32cx8_load(ggml_fp16_t *x) {
+      |                      ^                        ~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:1429:46: error: no matching function for call to '__avx_repeat_f32cx8_load'
+ 1429 |                 const __m256 row_scale_f32 = GGML_F32Cx8_REPEAT_LOAD(a_ptr[b].d, loadMask);
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:99:50: note: expanded from macro 'GGML_F32Cx8_REPEAT_LOAD'
+   99 | #define GGML_F32Cx8_REPEAT_LOAD(x, loadMask)     __avx_repeat_f32cx8_load(x)
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:76:22: note: candidate function not viable: no known conversion from 'const ggml_half[4]' (aka 'const unsigned short[4]') to 'ggml_fp16_t *' (aka 'unsigned short *') for 1st argument
+   76 | static inline __m256 __avx_repeat_f32cx8_load(ggml_fp16_t *x) {
+      |                      ^                        ~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:1527:46: error: no matching function for call to '__avx_rearranged_f32cx8_load'
+ 1527 |                 const __m256 col_scale_f32 = GGML_F32Cx8_REARRANGE_LOAD(b_ptr[b].d, deltamask);
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:100:56: note: expanded from macro 'GGML_F32Cx8_REARRANGE_LOAD'
+  100 | #define GGML_F32Cx8_REARRANGE_LOAD(x, arrangeMask)     __avx_rearranged_f32cx8_load(x, arrangeMask)
+      |                                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:86:22: note: candidate function not viable: no known conversion from 'const ggml_half[8]' (aka 'const unsigned short[8]') to 'ggml_fp16_t *' (aka 'unsigned short *') for 1st argument
+   86 | static inline __m256 __avx_rearranged_f32cx8_load(ggml_fp16_t *x, __m128i arrangeMask) {
+      |                      ^                            ~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:1776:46: error: no matching function for call to '__avx_rearranged_f32cx8_load'
+ 1776 |                 const __m256 col_scale_f32 = GGML_F32Cx8_REARRANGE_LOAD(b_ptr[b].d, deltamask);
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:100:56: note: expanded from macro 'GGML_F32Cx8_REARRANGE_LOAD'
+  100 | #define GGML_F32Cx8_REARRANGE_LOAD(x, arrangeMask)     __avx_rearranged_f32cx8_load(x, arrangeMask)
+      |                                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:86:22: note: candidate function not viable: no known conversion from 'const ggml_half[8]' (aka 'const unsigned short[8]') to 'ggml_fp16_t *' (aka 'unsigned short *') for 1st argument
+   86 | static inline __m256 __avx_rearranged_f32cx8_load(ggml_fp16_t *x, __m128i arrangeMask) {
+      |                      ^                            ~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:583:37: error: no matching function for call to '__avx_rearranged_f32cx8_load'
+  583 |                     col_scale_f32 = GGML_F32Cx8_REARRANGE_LOAD(b_ptr[b].d, changemask);
+      |                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:100:56: note: expanded from macro 'GGML_F32Cx8_REARRANGE_LOAD'
+  100 | #define GGML_F32Cx8_REARRANGE_LOAD(x, arrangeMask)     __avx_rearranged_f32cx8_load(x, arrangeMask)
+      |                                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:1455:9: note: in instantiation of function template specialization 'gemv_q4_b32_8x8_q8_0_lut_avx<block<4, 8>>' requested here
+ 1455 |         gemv_q4_b32_8x8_q8_0_lut_avx<block_q4_0x8>(n, s, bs, vx, vy, nr, nc, signextendlut);
+      |         ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:86:22: note: candidate function not viable: no known conversion from 'const ggml_half[8]' (aka 'const unsigned short[8]') to 'ggml_fp16_t *' (aka 'unsigned short *') for 1st argument
+   86 | static inline __m256 __avx_rearranged_f32cx8_load(ggml_fp16_t *x, __m128i arrangeMask) {
+      |                      ^                            ~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:583:37: error: no matching function for call to '__avx_rearranged_f32cx8_load'
+  583 |                     col_scale_f32 = GGML_F32Cx8_REARRANGE_LOAD(b_ptr[b].d, changemask);
+      |                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:100:56: note: expanded from macro 'GGML_F32Cx8_REARRANGE_LOAD'
+  100 | #define GGML_F32Cx8_REARRANGE_LOAD(x, arrangeMask)     __avx_rearranged_f32cx8_load(x, arrangeMask)
+      |                                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:1692:5: note: in instantiation of function template specialization 'gemv_q4_b32_8x8_q8_0_lut_avx<block_iq4_nlx8>' requested here
+ 1692 |     gemv_q4_b32_8x8_q8_0_lut_avx<block_iq4_nlx8>(n, s, bs, vx, vy, nr, nc, signextendlut);
+      |     ^
+/home/pub/DPHPC26/llama.cpp/ggml/src/ggml-cpu/arch/x86/repack.cpp:86:22: note: candidate function not viable: no known conversion from 'const ggml_half[8]' (aka 'const unsigned short[8]') to 'ggml_fp16_t *' (aka 'unsigned short *') for 1st argument
+   86 | static inline __m256 __avx_rearranged_f32cx8_load(ggml_fp16_t *x, __m128i arrangeMask) {
+      |                      ^                            ~~~~~~~~~~~~~~
+6 errors generated.
+gmake[3]: *** [ggml/src/CMakeFiles/ggml-cpu.dir/build.make:289: ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/repack.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:824: ggml/src/CMakeFiles/ggml-cpu.dir/all] Error 2
+gmake[2]: *** Waiting for unfinished jobs....
+[ 20%] Linking CXX static library libcpp-httplib.a
+[ 20%] Built target cpp-httplib
+gmake[1]: *** [CMakeFiles/Makefile2:1222: tools/llama-bench/CMakeFiles/llama-bench.dir/rule] Error 2
+gmake: *** [Makefile:338: llama-bench] Error 2
