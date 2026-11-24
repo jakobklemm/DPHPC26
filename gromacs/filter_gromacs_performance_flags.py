@@ -33,6 +33,31 @@ SIMD_NEEDS = {
     "ARM_SVE": (ARM, {"sve"}), "ARM_NEON_ASIMD": (ARM, {"asimd"}),
     "None": (X86 | ARM, set()),
 }
+# -mcpu values that make clang emit instructions not every ARM CPU has (SVE on
+# Neoverse V2 / Cortex-X925, RCpc loads on Neoverse N1): only offered when the
+# host has them, else the binary dies with SIGILL (e.g. Apple M1: no SVE).
+MCPU_NEEDS = {"-mcpu=neoverse-n1": {"asimddp", "asimdhp", "lrcpc"},
+              "-mcpu=neoverse-v2": {"sve", "sve2", "i8mm", "bf16"},
+              "-mcpu=cortex-x925": {"sve", "sve2", "i8mm", "bf16"}}
+# macOS reports CPU features through sysctl hw.optional.*; map them to the
+# Linux /proc/cpuinfo names that lscpu prints on ARM Linux hosts (GB10).
+DARWIN_FEATURES = {
+    "neon": ("fp", "asimd"),
+    "arm.FEAT_FP16": ("fphp", "asimdhp"),
+    "arm.FEAT_DotProd": ("asimddp",),
+    "arm.FEAT_I8MM": ("i8mm",),
+    "arm.FEAT_BF16": ("bf16",),
+    "arm.FEAT_FHM": ("asimdfhm",),
+    "arm.FEAT_RDM": ("asimdrdm",),
+    "arm.FEAT_LSE": ("atomics",),
+    "arm.FEAT_LRCPC": ("lrcpc",),
+    "arm.FEAT_CRC32": ("crc32",),
+    "arm.FEAT_AES": ("aes",),
+    "arm.FEAT_SHA256": ("sha2",),
+    "arm.FEAT_SHA3": ("sha3",),
+    "arm.FEAT_SME": ("sme",),
+    "arm.FEAT_SME2": ("sme2",),
+}
 # Compiler values that only make sense on one architecture: -mcpu (ARM), -march/-mprefer (x86)
 def value_architectures(value):
     if value.startswith("-mcpu="):
@@ -99,6 +124,17 @@ def profile_prerequisite_error(device, cpu_perf=True):
 
 def cpu_info() -> tuple[str, set[str]]:
     """Read the full CPU feature set."""
+    if platform.system() == "Darwin":   # no lscpu on macOS
+        output = subprocess.check_output(["sysctl", "hw.optional"], text=True)
+        features = set()
+        for line in output.splitlines():
+            key, _, value = line.partition(":")
+            names = DARWIN_FEATURES.get(key.strip().removeprefix("hw.optional."))
+            if names and value.strip() == "1":
+                features.update(names)
+        if not features:
+            raise RuntimeError("sysctl hw.optional did not report CPU features")
+        return platform.machine().lower(), features
     output = subprocess.check_output(["lscpu"], text=True)
     features = set()
     for line in output.splitlines():
@@ -108,6 +144,16 @@ def cpu_info() -> tuple[str, set[str]]:
     if not features:
         raise RuntimeError("lscpu did not report CPU flags/features")
     return platform.machine().lower(), features
+
+
+def cpu_model_name() -> str:
+    """CPU model string for the host snapshot (lscpu does not exist on macOS)."""
+    if platform.system() == "Darwin":
+        return subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"],
+                              capture_output=True, text=True).stdout.strip()
+    lscpu = subprocess.run(["lscpu"], capture_output=True, text=True, check=True).stdout
+    return next((line.partition(":")[2].strip() for line in lscpu.splitlines()
+                 if line.partition(":")[0].strip().lower() == "model name"), "")
 
 
 def compile_check(executable: str, flag: str, *, link: bool = False) -> bool:
@@ -159,6 +205,7 @@ def filter_catalog(catalog: dict, architecture: str, features: set[str], device:
         eligible = [value for value in values
                     if architecture in value_architectures(value)
                     and X86_LEVELS.get(value, set()) <= features
+                    and MCPU_NEEDS.get(value, set()) <= features
                     and toolchain_supports(value, link=value.startswith("-flto"))]
         # the baseline must survive, otherwise the group is dropped (never silently re-based)
         if eligible and eligible[0] == values[0]:

@@ -24,8 +24,8 @@ import time
 from hashlib import md5, sha256
 from pathlib import Path
 
-from filter_gromacs_performance_flags import (cpu_info, filter_catalog, find_cuda_compiler,
-                                              profile_prerequisite_error)
+from filter_gromacs_performance_flags import (cpu_info, cpu_model_name, filter_catalog,
+                                              find_cuda_compiler, profile_prerequisite_error)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -306,9 +306,7 @@ def main():
     save_json(plan_file, plan)
     if not system_file.exists():
         # Same host snapshot as the llama runner, so both applications share hardware features.
-        lscpu = subprocess.run(["lscpu"], capture_output=True, text=True, check=True).stdout
-        model_name = next((line.partition(":")[2].strip() for line in lscpu.splitlines()
-                           if line.partition(":")[0].strip().lower() == "model name"), "")
+        model_name = cpu_model_name()
         system = {"CPU Info": {"Architecture": platform.machine(),
                                 "Model Name": model_name, "Flags": sorted(features)},
                   "Compilers": {"c": {"clang": "installed"},
