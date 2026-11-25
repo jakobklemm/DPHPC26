@@ -13,9 +13,9 @@ benchmark.json is the one GROMACS benchmark (GPU-resident mdrun, live_gromacs.py
 RTX 5060 Ti campaign, are not read.
 """
 
-from .validation import (BOOL, COMMON_SCHEMA, enabled, isa_errors, cuda_errors,
-                         require, schema_errors, toolchain_errors, value,
-                         compiler_flags, positive_integer)
+from .validation import (BOOL, COMMON_SCHEMA, CLANG_CUDA_FLAGS, GPU_COMPILER_SCHEMA, enabled,
+                         isa_errors, cuda_errors, require, schema_errors, toolchain_errors,
+                         value, compiler_flags, positive_integer)
 
 APPLICATION = "gromacs"  # project_name in source.yml
 
@@ -45,7 +45,7 @@ BOOLEAN_OPTIONS = {"GMX_DOUBLE", "GMX_MPI", "GMX_THREAD_MPI", "GMX_OPENMP",
                    "GMX_FFTW_USE_WISDOM", "GMX_DISABLE_FFTW_MEASURE", "native", "lto"}
 CUDA_FLAGS = {"-Xptxas -O": {"-Xptxas=-O1", "-Xptxas=-O2", "-Xptxas=-O3"}}
 SCHEMA = {
-    **CUDA_FLAGS,
+    **CUDA_FLAGS, **GPU_COMPILER_SCHEMA,
     "GMX_SIMD_ACCURACY_BITS_SINGLE": positive_integer,
     "GMX_SIMD_ARM_SVE_LENGTH": {"128", "256", "512", "1024", "2048"},
     **COMMON_SCHEMA, **dict.fromkeys(BOOLEAN_OPTIONS, BOOL),
@@ -149,6 +149,7 @@ def performance(benchmark):
 
 # how to pass one option to the build
 def build_argument(option, value):
-    if option in compiler_flags(APPLICATION) or option in CUDA_FLAGS:
+    if option in compiler_flags(APPLICATION) or option in CUDA_FLAGS or option in CLANG_CUDA_FLAGS:
         return value
-    return f"{option}={value}" if option in HARNESS_OPTIONS else f"-D{option}={value}"
+    return (f"{option}={value}" if option in HARNESS_OPTIONS or option == "gpu_compiler"
+            else f"-D{option}={value}")

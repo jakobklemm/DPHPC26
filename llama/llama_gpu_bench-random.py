@@ -48,36 +48,44 @@ def configuration_space(options, device, cuda_arch=None):
         elif name not in {"GGML_CUDA", "GGML_VULKAN"}:
             cmake_base[name] = "OFF"
     compiler_base = {name: off_value(name) for name in compiler}
+    # GPU compiler flags (only with --cuda-compiler clang): the first value is the baseline.
+    cuda = options.get("cuda_compiler", {})
+    cuda_base = {name: values[0] for name, values in cuda.items()}
     candidates = ([("cmake", name) for name, values in cpu.items()
                    if name != "GGML_NATIVE" and "ON" in values]
                   + [("runtime", name) for name in runtime_base]
                   + [("cmake", name) for name in gpu if name not in runtime_base
                      and name not in {"GGML_CUDA", "GGML_VULKAN"}]
                   + [("compiler_flags", name) for name, values in compiler.items()
-                     if any(value != off_value(name) for value in values)])
+                     if any(value != off_value(name) for value in values)]
+                  + [("cuda_flags", name) for name, values in cuda.items() if len(values) > 1])
     # GGML_NATIVE changes CPU instruction selection even when individual ISA
     # switches are OFF. Include it as a regular selectable switch.
     if "GGML_NATIVE" in cpu and "ON" in cpu["GGML_NATIVE"]:
         candidates.insert(0, ("cmake", "GGML_NATIVE"))
-    return cmake_base, runtime_base, compiler_base, candidates
+    return cmake_base, runtime_base, compiler_base, candidates, cuda_base
 
 
 def configuration(options, device, space, choices, rng, single=False):
-    cmake_base, runtime_base, compiler_base, _ = space
+    cmake_base, runtime_base, compiler_base, _, cuda_base = space
     config = {"device": device, "compiler": "clang++", "cmake": cmake_base.copy(),
               "runtime": runtime_base.copy(), "compiler_flags": compiler_base.copy()}
+    if cuda_base:   # only clang-CUDA runs have this key, so nvcc plans stay unchanged
+        config["cuda_flags"] = cuda_base.copy()
     for kind, name in choices:
         catalog = options[{"cmake": "cmake", "runtime": "device",
-                           "compiler_flags": "compiler"}[kind]]
+                           "compiler_flags": "compiler", "cuda_flags": "cuda_compiler"}[kind]]
         values = catalog.get(name, options["device"].get(name))
-        off = off_value(name) if kind == "compiler_flags" else "0" if kind == "runtime" else "OFF"
+        off = (off_value(name) if kind == "compiler_flags" else "0" if kind == "runtime"
+               else values[0] if kind == "cuda_flags" else "OFF")
         enabled = [value for value in values if value != off]
         config[kind][name] = enabled[0] if single else rng.choice(enabled)
     return config
 
 
 def valid_configuration(config, options):
-    return valid(config["cmake"] | config["runtime"] | config["compiler_flags"],
+    return valid(config["cmake"] | config["runtime"] | config["compiler_flags"]
+                 | config.get("cuda_flags", {}),
                  options.get("invalid_combinations", []))
 
 
@@ -160,6 +168,9 @@ def main():
                         help="Flag catalog (default: flags.json beside this script)")
     common.add_argument("--device", required=True, choices=("cpu", "cuda", "vulkan"))
     common.add_argument("--cuda-arch", help="CUDA SM architecture, e.g. 86")
+    common.add_argument("--cuda-compiler", choices=("nvcc", "clang"), default="nvcc",
+                        help="Compiler for the GPU code. clang also varies the flag file's "
+                             "cuda_compiler flags; needs a llama.cpp tree with the clang-CUDA patch")
     common.add_argument("--build-dir", type=Path, default=ROOT / "build")
     common.add_argument("--results-dir", type=Path, default=ROOT / "bench-results")
     common.add_argument("--flags-output", type=Path)
@@ -168,6 +179,8 @@ def main():
     common.add_argument("--generate", type=positive_int, default=128)
     common.add_argument("--repetitions", type=positive_int, default=3)
     common.add_argument("--gpu-layers", type=int, default=99)
+    common.add_argument("--threads", type=positive_int,
+                        help="llama-bench -t (default: llama-bench picks one thread per core of the machine)")
     common.add_argument("--dry-run", action="store_true")
     common.add_argument("--no-profile", action="store_true",
                         help="Build and benchmark only; do not require perf or HPCToolkit")
@@ -185,6 +198,8 @@ def main():
         parser.error("--cuda-arch must contain numeric CMake CUDA architectures")
     if args.mode == "random" and args.count < 0:
         parser.error("--count must be non-negative")
+    if args.cuda_compiler == "clang" and args.device != "cuda":
+        parser.error("--cuda-compiler clang requires --device cuda")
     source = args.source.expanduser().resolve()
     model = args.model.expanduser().resolve()
     if not (source / "CMakeLists.txt").is_file() or not model.is_file():
@@ -198,6 +213,8 @@ def main():
         catalog = json.load(stream)
     arch, features = cpu_info()
     options = filter_catalog(catalog, arch, features, args.device)
+    if args.cuda_compiler == "clang":
+        options["cuda_compiler"] = catalog.get("cuda_compiler", {})
     if args.flags_output:
         save_json(args.flags_output.expanduser().resolve(), options)
     plan = execution_plan(options, args.device, args.cuda_arch) if args.mode == "sweep" else None
@@ -250,6 +267,8 @@ def main():
                 "repetitions": args.repetitions,
                 "gpu_layers": 0 if args.device == "cpu" else args.gpu_layers,
                  "profile": not args.no_profile, "build_dir": str(build)}
+    if args.cuda_compiler == "clang":   # only added when used, so nvcc settings files still match
+        settings["cuda_compiler"] = "clang"
     if args.mode == "random":
         settings.update({"sampling": "harmonic-toggle-count-v1", "seed": SEED, "options": options})
         if args.min_flags:  # only added when used, so older settings files still match
@@ -305,6 +324,8 @@ def main():
                    "--workers", str(args.workers), "--prompt", str(args.prompt),
                    "--generate", str(args.generate), "--repetitions", str(args.repetitions),
                    "--gpu-layers", str(0 if args.device == "cpu" else args.gpu_layers)]
+        if args.threads:
+            command.extend(["--threads", str(args.threads)])
         if args.no_profile:
             command.append("--no-profile")
         for name, value in config["cmake"].items():
@@ -313,6 +334,10 @@ def main():
             command.extend(["--runtime-arg", f"{name}={value}"])
         for value in config["compiler_flags"].values():
             command.append(f"--compiler-flag={value}")
+        if args.cuda_compiler == "clang":
+            command.extend(["--cuda-compiler", "clang"])
+            for value in config.get("cuda_flags", {}).values():
+                command.append(f"--cuda-flag={value}")
         label = "Retrying failed execution" if previous else "Execution"
         print(f"\n{label} {index + 1}/{total}: {shlex.join(command)}", flush=True)
         start = time.monotonic()

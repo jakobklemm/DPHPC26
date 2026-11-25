@@ -1,0 +1,329 @@
+{
+  "metric": "ns_per_day",
+  "unit": "ns/day",
+  "higher_is_better": true,
+  "aggregate": "mean",
+  "mean": 93.84266666666667,
+  "std": 0.44942889686060056,
+  "n_runs": 3,
+  "warmup_runs": 1,
+  "nsteps": 50000,
+  "threads": 20,
+  "input": {
+    "name": "water_0096",
+    "source": "water_GMX50_bare/0096",
+    "tpr_sha256": "ffaeb36ad0f1772b5a3ec3610639705724e3f4dbd5d05fbd22dd3f05bbda2203",
+    "atoms": 96000,
+    "nsteps": 50000,
+    "dt_ps": 0.002,
+    "simulated_ps": 100.0,
+    "mdp": "bench.mdp",
+    "mdrun_options": [
+      "-ntmpi",
+      "1",
+      "-ntomp",
+      "20",
+      "-pin",
+      "on",
+      "-nb",
+      "gpu",
+      "-pme",
+      "gpu",
+      "-bonded",
+      "cpu",
+      "-update",
+      "gpu",
+      "-nsteps",
+      "50000",
+      "-resethway",
+      "-notunepme",
+      "-noconfout",
+      "-g",
+      "md.log"
+    ]
+  },
+  "runs": [
+    {
+      "kind": "measured",
+      "index": 0,
+      "value": 94.087,
+      "core_s": 918.278,
+      "wall_s": 45.917,
+      "phases": {
+        "Neighbor search": {
+          "wall_s": 4.987,
+          "gcycles": 99.748,
+          "percent": 10.9,
+          "calls": 251,
+          "group": "main"
+        },
+        "Launch PP GPU ops.": {
+          "wall_s": 0.665,
+          "gcycles": 13.304,
+          "percent": 1.4,
+          "calls": 49751,
+          "group": "main"
+        },
+        "Force": {
+          "wall_s": 0.077,
+          "gcycles": 1.532,
+          "percent": 0.2,
+          "calls": 25001,
+          "group": "main"
+        },
+        "PME GPU mesh": {
+          "wall_s": 0.99,
+          "gcycles": 19.791,
+          "percent": 2.2,
+          "calls": 25001,
+          "group": "main"
+        },
+        "Wait GPU NB local": {
+          "wall_s": 0.413,
+          "gcycles": 8.255,
+          "percent": 0.9,
+          "calls": 25001,
+          "group": "main"
+        },
+        "Wait GPU state copy": {
+          "wall_s": 37.366,
+          "gcycles": 747.322,
+          "percent": 81.4,
+          "calls": 6005,
+          "group": "main"
+        },
+        "NB X/F buffer ops.": {
+          "wall_s": 0.019,
+          "gcycles": 0.374,
+          "percent": 0.0,
+          "calls": 251,
+          "group": "main"
+        },
+        "Kinetic energy": {
+          "wall_s": 1.029,
+          "gcycles": 20.572,
+          "percent": 2.2,
+          "calls": 5001,
+          "group": "main"
+        },
+        "Rest": {
+          "wall_s": 0.372,
+          "gcycles": 7.434,
+          "percent": 0.8,
+          "calls": null,
+          "group": "main"
+        },
+        "Wait PME GPU gather": {
+          "wall_s": 0.053,
+          "gcycles": 1.065,
+          "percent": 0.1,
+          "calls": 25001,
+          "group": "pme"
+        },
+        "Reduce GPU PME F": {
+          "wall_s": 0.019,
+          "gcycles": 0.377,
+          "percent": 0.0,
+          "calls": 25001,
+          "group": "pme"
+        },
+        "Launch PME GPU ops.": {
+          "wall_s": 0.862,
+          "gcycles": 17.244,
+          "percent": 1.9,
+          "calls": 200008,
+          "group": "pme"
+        }
+      },
+      "process_s": 92.84
+    },
+    {
+      "kind": "measured",
+      "index": 1,
+      "value": 93.324,
+      "core_s": 925.798,
+      "wall_s": 46.292,
+      "phases": {
+        "Neighbor search": {
+          "wall_s": 4.983,
+          "gcycles": 99.655,
+          "percent": 10.8,
+          "calls": 251,
+          "group": "main"
+        },
+        "Launch PP GPU ops.": {
+          "wall_s": 0.671,
+          "gcycles": 13.415,
+          "percent": 1.4,
+          "calls": 49751,
+          "group": "main"
+        },
+        "Force": {
+          "wall_s": 0.081,
+          "gcycles": 1.623,
+          "percent": 0.2,
+          "calls": 25001,
+          "group": "main"
+        },
+        "PME GPU mesh": {
+          "wall_s": 0.994,
+          "gcycles": 19.872,
+          "percent": 2.1,
+          "calls": 25001,
+          "group": "main"
+        },
+        "Wait GPU NB local": {
+          "wall_s": 0.411,
+          "gcycles": 8.217,
+          "percent": 0.9,
+          "calls": 25001,
+          "group": "main"
+        },
+        "Wait GPU state copy": {
+          "wall_s": 37.657,
+          "gcycles": 753.138,
+          "percent": 81.3,
+          "calls": 6005,
+          "group": "main"
+        },
+        "NB X/F buffer ops.": {
+          "wall_s": 0.019,
+          "gcycles": 0.379,
+          "percent": 0.0,
+          "calls": 251,
+          "group": "main"
+        },
+        "Kinetic energy": {
+          "wall_s": 1.109,
+          "gcycles": 22.187,
+          "percent": 2.4,
+          "calls": 5001,
+          "group": "main"
+        },
+        "Rest": {
+          "wall_s": 0.368,
+          "gcycles": 7.353,
+          "percent": 0.8,
+          "calls": null,
+          "group": "main"
+        },
+        "Wait PME GPU gather": {
+          "wall_s": 0.052,
+          "gcycles": 1.042,
+          "percent": 0.1,
+          "calls": 25001,
+          "group": "pme"
+        },
+        "Reduce GPU PME F": {
+          "wall_s": 0.02,
+          "gcycles": 0.397,
+          "percent": 0.0,
+          "calls": 25001,
+          "group": "pme"
+        },
+        "Launch PME GPU ops.": {
+          "wall_s": 0.865,
+          "gcycles": 17.308,
+          "percent": 1.9,
+          "calls": 200008,
+          "group": "pme"
+        }
+      },
+      "process_s": 93.592
+    },
+    {
+      "kind": "measured",
+      "index": 2,
+      "value": 94.117,
+      "core_s": 917.998,
+      "wall_s": 45.902,
+      "phases": {
+        "Neighbor search": {
+          "wall_s": 4.986,
+          "gcycles": 99.714,
+          "percent": 10.9,
+          "calls": 251,
+          "group": "main"
+        },
+        "Launch PP GPU ops.": {
+          "wall_s": 0.671,
+          "gcycles": 13.418,
+          "percent": 1.5,
+          "calls": 49751,
+          "group": "main"
+        },
+        "Force": {
+          "wall_s": 0.077,
+          "gcycles": 1.547,
+          "percent": 0.2,
+          "calls": 25001,
+          "group": "main"
+        },
+        "PME GPU mesh": {
+          "wall_s": 0.984,
+          "gcycles": 19.688,
+          "percent": 2.1,
+          "calls": 25001,
+          "group": "main"
+        },
+        "Wait GPU NB local": {
+          "wall_s": 0.411,
+          "gcycles": 8.21,
+          "percent": 0.9,
+          "calls": 25001,
+          "group": "main"
+        },
+        "Wait GPU state copy": {
+          "wall_s": 37.332,
+          "gcycles": 746.638,
+          "percent": 81.3,
+          "calls": 6005,
+          "group": "main"
+        },
+        "NB X/F buffer ops.": {
+          "wall_s": 0.019,
+          "gcycles": 0.385,
+          "percent": 0.0,
+          "calls": 251,
+          "group": "main"
+        },
+        "Kinetic energy": {
+          "wall_s": 1.059,
+          "gcycles": 21.184,
+          "percent": 2.3,
+          "calls": 5001,
+          "group": "main"
+        },
+        "Rest": {
+          "wall_s": 0.363,
+          "gcycles": 7.254,
+          "percent": 0.8,
+          "calls": null,
+          "group": "main"
+        },
+        "Wait PME GPU gather": {
+          "wall_s": 0.051,
+          "gcycles": 1.029,
+          "percent": 0.1,
+          "calls": 25001,
+          "group": "pme"
+        },
+        "Reduce GPU PME F": {
+          "wall_s": 0.019,
+          "gcycles": 0.385,
+          "percent": 0.0,
+          "calls": 25001,
+          "group": "pme"
+        },
+        "Launch PME GPU ops.": {
+          "wall_s": 0.859,
+          "gcycles": 17.184,
+          "percent": 1.9,
+          "calls": 200008,
+          "group": "pme"
+        }
+      },
+      "process_s": 92.742
+    }
+  ]
+}

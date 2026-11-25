@@ -1,0 +1,36 @@
+--- a/ggml/src/ggml-cuda/CMakeLists.txt
++++ b/ggml/src/ggml-cuda/CMakeLists.txt
+@@ -262,6 +262,12 @@
+         list(APPEND CUDA_FLAGS -Xcompiler ${CUDA_CXX_FLAGS_JOINED})
+     endif()
+ 
++    if (CMAKE_CUDA_COMPILER_ID STREQUAL "Clang")
++        # DPHPC clang-CUDA patch: clang compiles the CUDA code itself; nvcc-only flags
++        # (-use_fast_math, -extended-lambda, -compress-mode, -Xcompiler) are replaced
++        # by their clang equivalents (fast math + flush denormals = nvcc -use_fast_math).
++        set(CUDA_FLAGS -ffast-math -fno-finite-math-only -fcuda-flush-denormals-to-zero -fgpu-approx-transcendentals -Wno-pedantic -Wno-unknown-cuda-version)
++    endif()
+     target_compile_options(ggml-cuda PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:${CUDA_FLAGS}>")
+ else()
+     message(FATAL_ERROR "CUDA Toolkit not found")
+--- a/ggml/src/ggml-cuda/common.cuh
++++ b/ggml/src/ggml-cuda/common.cuh
+@@ -112,7 +112,8 @@
+ #define GGML_CUDA_CC_IS_QY2(cc)      (cc >= GGML_CUDA_CC_QY2 && cc < GGML_CUDA_CC_PH1)
+ #define GGML_CUDA_CC_IS_PH1(cc)      (cc >= GGML_CUDA_CC_PH1)
+ 
+-#if !defined(GGML_USE_HIP) && (defined(GGML_USE_MUSA) || CUDART_VERSION >= 11070)
++// DPHPC clang-CUDA patch: CUDA 13.1 CCCL (cub) headers do not compile with clang 22 -> use the non-cub fallback (as on HIP)
++#if !defined(GGML_USE_HIP) && !(defined(__clang__) && defined(__CUDA__) && !defined(__NVCC__)) && (defined(GGML_USE_MUSA) || CUDART_VERSION >= 11070)
+ #    define GGML_CUDA_USE_CUB
+ #endif  // !defined(GGML_USE_HIP) && (defined(GGML_USE_MUSA) || CUDART_VERSION >= 11070)
+ 
+--- a/ggml/src/ggml-cuda/ssm-scan.cu
++++ b/ggml/src/ggml-cuda/ssm-scan.cu
+@@ -1,4 +1,5 @@
+-#if !defined(GGML_USE_HIP) && (defined(GGML_USE_MUSA) || CUDART_VERSION >= 11070)
++// DPHPC clang-CUDA patch: no cub with clang 22 (see common.cuh)
++#if !defined(GGML_USE_HIP) && !(defined(__clang__) && defined(__CUDA__) && !defined(__NVCC__)) && (defined(GGML_USE_MUSA) || CUDART_VERSION >= 11070)
+ #define USE_CUB
+ #endif // !defined(GGML_USE_HIP) && (defined(GGML_USE_MUSA) || CUDART_VERSION >= 11070)
+ 

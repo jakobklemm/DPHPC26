@@ -6,6 +6,9 @@ Each option in flags.json lists its baseline value first. A configuration sets
 EVERY eligible option explicitly: baseline, except for the chosen ones.
   sweep:  the baseline build, then every non-baseline value of every option alone
   subset: --count random builds, each changes exactly --flags-per-build options
+  random: --count random builds; the number of changed options k is drawn with weight
+          1/(k+1) (k = 0..all), as in llama/llama_gpu_bench-random.py "random", so small
+          changes are common but large ones still occur
 """
 
 import argparse
@@ -39,10 +42,10 @@ def valid(settings, rules):
 
 
 def execution_plan(options, device, cuda_arch=None, mode="sweep", count=DEFAULT_COUNT,
-                   flag_count=DEFAULT_FLAGS_PER_BUILD):
+                   flag_count=DEFAULT_FLAGS_PER_BUILD, min_flags=0):
     if count < 0 or flag_count < 1:
         raise ValueError("count must be non-negative and flags-per-build must be positive")
-    if mode == "subset" and count == 0:
+    if mode in {"subset", "random"} and count == 0:
         return []
     rng = random.Random(SEED)
     cmake_options = {**options["cpu"], **options["device"]}
@@ -88,6 +91,21 @@ def execution_plan(options, device, cuda_arch=None, mode="sweep", count=DEFAULT_
                 groups.append(group)
                 if len(groups) == count * 10 + 100:
                     break
+    elif mode == "random":
+        # Harmonic toggle count (llama "harmonic-toggle-count-v1"); invalid draws are redrawn.
+        counts = range(min_flags, len(candidates) + 1)
+        weights = [1 / (k + 1) for k in counts]
+        groups = []
+        for _ in range(count):
+            for _attempt in range(10_000):
+                chosen = sorted(rng.sample(candidates, rng.choices(counts, weights=weights)[0]))
+                group = tuple((candidate, rng.choice(alternatives(candidate))) for candidate in chosen)
+                config = configuration(group)
+                if valid(config["cmake"] | config["compiler_flags"] | config.get("cuda_flags", {}), rules):
+                    groups.append(group)
+                    break
+            else:
+                raise ValueError("Could not draw a valid configuration after 10000 attempts")
     else:
         raise ValueError(f"Unknown mode: {mode}")
     plan = []
@@ -98,7 +116,7 @@ def execution_plan(options, device, cuda_arch=None, mode="sweep", count=DEFAULT_
         plan.append({"phase": mode, "config": config})
         if mode == "subset" and len(plan) == count:
             break
-    if mode == "subset" and len(plan) != count:
+    if mode in {"subset", "random"} and len(plan) != count:
         raise ValueError(f"Only {len(plan)} valid configurations (requested {count})")
     return plan
 
@@ -163,6 +181,12 @@ def main():
                         help="Flag catalog (default: flags.json beside this script)")
     common.add_argument("--device", required=True, choices=("cpu", "cuda"))
     common.add_argument("--cuda-arch", help="CUDA SM architecture, e.g. 121")
+    common.add_argument("--cuda-compiler", choices=("nvcc", "clang"), default="nvcc",
+                        help="Compiler for the GPU code (clang: use a flags file whose "
+                             "cuda_compiler section has clang switches, e.g. flags-clang.json)")
+    common.add_argument("--cccl", type=Path,
+                        help="CCCL source tree for clang-CUDA (CUDA 13.1's own cub does not "
+                             "compile with clang 22), e.g. a v3.4.3 checkout")
     common.add_argument("--build-dir", type=Path, default=ROOT / "build")
     common.add_argument("--results-dir", type=Path, default=ROOT / "bench-results")
     common.add_argument("--flags-output", type=Path)
@@ -187,12 +211,20 @@ def main():
     subset = commands.add_parser("subset", parents=[common], help="Random N-option subsets")
     subset.add_argument("--count", type=int, default=DEFAULT_COUNT)
     subset.add_argument("--flags-per-build", type=positive_int, default=DEFAULT_FLAGS_PER_BUILD)
+    randomized = commands.add_parser("random", parents=[common],
+                                     help="Random number of changed options, favoring small counts")
+    randomized.add_argument("--count", type=int, default=DEFAULT_COUNT)
+    randomized.add_argument("--min-flags", type=int, default=0,
+                            help="smallest number of changed options (1 = never redraw the baseline)")
     args = parser.parse_args()
     if (args.device == "cuda") != (args.cuda_arch is not None):
         parser.error("--cuda-arch is required for CUDA and only accepted with CUDA")
     if args.cuda_arch is not None and not all(part.isdigit() for part in args.cuda_arch.split(";")):
         parser.error("--cuda-arch must contain numeric CMake CUDA architectures")
-    if args.mode == "subset" and args.count < 0:
+    if args.cuda_compiler == "clang" and (args.device != "cuda" or args.cccl is None
+                                          or not (args.cccl / "cub" / "cub").is_dir()):
+        parser.error("--cuda-compiler clang needs --device cuda and --cccl <CCCL source tree>")
+    if args.mode in {"subset", "random"} and args.count < 0:
         parser.error("--count must be non-negative")
     if args.no_profile:
         args.skip_cpu_perf = args.skip_hpcstruct = True
@@ -219,7 +251,8 @@ def main():
         save_json(args.flags_output.expanduser().resolve(), options)
     try:
         plan = execution_plan(options, args.device, args.cuda_arch, args.mode,
-                              getattr(args, "count", 0), getattr(args, "flags_per_build", 1))
+                              getattr(args, "count", 0), getattr(args, "flags_per_build", 1),
+                              getattr(args, "min_flags", 0))
     except ValueError as error:
         parser.error(str(error))
     # Each mode has its own run list; a saved plan includes future executions too.
@@ -257,6 +290,12 @@ def main():
                             "gpu_hpctoolkit": args.device == "cuda" and not args.no_profile,
                             "hpcstruct": args.device == "cuda" and not args.skip_hpcstruct},
                 "build_dir": str(build)}
+    if args.mode == "random":
+        settings["sampling"] = "harmonic-toggle-count-v1"
+        if args.min_flags:
+            settings["min_flags"] = args.min_flags
+    if args.cuda_compiler == "clang":   # only added when used, so older settings files still match
+        settings["cuda_compiler"] = {"compiler": "clang", "cccl": str(args.cccl.resolve())}
     if cpu_tpr:   # only added when used, so older settings files still match
         settings["cpu_benchmark"] = {"tpr": str(cpu_tpr), "tpr_sha256": file_hash(cpu_tpr),
                                      "nsteps": args.cpu_nsteps}
@@ -321,6 +360,8 @@ def main():
             command.append(f"--compiler-flag={value}")
         for value in config.get("cuda_flags", {}).values():
             command.append(f"--cuda-flag={value}")
+        if args.cuda_compiler == "clang":
+            command.extend(["--cuda-compiler", "clang", "--cccl", str(args.cccl.resolve())])
         label = "Retrying failed execution" if previous else "Execution"
         print(f"\n{label} {index + 1}/{len(plan)}: {shlex.join(command)}", flush=True)
         start = time.monotonic()

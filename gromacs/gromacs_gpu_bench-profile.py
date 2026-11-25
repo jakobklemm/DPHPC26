@@ -219,6 +219,37 @@ def cuda_flag_option(flag):
     return flag.partition("=")[0]
 
 
+def clang_cuda_option(flag):
+    """flag group of a clang GPU switch, named as in flags-clang.json: "-fno-unroll-loops" -> "cuda:-funroll-loops"."""
+    return "cuda:" + compiler_flag_option(flag)
+
+
+def clang_cuda_configure(cmake, cuda_flags, cccl):
+    """CMake arguments that make clang (not nvcc) compile the CUDA code.
+
+    Tested with clang 22.1.8 + CMake 3.31.6 + CUDA 13.1 on GB10 (sm_121):
+    - CMake's compiler check builds for a default arch that CUDA 13 dropped -> pass the arch;
+    - CUDA 13.1's own CCCL (cub) does not compile with clang 22 -> newer CCCL source tree, with
+      the FP4/6/8 types off (their CUDA 13.1 headers need vector types clang does not define);
+    - FindOpenMP cannot detect OpenMP for CUDA sources with clang -> give it explicitly.
+    """
+    cuda_root = Path(find_cuda_compiler()).resolve().parent.parent
+    clangxx = shutil.which("clang++")
+    libomp = subprocess.run([clangxx, "-print-file-name=libomp.so"], capture_output=True,
+                            text=True, check=True).stdout.strip()
+    arch = cmake["CMAKE_CUDA_ARCHITECTURES"].split(";")[0]
+    base = [f"--cuda-path={cuda_root}", f"--cuda-gpu-arch=sm_{arch}", "--no-offload-new-driver",
+            "-Wno-unknown-cuda-version",
+            *(f"-I{cccl / part}" for part in ("cub", "thrust", "libcudacxx/include")),
+            "-DCCCL_DISABLE_NVFP4_SUPPORT", "-DCCCL_DISABLE_NVFP6_SUPPORT", "-DCCCL_DISABLE_NVFP8_SUPPORT"]
+    optimization = [] if any(flag.startswith("-O") for flag in cuda_flags) else ["-O3"]
+    return ["-DGMX_CLANG_CUDA=ON", f"-DCMAKE_CUDA_COMPILER={clangxx}", f"-DCUDAToolkit_ROOT={cuda_root}",
+            "-DCMAKE_CUDA_FLAGS=" + " ".join(base),
+            "-DCMAKE_CUDA_FLAGS_RELEASE=" + " ".join(["-DNDEBUG", *optimization, *cuda_flags]),
+            "-DOpenMP_CUDA_FLAGS=-fopenmp=libomp", "-DOpenMP_CUDA_LIB_NAMES=omp",
+            f"-DOpenMP_omp_LIBRARY={libomp}"]
+
+
 def sve_bits():
     """Hardware SVE vector length; an ARM_SVE build must match it or mdrun aborts."""
     try:
@@ -243,7 +274,9 @@ def main():
     parser.add_argument("--cmake-arg", action="append", default=[])
     parser.add_argument("--compiler-flag", action="append", default=[])
     parser.add_argument("--cuda-flag", action="append", default=[],
-                        help="nvcc switch appended to CMAKE_CUDA_FLAGS")
+                        help="GPU compiler switch: nvcc -> CMAKE_CUDA_FLAGS, clang -> CMAKE_CUDA_FLAGS_RELEASE")
+    parser.add_argument("--cuda-compiler", choices=("nvcc", "clang"), default="nvcc")
+    parser.add_argument("--cccl", type=Path, help="CCCL source tree (needed with --cuda-compiler clang)")
     parser.add_argument("--workers", type=positive_int, default=4)
     parser.add_argument("--threads", type=positive_int, default=os.cpu_count() or 1)
     parser.add_argument("--nsteps", type=positive_int, default=20000)
@@ -279,6 +312,9 @@ def main():
         parser.error("--compiler-flag/--cuda-flag must be a single compiler switch")
     if args.cuda_flag and args.device != "cuda":
         parser.error("--cuda-flag requires --device cuda")
+    if args.cuda_compiler == "clang" and (args.device != "cuda" or args.cccl is None
+                                          or not (args.cccl / "cub" / "cub").is_dir()):
+        parser.error("--cuda-compiler clang needs --device cuda and --cccl <CCCL source tree>")
     cpu_tpr = args.cpu_tpr.expanduser().resolve() if args.cpu_tpr else None
     if cpu_tpr and (args.device != "cuda" or not cpu_tpr.is_file() or not args.cpu_nsteps):
         parser.error("--cpu-tpr needs --device cuda, an existing .tpr and --cpu-nsteps")
@@ -288,7 +324,10 @@ def main():
     with flags_file.open(encoding="utf-8") as source_flags:
         rules = json.load(source_flags).get("invalid_combinations", [])
     groups = {compiler_flag_option(flag): flag for flag in args.compiler_flag}
-    groups.update({cuda_flag_option(flag): flag for flag in args.cuda_flag})
+    groups.update({(clang_cuda_option if args.cuda_compiler == "clang" else cuda_flag_option)(flag): flag
+                   for flag in args.cuda_flag})
+    if args.cuda_compiler == "clang":
+        groups["gpu_compiler"] = "clang"
     if any(all({**cmake, **groups}.get(name) == value for name, value in rule.items()) for rule in rules):
         parser.error("invalid flag combination")
     if not shutil.which("clang") or not shutil.which("clang++"):
@@ -359,7 +398,9 @@ def main():
         if own_fftw:
             configure.extend([f"-DGMX_BUILD_OWN_FFTW_URL={fftw}",
                               f"-DGMX_BUILD_OWN_FFTW_MD5={args.fftw_md5 or hashlib.md5(fftw.read_bytes()).hexdigest()}"])
-        if args.device == "cuda":
+        if args.device == "cuda" and args.cuda_compiler == "clang":
+            configure.extend(clang_cuda_configure(cmake, args.cuda_flag, args.cccl.expanduser().resolve()))
+        elif args.device == "cuda":
             configure.extend(["-DCMAKE_CUDA_HOST_COMPILER=clang++",
                               "-DCMAKE_CUDA_FLAGS=" + " ".join(["-lineinfo", *args.cuda_flag])])
         record["configure_command"] = configure
