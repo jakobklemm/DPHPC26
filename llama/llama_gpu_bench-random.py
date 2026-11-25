@@ -173,6 +173,8 @@ def main():
     common.add_argument("--generate", type=positive_int, default=128)
     common.add_argument("--repetitions", type=positive_int, default=3)
     common.add_argument("--gpu-layers", type=int, default=99)
+    common.add_argument("--threads", type=positive_int,
+                        help="llama-bench -t (default: llama-bench picks one thread per core of the machine)")
     common.add_argument("--dry-run", action="store_true")
     common.add_argument("--no-profile", action="store_true",
                         help="Build and benchmark only; do not require perf or HPCToolkit")
@@ -264,6 +266,8 @@ def main():
         settings.update({"sampling": "harmonic-toggle-count-v1", "seed": SEED, "options": options})
         if args.min_flags:   # only added when used, so older settings files still match
             settings["min_flags"] = args.min_flags
+    if args.threads:   # only added when used, so older settings files still match
+        settings["threads"] = args.threads
     settings_file = results / f"{args.mode}-settings.json"
     if settings_file.exists() and json.loads(settings_file.read_text()) != settings:
         parser.error(f"Run settings changed: use a different --results-dir or remove {settings_file}")
@@ -318,6 +322,8 @@ def main():
                    "--workers", str(args.workers), "--prompt", str(args.prompt),
                    "--generate", str(args.generate), "--repetitions", str(args.repetitions),
                    "--gpu-layers", str(0 if args.device == "cpu" else args.gpu_layers)]
+        if args.threads:
+            command.extend(["--threads", str(args.threads)])
         if args.no_profile:
             command.append("--no-profile")
         for name, value in config["cmake"].items():

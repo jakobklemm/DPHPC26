@@ -55,7 +55,8 @@ def run_logged(command, log, *, env=None, cwd=None):
 def benchmark_args(binary, model, args, repetitions):
     return [str(binary), "-m", str(model), "-ngl", str(args.gpu_layers),
             "-p", str(args.prompt), "-n", str(args.generate),
-            "-r", str(repetitions), "-o", "json"]
+            "-r", str(repetitions), "-o", "json",
+            *(["-t", str(args.threads)] if args.threads else [])]
 
 
 def verify_benchmark(path, device):
@@ -139,6 +140,8 @@ def main():
     parser.add_argument("--repetitions", type=positive_int, default=3)
     parser.add_argument("--gpu-layers", type=int,
                         help="Defaults to 0 on CPU, 99 on GPU")
+    parser.add_argument("--threads", type=positive_int,
+                        help="llama-bench -t (default: llama-bench's own choice)")
     args = parser.parse_args()
     if args.gpu_layers is None:
         args.gpu_layers = 0 if args.device == "cpu" else 99

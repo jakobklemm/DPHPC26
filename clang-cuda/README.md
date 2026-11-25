@@ -54,6 +54,21 @@ GROMACS energies match nvcc (~1e-4).
 - `env-gb10-clang.sh`: toolchain environment for GB10 jobs.
 - `campaign_gb10_clang.sbatch <llama|gromacs> <subdir> <sweep|random> [args]`: one run.
 - `chain_gb10_clang.sbatch <llama|gromacs> <count>`: sweep, then random in one job (same node).
+- `env-5060ti-clang.sh`: toolchain environment for RTX 5060 Ti jobs (x86_64, clang 22.1.8,
+  CUDA 12.8). The `cuda/12.8` module adds a non-existent `lib/`; `libcudart.so.12` is in `lib64/`.
+- `campaign_5060ti_clang.sbatch <subdir> <sweep|random> [args]` or `... chain <count>`: llama on
+  one 5060 Ti (sweep, then random). The cluster ignores `--nodelist`/`--exclude`, so jobs land on
+  the always-on node `studgpu-node01` (shared with other users).
+
+## llama-bench threads (`--threads`)
+
+The llama runner now takes `--threads N` (passed to `llama-bench -t`, stored in the run settings
+only when used). Without it, llama-bench starts one thread per core of the whole machine. That
+is fine when the job owns the machine (GB10: 20 threads, 20 cores), but a 5060 Ti job gets only
+3 of 28 cores. With `GGML_OPENMP=OFF`, ggml's own thread pool busy-waits, and 28 threads on
+3 cores dropped tg128 from ~155 to ~70 tok/s with samples spread up to 40%. With `-t 3`, the
+results are stable again (spread < 0.5%). Builds with `GGML_OPENMP=ON` were stable either way.
+**Any team run where the job has fewer cores than the machine should pass `--threads`.**
 
 Other GPUs: AMD -> ROCm/HIP (hipcc is clang, so flags reach the GPU code). Vulkan and Metal
 compile shaders with their own compilers (see team chat for proposals).
