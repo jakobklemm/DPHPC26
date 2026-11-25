@@ -273,6 +273,8 @@ def main():
         settings.update({"sampling": "harmonic-toggle-count-v1", "seed": SEED, "options": options})
         if args.min_flags:  # only added when used, so older settings files still match
             settings["min_flags"] = args.min_flags
+    if args.threads:   # only added when used, so older settings files still match
+        settings["threads"] = args.threads
     settings_file = results / f"{args.mode}-settings.json"
     if settings_file.exists() and json.loads(settings_file.read_text()) != settings:
         parser.error(f"Run settings changed: use a different --results-dir or remove {settings_file}")
