@@ -9,7 +9,9 @@ import csv
 import hashlib
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import zipfile
@@ -58,6 +60,26 @@ def run_case(local, pool, source, source_name, steps, initial, seed, compact):
         del result[f'best@{step}']
     return dict(result, platform=pool.platform.iloc[0],
                 pretrained=source_name, application='llama.cpp', workload=pool.workload.iloc[0])
+
+
+def git_state():
+    """Commit of the repository and its uncommitted changes (None outside a Git checkout)."""
+    def git(*arguments):
+        result = subprocess.run(['git', '-C', str(ROOT), *arguments], capture_output=True, text=True)
+        return result.stdout.strip() if result.returncode == 0 else None
+    commit = git('rev-parse', 'HEAD')
+    changes = git('status', '--porcelain', '--untracked-files=no')
+    return {'commit': commit, 'branch': git('rev-parse', '--abbrev-ref', 'HEAD'),
+            'uncommitted_changes': changes.splitlines() if changes else []}
+
+
+def record_run(path, metadata):
+    """Append one entry per start (fresh or resumed), so every result row has a known code version."""
+    runs = json.loads(path.read_text()) if path.exists() else []
+    runs.append({'started_utc': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                 'git': git_state(), 'data_sha256': metadata['data_sha256'],
+                 'command': [sys.executable, *sys.argv]})
+    path.write_text(json.dumps(runs, indent=2) + '\n')
 
 
 def sanitized_paths(paths, temporary):
@@ -141,6 +163,7 @@ def main():
         parser.error('existing output has no metadata sidecar; use a new --output path')
     else:
         manifest.write_text(json.dumps(metadata, indent=2) + '\n')
+    record_run(args.output.with_suffix('.run-info.json'), metadata)
     seen = set()
     if args.output.exists():
         for row in pd.read_csv(args.output, keep_default_na=False).itertuples():
