@@ -1,0 +1,147 @@
+{
+  "device": "cpu",
+  "threads": 8,
+  "steps": 20,
+  "repetitions": 3,
+  "workers": 16,
+  "inputs": "# Uniform thermal plasma (WarpX Examples/Physics_applications/uniform_plasma), enlarged, all output off.\nmax_step = 20\namr.n_cell = 64 64 64\namr.max_grid_size = 32\namr.blocking_factor = 16\namr.max_level = 0\ngeometry.dims = 3\ngeometry.prob_lo = -20.e-6 -20.e-6 -20.e-6\ngeometry.prob_hi =  20.e-6  20.e-6  20.e-6\nboundary.field_lo = periodic periodic periodic\nboundary.field_hi = periodic periodic periodic\nwarpx.serialize_initial_conditions = 1\nwarpx.random_seed = 1\nwarpx.verbose = 1\nwarpx.cfl = 1.0\nalgo.particle_shape = 3\nparticles.species_names = electrons\nelectrons.species_type = electron\nelectrons.injection_style = \"NUniformPerCell\"\nelectrons.num_particles_per_cell_each_dim = 2 2 2\nelectrons.profile = constant\nelectrons.density = 1.e25\nelectrons.momentum_distribution_type = \"gaussian\"\nelectrons.ux_th = 0.01\nelectrons.uy_th = 0.01\nelectrons.uz_th = 0.01\n",
+  "sampling": "harmonic-toggle-count-v1",
+  "seed": 20261021,
+  "options": {
+    "cmake": {
+      "WarpX_COMPUTE": [
+        "OMP",
+        "NOACC"
+      ],
+      "WarpX_SIMD": [
+        "OFF"
+      ],
+      "WarpX_FASTMATH": [
+        "OFF",
+        "ON"
+      ],
+      "WarpX_IPO": [
+        "OFF",
+        "ON"
+      ],
+      "WarpX_UNITY_BUILD": [
+        "OFF",
+        "ON"
+      ],
+      "WarpX_PRECISION": [
+        "DOUBLE",
+        "SINGLE"
+      ],
+      "WarpX_PARTICLE_PRECISION": [
+        "DOUBLE",
+        "SINGLE"
+      ],
+      "WarpX_EB": [
+        "ON",
+        "OFF"
+      ],
+      "WarpX_QED": [
+        "ON",
+        "OFF"
+      ],
+      "AMReX_FLATTEN_FOR": [
+        "OFF",
+        "ON"
+      ],
+      "AMReX_ARRAY4_64BIT_INDEX": [
+        "OFF"
+      ],
+      "AMReX_MATH_ERRNO": [
+        "OFF",
+        "ON"
+      ],
+      "ABLASTR_POSITION_INDEPENDENT_CODE": [
+        "ON",
+        "OFF"
+      ],
+      "BUILD_SHARED_LIBS": [
+        "OFF",
+        "ON"
+      ]
+    },
+    "compiler": {
+      "-O": [
+        "-O3",
+        "-O2",
+        "-O1",
+        "-Os",
+        "-Oz"
+      ],
+      "-march": [
+        "-march=x86-64",
+        "-march=x86-64-v2",
+        "-march=x86-64-v3",
+        "-march=native"
+      ],
+      "-mprefer-vector-width": [
+        "default",
+        "-mprefer-vector-width=128",
+        "-mprefer-vector-width=256"
+      ],
+      "-fvectorize": [
+        "-fvectorize",
+        "-fno-vectorize"
+      ],
+      "-fslp-vectorize": [
+        "-fslp-vectorize",
+        "-fno-slp-vectorize"
+      ],
+      "-funroll-loops": [
+        "-funroll-loops",
+        "-fno-unroll-loops"
+      ],
+      "-finline-functions": [
+        "-finline-functions",
+        "-fno-inline-functions"
+      ],
+      "-fstrict-aliasing": [
+        "-fstrict-aliasing",
+        "-fno-strict-aliasing"
+      ],
+      "-ffp-contract": [
+        "-ffp-contract=on",
+        "-ffp-contract=fast",
+        "-ffp-contract=off"
+      ]
+    },
+    "invalid_combinations": [
+      {
+        "WarpX_COMPUTE": "CUDA",
+        "WarpX_SIMD": "ON"
+      },
+      {
+        "WarpX_COMPUTE": "HIP",
+        "WarpX_SIMD": "ON"
+      },
+      {
+        "BUILD_SHARED_LIBS": "ON",
+        "ABLASTR_POSITION_INDEPENDENT_CODE": "OFF"
+      },
+      {
+        "WarpX_FASTMATH": "ON",
+        "AMReX_MATH_ERRNO": "ON"
+      },
+      {
+        "-mprefer-vector-width": "-mprefer-vector-width=128",
+        "-march": "-march=x86-64"
+      },
+      {
+        "-mprefer-vector-width": "-mprefer-vector-width=128",
+        "-march": "-march=x86-64-v2"
+      },
+      {
+        "-mprefer-vector-width": "-mprefer-vector-width=256",
+        "-march": "-march=x86-64"
+      },
+      {
+        "-mprefer-vector-width": "-mprefer-vector-width=256",
+        "-march": "-march=x86-64-v2"
+      }
+    ]
+  }
+}

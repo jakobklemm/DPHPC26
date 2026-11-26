@@ -12,7 +12,7 @@ Only four small files of each folder are used:
 
 What is application specific (how to read the build configuration and the
 performance, options that depend on the hardware) lives in one module per
-application: load_llama.py, load_gromacs.py. To add an application, write such
+application: load_llama.py, load_gromacs.py, load_warpx.py. To add an application, write such
 a module and add it to APPS below.
 
 The result is a table with one row per distinct build and platform:
@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from . import load_gromacs, load_llama
+from . import load_gromacs, load_llama, load_warpx
 from .validation import COMMON_SCHEMA, catalog_errors, discovery_features, flag_catalog, schema_errors, toolchain_errors
 
 HW = "hw."
@@ -36,13 +36,14 @@ CFG = "cfg."
 DEFAULT = "default"
 
 # project_name in source.yml -> module that knows how to read that application
-APPS = {app.APPLICATION: app for app in [load_llama, load_gromacs]}
+APPS = {app.APPLICATION: app for app in [load_llama, load_gromacs, load_warpx]}
 
 # Resolve default data folders relative to the repository, not the working directory.
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_RESULTS = {
     "llama.cpp": REPOSITORY_ROOT / "llama" / "results",
     "gromacs": REPOSITORY_ROOT / "gromacs" / "results",
+    "warpx": REPOSITORY_ROOT / "warpx" / "results",
 }
 
 # Options whose value follows from the hardware, as {option: rule(hardware) -> value}, learning them would not work.
@@ -65,6 +66,8 @@ def validation_errors(config, hardware, app=None):
                 applications.add("llama.cpp")
             elif option.startswith("GMX_") or option in load_gromacs.HARNESS_OPTIONS:
                 applications.add("gromacs")
+            elif option.startswith(load_warpx.PREFIXES):
+                applications.add("warpx")
         if len(applications) > 1:
             return ["schema: configuration mixes options from different applications"]
         app = next(iter(applications), None)

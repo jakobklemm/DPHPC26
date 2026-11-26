@@ -20,7 +20,7 @@ BOOL = TRUE | FALSE
 
 @lru_cache(maxsize=None)
 def flag_catalog(application):
-    directory = {"llama.cpp": "llama", "gromacs": "gromacs"}[application]
+    directory = {"llama.cpp": "llama", "gromacs": "gromacs", "warpx": "warpx"}[application]
     root = Path(os.environ.get("DATA_DIR", Path(__file__).resolve().parent.parent))
     path = root / directory / "flags.json"
     if not path.is_file():

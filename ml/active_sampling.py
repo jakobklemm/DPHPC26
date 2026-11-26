@@ -219,7 +219,7 @@ def _session(name, pool, steps, initial, seed, pretrained=None, evaluation=False
     performance = pool["performance"].to_numpy()
     relative = pool["relative"].to_numpy()
     optimum = float(performance.max())
-    unit = 'tokens/s' if pool.application.iloc[0] == 'llama.cpp' else 'ns/day'
+    unit = {'llama.cpp': 'tokens/s', 'gromacs': 'ns/day', 'warpx': 'particle-steps/s'}[pool.application.iloc[0]]
     best = {}
     for n in range(1, steps + 1):
         tick = time.perf_counter()

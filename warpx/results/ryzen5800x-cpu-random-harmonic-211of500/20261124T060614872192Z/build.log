@@ -1,0 +1,472 @@
++ cmake -G Ninja -S /opt/src/warpx -B /tmp/warpx-build -DWarpX_amrex_src=/opt/src/amrex -DWarpX_picsar_src=/opt/src/picsar -DWarpX_DIMS=3 -DWarpX_MPI=OFF -DWarpX_OPENPMD=OFF -DWarpX_FFT=OFF -DWarpX_CCACHE=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DWarpX_COMPUTE=OMP -DWarpX_SIMD=OFF -DWarpX_FASTMATH=OFF -DWarpX_IPO=OFF -DWarpX_UNITY_BUILD=OFF -DWarpX_PRECISION=DOUBLE -DWarpX_PARTICLE_PRECISION=DOUBLE -DWarpX_EB=ON -DWarpX_QED=ON -DAMReX_FLATTEN_FOR=OFF -DAMReX_ARRAY4_64BIT_INDEX=OFF -DAMReX_MATH_ERRNO=OFF -DABLASTR_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON '-DCMAKE_C_FLAGS_RELEASE=-DNDEBUG -O3 -march=x86-64 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on' '-DCMAKE_CXX_FLAGS_RELEASE=-DNDEBUG -O3 -march=x86-64 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on' '-DCMAKE_CXX_COMPILE_OBJECT=<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -O3 -march=x86-64 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -o <OBJECT> -c <SOURCE>' -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
+-- The C compiler identification is Clang 18.1.3
+-- The CXX compiler identification is Clang 18.1.3
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Compiling local AMReX ...
+-- AMReX source path: /opt/src/amrex
+-- CMake version: 3.28.3
+-- AMReX installation directory: /usr/local
+-- Build type set by user to 'Release'.
+-- Building AMReX with AMReX_SPACEDIM = 3
+-- Configuring AMReX with the following options enabled: 
+--    AMReX_PRECISION = DOUBLE
+--    AMReX_OMP
+--    AMReX_EB
+--    AMReX_LINEAR_SOLVERS
+--    AMReX_LINEAR_SOLVERS_INCFLO
+--    AMReX_LINEAR_SOLVERS_EM
+--    AMReX_PARTICLES
+--    AMReX_PARTICLES_PRECISION = DOUBLE
+--    AMReX_PIC
+--    AMReX_TINY_PROFILE
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Found OpenMP_CXX: -fopenmp=libomp (found version "5.1") 
+-- Found OpenMP: TRUE (found version "5.1") found components: CXX 
+-- AMReX configuration summary: 
+--    Build type               = Release
+--    Install directory        = /usr/local
+--    C++ compiler             = /usr/bin/clang++
+--    C++ defines              = -DAMREX_SPACEDIM=3
+--    C++ flags                = -DNDEBUG -O3 -march=x86-64 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on  -fopenmp=libomp -fno-math-errno
+--    C++ include paths        = -I/opt/src/amrex/Src/Base -I/opt/src/amrex/Src/Base/Parser -I/opt/src/amrex/Src/Boundary -I/opt/src/amrex/Src/AmrCore -I/opt/src/amrex/Src/EB -I/opt/src/amrex/Src/LinearSolvers -I/opt/src/amrex/Src/LinearSolvers/MLMG -I/opt/src/amrex/Src/LinearSolvers/OpenBC -I/opt/src/amrex/Src/Particle
+--    Link line                = /usr/lib/llvm-18/lib/libomp.so /lib/x86_64-linux-gnu/libpthread.a
+-- AMReX: Using version '26.11' (26.11)
+-- Compiling local PICSAR ...
+-- PICSAR source path: /opt/src/picsar
+-- Found Git: /usr/bin/git (found version "2.43.0") 
+-- Performing Test COMPILER_HAS_HIDDEN_VISIBILITY
+-- Performing Test COMPILER_HAS_HIDDEN_VISIBILITY - Success
+-- Performing Test COMPILER_HAS_HIDDEN_INLINE_VISIBILITY
+-- Performing Test COMPILER_HAS_HIDDEN_INLINE_VISIBILITY - Success
+-- Performing Test COMPILER_HAS_DEPRECATED_ATTR
+-- Performing Test COMPILER_HAS_DEPRECATED_ATTR - Success
+
+WarpX build configuration:
+  Version: 26.11 (2bb8b5011038-dirty)
+  C++ Compiler: Clang 18.1.3 
+    /usr/bin/clang++
+
+  Installation prefix: /usr/local
+        bin: bin
+        lib: lib
+    include: include
+      cmake: lib/cmake/WarpX
+
+  Build type: Release
+  Build options:
+    APP: ON
+    ASCENT: OFF
+    CATALYST: OFF
+    COMPUTE: OMP
+    FASTMATH: OFF
+    SIMD: OFF
+    DIMS: 3
+    Embedded Boundary: ON
+    PETSc: OFF
+    IPO/LTO: OFF
+    LIB: ON (static)
+    MPI: OFF
+    PARTICLE PRECISION: DOUBLE
+    PRECISION: DOUBLE
+    FFT Solvers: OFF
+    PYTHON: OFF
+    OPENPMD: OFF
+    QED: ON
+    QED table generation: OFF
+    QED tools: OFF
+    SENSEI: OFF
+
+-- Configuring done (2.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /tmp/warpx-build
++ cmake --build /tmp/warpx-build --target app_3d -j 16
+[1/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/math/fft/WrapNoFFT.cpp.o
+[2/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/text/StreamUtils.cpp.o
+[3/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/text/StringUtils.cpp.o
+[4/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/TextMsg.cpp.o
+[5/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/math/FiniteDifference.cpp.o
+[6/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/timer/Timer.cpp.o
+[7/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/parallelization/MPIInitHelpers.cpp.o
+[8/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/math/RandomSeed.cpp.o
+[9/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/msg_logger/MsgLogger.cpp.o
+[10/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/UsedInputsFile.cpp.o
+[11/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/SignalHandling.cpp.o
+[12/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/text/IntervalsParser.cpp.o
+[13/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/RelativeCellPosition.cpp.o
+[14/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/coarsen/average.cpp.o
+[15/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/warn_manager/WarnManager.cpp.o
+[16/379] Building CXX object CMakeFiles/lib_3d.dir/Source/AcceleratorLattice/LatticeElements/Drift.cpp.o
+[17/379] Building CXX object CMakeFiles/lib_3d.dir/Source/AcceleratorLattice/LatticeElements/LatticeElementBase.cpp.o
+[18/379] Building CXX object CMakeFiles/lib_3d.dir/Source/AcceleratorLattice/LatticeElements/HardEdgedQuadrupole.cpp.o
+[19/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/coarsen/sample.cpp.o
+[20/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/fields/MultiFabRegister.cpp.o
+[21/379] Building CXX object CMakeFiles/lib_3d.dir/Source/AcceleratorLattice/LatticeElements/HardEdgedPlasmaLens.cpp.o
+[22/379] Building CXX object CMakeFiles/lib_3d.dir/Source/BoundaryConditions/FieldBoundaries.cpp.o
+[23/379] Building CXX object CMakeFiles/lib_3d.dir/Source/AcceleratorLattice/AcceleratorLattice.cpp.o
+[24/379] Building CXX object CMakeFiles/ablastr_3d.dir/Source/ablastr/utils/Communication.cpp.o
+[25/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/FieldIO.cpp.o
+[26/379] Building CXX object CMakeFiles/lib_3d.dir/Source/AcceleratorLattice/LatticeElementFinder.cpp.o
+[27/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/OpenPMDHelpFunction.cpp.o
+[28/379] Building CXX object CMakeFiles/lib_3d.dir/Source/BoundaryConditions/WarpX_PEC.cpp.o
+[29/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/BTD_Plotfile_Header_Impl.cpp.o
+[30/379] Building CXX object CMakeFiles/lib_3d.dir/Source/BoundaryConditions/WarpXFieldBoundaries.cpp.o
+[31/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/MultiDiagnostics.cpp.o
+[32/379] Building CXX object CMakeFiles/lib_3d.dir/Source/BoundaryConditions/WarpXEvolvePML.cpp.o
+[33/379] Building CXX object CMakeFiles/lib_3d.dir/Source/BoundaryConditions/PEC_Insulator.cpp.o
+[34/379] Building CXX object CMakeFiles/lib_3d.dir/Source/BoundaryConditions/PML.cpp.o
+[35/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/WarpXOpenPMD.cpp.o
+[36/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/Diagnostics.cpp.o
+[37/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/FullDiagnostics.cpp.o
+[38/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/WarpXIO.cpp.o
+[39/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/BoundaryScrapingDiagnostics.cpp.o
+[40/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/CellCenterFunctor.cpp.o
+[41/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/DarwinEfieldFunctor.cpp.o
+[42/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/DivBFunctor.cpp.o
+[43/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/DivEFunctor.cpp.o
+[44/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/EBCoveredFunctor.cpp.o
+[45/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/JFunctor.cpp.o
+[46/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/JdispFunctor.cpp.o
+[47/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/RhoFunctor.cpp.o
+[48/379] Building CXX object CMakeFiles/lib_3d.dir/Source/WarpX.cpp.o
+[49/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ParticleIO.cpp.o
+[50/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/PartPerGridFunctor.cpp.o
+[51/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/ProcessNumberFunctor.cpp.o
+[52/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/PartPerCellFunctor.cpp.o
+[53/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/BackTransformFunctor.cpp.o
+[54/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/BTDiagnostics.cpp.o
+[55/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/BackTransformParticleFunctor.cpp.o
+[56/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/FlushFormats/FlushFormatInSitu.cpp.o
+[57/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/PhiFunctor.cpp.o
+[58/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/TemperatureFunctor.cpp.o
+[59/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ComputeDiagFunctors/ParticleReductionFunctor.cpp.o
+[60/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/FlushFormats/FlushFormatCatalyst.cpp.o
+[61/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/FlushFormats/FlushFormatSensei.cpp.o
+[62/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/FlushFormats/FlushFormatAscent.cpp.o
+[63/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ParticleDiag/ParticleDiag.cpp.o
+[64/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/BeamRelevant.cpp.o
+[65/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ChargeOnEB.cpp.o
+[66/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/DifferentialLuminosity.cpp.o
+[67/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/DifferentialLuminosity2D.cpp.o
+[68/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/FlushFormats/FlushFormatCheckpoint.cpp.o
+[69/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/FieldEnergy.cpp.o
+[70/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/FieldMaximum.cpp.o
+[71/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/FieldMomentum.cpp.o
+[72/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ColliderRelevant.cpp.o
+[73/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/LoadBalanceEfficiency.cpp.o
+[74/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/FieldProbeParticleContainer.cpp.o
+[75/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/FlushFormats/FlushFormatPlotfile.cpp.o
+[76/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/FieldPoyntingFlux.cpp.o
+[77/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/LoadBalanceCosts.cpp.o
+[78/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ParticleEnergy.cpp.o
+[79/379] Building CXX object CMakeFiles/lib_3d.dir/Source/EmbeddedBoundary/Enabled.cpp.o
+[80/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/MultiReducedDiags.cpp.o
+[81/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/FieldProbe.cpp.o
+[82/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ParticleHistogram.cpp.o
+[83/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ReducedDiags.cpp.o
+[84/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ParticleMomentum.cpp.o
+[85/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ParticleHistogram2D.cpp.o
+[86/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ParticleNumber.cpp.o
+[87/379] Building CXX object CMakeFiles/lib_3d.dir/Source/EmbeddedBoundary/EmbeddedBoundaryInit.cpp.o
+[88/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/FieldReduction.cpp.o
+[89/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/Timestep.cpp.o
+[90/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/RhoMaximum.cpp.o
+[91/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Diagnostics/ReducedDiags/ParticleExtrema.cpp.o
+[92/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/ComputeDivE.cpp.o
+[93/379] Building CXX object CMakeFiles/lib_3d.dir/Source/EmbeddedBoundary/WarpXFaceExtensions.cpp.o
+[94/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/WarpXPushFieldsEM.cpp.o
+[95/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Evolve/WarpXComputeDt.cpp.o
+[96/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/WarpX_QED_Field_Pushers.cpp.o
+[97/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/WarpXPushFieldsHybridPIC.cpp.o
+[98/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/WarpXSolveFieldsES.cpp.o
+[99/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Evolve/WarpXEvolve.cpp.o
+[100/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ElectrostaticSolvers/PoissonBoundaryHandler.cpp.o
+[101/379] Building CXX object CMakeFiles/lib_3d.dir/Source/EmbeddedBoundary/WarpXInitEB.cpp.o
+[102/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ElectrostaticSolvers/RelativisticExplicitES.cpp.o
+[103/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ElectrostaticSolvers/LabFrameExplicitES.cpp.o
+[104/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/ComputeCurlA.cpp.o
+[105/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/ComputeCurlB.cpp.o
+[106/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ElectrostaticSolvers/EffectivePotentialES.cpp.o
+[107/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/EvolveF.cpp.o
+[108/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ElectrostaticSolvers/ElectrostaticSolver.cpp.o
+[109/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/EvolveFPML.cpp.o
+[110/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/FiniteDifferenceSolver.cpp.o
+[111/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/EvolveG.cpp.o
+[112/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/EvolveBPML.cpp.o
+[113/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/ComputeGradient.cpp.o
+[114/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/ComputeLaplacian.cpp.o
+[115/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/ApplySilverMuellerBoundary.cpp.o
+[116/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/MacroscopicEvolveE.cpp.o
+[117/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/EvolveEPML.cpp.o
+[118/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/EvolveECTRho.cpp.o
+[119/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/EvolveB.cpp.o
+[120/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/MacroscopicProperties/MacroscopicProperties.cpp.o
+[121/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/EvolveE.cpp.o
+[122/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/SparseJacobianMatrix.cpp.o
+[123/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Filter/BilinearFilter.cpp.o
+[124/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/SemiImplicitEM.cpp.o
+[125/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Filter/NCIGodfreyFilter.cpp.o
+[126/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/HybridPICModel/ExternalVectorPotential.cpp.o
+[127/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/HybridPICSolveE.cpp.o
+[128/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/ThetaImplicitEM.cpp.o
+[129/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/MagnetostaticSolver/MagnetostaticSolver.cpp.o
+[130/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/StrangImplicitSpectralEM.cpp.o
+[131/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Fluids/MultiFluidContainer.cpp.o
+[132/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/WarpXSolverDOF.cpp.o
+[133/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/SemiImplicitDarwin.cpp.o
+[134/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/DarwinLinearFieldOperator.cpp.o
+[135/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Filter/Filter.cpp.o
+[136/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/WarpXImplicitOps.cpp.o
+[137/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/WarpXSolverVec.cpp.o
+[138/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/GetTemperature.cpp.o
+[139/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/InjectorMomentum.cpp.o
+[140/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/ExternalField.cpp.o
+[141/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/WarpXInit.cpp.o
+[142/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/GetVelocity.cpp.o
+[143/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/InjectorDensity.cpp.o
+[144/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/WarpXAMReXInit.cpp.o
+[145/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/FiniteDifferenceSolver/HybridPICModel/HybridPICModel.cpp.o
+[146/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Parallelization/GuardCellManager.cpp.o
+[147/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Laser/LaserProfilesImpl/LaserProfileFromFile.cpp.o
+[148/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Laser/LaserProfilesImpl/LaserProfileGaussian.cpp.o
+[149/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Laser/LaserProfilesImpl/LaserProfileFieldFunction.cpp.o
+[150/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/TemperatureProperties.cpp.o
+[151/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/VelocityProperties.cpp.o
+[152/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/PlasmaInjector.cpp.o
+[153/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Fluids/QdsmcParticleContainer.cpp.o
+[154/379] Building CXX object CMakeFiles/lib_3d.dir/Source/NonlinearSolvers/WarpX_PETSc.cpp.o
+[155/379] Building CXX object CMakeFiles/lib_3d.dir/Source/FieldSolver/ImplicitSolvers/ImplicitSolver.cpp.o
+[156/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ParticleBoundaries.cpp.o
+[157/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/DivCleaner/ProjectionDivCleaner.cpp.o
+[158/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/SpeciesPhysicalProperties.cpp.o
+[159/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Initialization/WarpXInitData.cpp.o
+[160/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ExternalParticleFields.cpp.o
+[161/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Parallelization/WarpXSumGuardCells.cpp.o
+[162/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Fluids/WarpXFluidContainer.cpp.o
+[163/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Parallelization/WarpXRegrid.cpp.o
+[164/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/CollisionBase.cpp.o
+[165/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/ScatteringProcess.cpp.o
+[166/379] Building CXX object CMakeFiles/lib_3d.dir/Source/NonlinearSolvers/MatrixPCAlgMG.cpp.o
+[167/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Parallelization/WarpXComm.cpp.o
+[168/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/LaserParticleContainer.cpp.o
+[169/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BinaryCollision/BinaryCollisionUtils.cpp.o
+[170/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BinaryCollision/DSMC/DSMCFunc.cpp.o
+[171/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ParticleBoundaryBuffer.cpp.o
+[172/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BinaryCollision/ParticleCreationFunc.cpp.o
+[173/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BinaryCollision/Bremsstrahlung/BremsstrahlungFunc.cpp.o
+[174/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BinaryCollision/DSMC/SplitAndScatterFunc.cpp.o
+[175/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/PhotonParticleContainer.cpp.o
+[176/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BinaryCollision/Bremsstrahlung/PhotonCreationFunc.cpp.o
+[177/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/RigidInjectedParticleContainer.cpp.o
+[178/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BinaryCollision/VirtualPhotonCreation.cpp.o
+[179/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/PulsedDecay/PulsedDecay.cpp.o
+[180/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BackgroundMCC/BackgroundMCCCollision.cpp.o
+[181/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ElementaryProcess/QEDInternals/BreitWheelerEngineWrapper.cpp.o
+[182/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ElementaryProcess/QEDInternals/QuantumSyncEngineWrapper.cpp.o
+[183/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/BackgroundStopping/BackgroundStopping.cpp.o
+[184/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ElementaryProcess/Ionization.cpp.o
+[185/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Deposition/VarianceAccumulationBuffer.cpp.o
+[186/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/InverseBremsstrahlung/InverseBremsstrahlung.cpp.o
+[187/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ElementaryProcess/QEDPhotonEmission.cpp.o
+[188/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ElementaryProcess/QEDPairGeneration.cpp.o
+[189/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ParticleCreation/AddPlasmaUtilities.cpp.o
+[190/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/CollisionHandler.cpp.o
+[191/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/MultiParticleContainer.cpp.o
+[192/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Python/callbacks.cpp.o
+[193/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Gather/GetExternalFields.cpp.o
+[194/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Python/GIL.cpp.o
+[195/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Collision/HybridResistiveDrag/HybridResistiveDrag.cpp.o
+[196/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Resampling/Resampling.cpp.o
+[197/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ParticleCreation/SmartUtils.cpp.o
+[198/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Resampling/VelocityCoincidenceThinning.cpp.o
+[199/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ParticleThermalizer/ParticleThermalizer.cpp.o
+[200/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Resampling/LevelingThinning.cpp.o
+[201/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/Logo/GetLogo.cpp.o
+[202/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Sorting/SortingUtils.cpp.o
+[203/379] Building CXX object CMakeFiles/buildInfoapp_3d.dir/app_3d/AMReX_buildInfo.cpp.o
+[204/379] Linking CXX static library lib/libbuildInfoapp_3d.a
+[205/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/Interpolate.cpp.o
+[206/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/Parser/BTDIntervalsParser.cpp.o
+[207/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Resampling/ResamplingTrigger.cpp.o
+[208/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Sorting/Partition.cpp.o
+[209/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/SpeciesUtils.cpp.o
+[210/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Version.cpp.o
+[211/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_error_fi.cpp.o
+[212/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/ParticleUtils.cpp.o
+[213/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_String.cpp.o
+[214/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/Parser/ParserUtils.cpp.o
+[215/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_PODVector.cpp.o
+[216/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_parmparse_fi.cpp.o
+[217/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_FileSystem.cpp.o
+[218/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Utility.cpp.o
+[219/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/PhysicalParticleContainer.cpp.o
+[220/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX.cpp.o
+[221/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Random.cpp.o
+[222/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/ParticleCreation/AddParticles.cpp.o
+[223/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/WarpXUtil.cpp.o
+[224/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_ParallelContext.cpp.o
+[225/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/WarpXVersion.cpp.o
+[226/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_ParallelDescriptor.cpp.o
+[227/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_OpenMP.cpp.o
+[228/379] Building CXX object CMakeFiles/app_3d.dir/Source/main.cpp.o
+[229/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BArena.cpp.o
+[230/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BackgroundThread.cpp.o
+[231/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_CrtReport.cpp.o
+[232/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Utils/WarpXMovingWindow.cpp.o
+[233/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_AsyncOut.cpp.o
+[234/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_PArena.cpp.o
+[235/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_ForkJoin.cpp.o
+[236/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_FPC.cpp.o
+[237/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_SArena.cpp.o
+[238/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Arena.cpp.o
+[239/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_CArena.cpp.o
+[240/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_VectorIO.cpp.o
+[241/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_IntConv.cpp.o
+[242/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_NFiles.cpp.o
+[243/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Orientation.cpp.o
+[244/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_parstream.cpp.o
+[245/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_DistributionMapping.cpp.o
+[246/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BLBackTrace.cpp.o
+[247/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Box.cpp.o
+[248/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_IndexType.cpp.o
+[249/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Periodicity.cpp.o
+[250/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_FabConv.cpp.o
+[251/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BoxDomain.cpp.o
+[252/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_RealBox.cpp.o
+[253/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_VisMF.cpp.o
+[254/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/WarpXParticleContainer.cpp.o
+[255/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BaseFab.cpp.o
+[256/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_IArrayBox.cpp.o
+[257/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BCRec.cpp.o
+[258/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BoxList.cpp.o
+[259/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_FArrayBox.cpp.o
+[260/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_MFCopyDescriptor.cpp.o
+[261/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_MFIter.cpp.o
+[262/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_ParmParse.cpp.o
+[263/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_CoordSys.cpp.o
+[264/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_GpuControl.cpp.o
+[265/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BoxArray.cpp.o
+[266/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_iMultiFab.cpp.o
+[267/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Geometry.cpp.o
+[268/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_PhysBCFunct.cpp.o
+[269/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_FilND_C.cpp.o
+[270/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BCUtil.cpp.o
+[271/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_Machine.cpp.o
+[272/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_NonLocalBC.cpp.o
+[273/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_FilFC_C.cpp.o
+[274/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_GpuDevice.cpp.o
+[275/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_GpuUtility.cpp.o
+[276/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_MultiFab.cpp.o
+[277/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_GpuElixir.cpp.o
+[278/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_FilCC_C.cpp.o
+[279/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/amrex_parser.lex.cpp.o
+[280/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/amrex_parser.tab.cpp.o
+[281/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_PlotFileUtil.cpp.o
+[282/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_MemPool.cpp.o
+[283/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_PlotFileDataImpl.cpp.o
+[284/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/AMReX_IParser_Exe.cpp.o
+[285/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_FabArrayBase.cpp.o
+[286/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/AMReX_Parser.cpp.o
+[287/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/amrex_iparser.lex.cpp.o
+[288/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/amrex_iparser.tab.cpp.o
+[289/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/AMReX_Parser_Y.cpp.o
+[290/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/AMReX_Parser_Exe.cpp.o
+[291/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/AMReX_IParser_Y.cpp.o
+[292/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Boundary/AMReX_LO_BCTYPES.cpp.o
+[293/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/Parser/AMReX_IParser.cpp.o
+[294/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_MultiFabUtil.cpp.o
+[295/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_BLProfiler.cpp.o
+[296/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_InterpBase.cpp.o
+[297/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Boundary/AMReX_Mask.cpp.o
+[298/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_Cluster.cpp.o
+[299/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Boundary/AMReX_MultiMask.cpp.o
+[300/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_AmrCore.cpp.o
+[301/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_FillPatchUtil.cpp.o
+[302/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Base/AMReX_TinyProfiler.cpp.o
+[303/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_ErrorList.cpp.o
+[304/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_MFInterpolater.cpp.o
+[305/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBFArrayBox.cpp.o
+[306/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Boundary/AMReX_EdgeFluxRegister.cpp.o
+[307/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_AmrMeshGridding.cpp.o
+[308/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_TagBox.cpp.o
+[309/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_AmrMesh.cpp.o
+[310/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_FluxRegister.cpp.o
+[311/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBFabFactory.cpp.o
+[312/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_InterpFaceRegister.cpp.o
+[313/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBCellFlag.cpp.o
+[314/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBInterpolater.cpp.o
+[315/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBMFInterpolater.cpp.o
+[316/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_MultiCutFab.cpp.o
+[317/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBDataCollection.cpp.o
+[318/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBAmrUtil.cpp.o
+[319/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_utils.cpp.o
+[320/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_FluxRedistribute.cpp.o
+[321/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_distFcnElement.cpp.o
+[322/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_Redistribution.cpp.o
+[323/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_RedistributionApply.cpp.o
+[324/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_StateRedistUtils.cpp.o
+[325/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_StateRedistItracker.cpp.o
+[326/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBFluxRegister.cpp.o
+[327/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_algoim.cpp.o
+[328/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/AmrCore/AMReX_Interpolater.cpp.o
+[329/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2_MultiGFab.cpp.o
+[330/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBMultiFabUtil.cpp.o
+[331/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2_ND_C.cpp.o
+[332/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2_3D_C.cpp.o
+[333/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_chkpt_file.cpp.o
+[334/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_StateRedistribute.cpp.o
+[335/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2_IndexSpace_STL.cpp.o
+[336/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EBToPVD.cpp.o
+[337/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2_Level_chkpt_file.cpp.o
+[338/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_WriteEBSurface.cpp.o
+[339/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2_Level_STL.cpp.o
+[340/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_MarchingCubes.cpp.o
+[341/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2_IndexSpace_chkpt_file.cpp.o
+[342/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB_STL_utils.cpp.o
+[343/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/AMReX_AlgPartition.cpp.o
+[344/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/AMReX_CrossProj.cpp.o
+[345/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2_Level.cpp.o
+[346/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeTensorLaplacian.cpp.o
+[347/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeABecLaplacian.cpp.o
+[348/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeLaplacian_matrix.cpp.o
+[349/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLTerrainPoisson.cpp.o
+[350/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLCurlCurl.cpp.o
+[351/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLEBNodeFDLaplacian.cpp.o
+[352/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeLinOp.cpp.o
+[353/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeLaplacian_eb.cpp.o
+[354/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLAlgMG.cpp.o
+[355/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/EB/AMReX_EB2.cpp.o
+[356/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Particle/AMReX_ParticleMPIUtil.cpp.o
+[357/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeLaplacian_sten.cpp.o
+[358/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLEBABecLap.cpp.o
+[359/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeLaplacian_misc.cpp.o
+[360/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Particle/AMReX_ParticleUtil.cpp.o
+[361/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Particle/AMReX_ParticleBufferMap.cpp.o
+[362/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeLaplacian.cpp.o
+[363/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/OpenBC/AMReX_OpenBC.cpp.o
+[364/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Particle/AMReX_ParticleHeader.cpp.o
+[365/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Particle/AMReX_TracerParticles.cpp.o
+[366/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLMG_float.cpp.o
+[367/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Particle/AMReX_ParticleCommunication.cpp.o
+[368/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/Particle/AMReX_ParticleContainerBase.cpp.o
+[369/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLMG.cpp.o
+[370/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLNodeLaplacian_sync.cpp.o
+[371/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLEBTensorOp.cpp.o
+[372/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLEBTensorOp_bc.cpp.o
+[373/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLEBABecLap_F.cpp.o
+[374/379] Building CXX object _deps/localamrex-build/Src/CMakeFiles/amrex_3d.dir/LinearSolvers/MLMG/AMReX_MLTensorOp.cpp.o
+[375/379] Linking CXX static library lib/libamrex_3d.a
+[376/379] Linking CXX static library lib/libablastr_3d.a
+[377/379] Building CXX object CMakeFiles/lib_3d.dir/Source/Particles/Pusher/ImplicitPushPX.cpp.o
+[378/379] Linking CXX static library lib/libwarpx.3d.NOMPI.OMP.DP.PDP.EB.QED.a
+[379/379] Linking CXX executable bin/warpx.3d.NOMPI.OMP.DP.PDP.EB.QED
