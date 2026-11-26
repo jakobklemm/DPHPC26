@@ -5,6 +5,7 @@ Runs come from llama_gpu_bench.py (build-<run id>.json) or llama_gpu_bench-profi
     cmake_definitions_in_order -> CMake options
     configure_command          -> compiler and build type (build.json only)
     compiler_flags             -> one option per flag group of flags.json, e.g. "-fvectorize" (build.json only)
+    runtime_environment        -> Vulkan GGML_VK_* switches that were set
     cuda_compiler, cuda_flags  -> gpu_compiler and one "cuda:<group>" option per GPU flag (clang-CUDA builds only)
     benchmark.json             llama-bench output -> performance (tokens per second)
 """
@@ -49,6 +50,11 @@ BOOLEAN_OPTIONS = set(CPU_FEATURES) | {
     "GGML_CUDA_NO_PEER_COPY", "GGML_CUDA_F16", "GGML_HIP", "GGML_SYCL", "GGML_VULKAN",
     "GGML_METAL", "GGML_BLAS", "GGML_BACKEND_DL", "LLAMA_CURL",
     "GGML_ACCELERATE", "GGML_CPU_KLEIDIAI",
+    # Vulkan switches: environment variables of the benchmark, not CMake options
+    "GGML_VK_DISABLE_F16", "GGML_VK_DISABLE_COOPMAT", "GGML_VK_DISABLE_FUSION",
+    "GGML_VK_DISABLE_GRAPH_OPTIMIZE", "GGML_VK_DISABLE_MMVQ", "GGML_VK_FORCE_MMVQ",
+    "GGML_VK_DISABLE_MULTI_ADD", "GGML_VK_DISABLE_DESCRIPTOR_REUSE", "GGML_VK_DISABLE_ASYNC",
+    "GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM", "GGML_VK_SERIALIZE_SUBMISSIONS", "GGML_VK_ALLOW_GRAPHICS_QUEUE",
 }
 # Compiler flags of the harness: the flag groups of flags.json "compiler", {option: check(flag)}.
 # The option is the flag group, its value the flag passed, e.g. "-fvectorize": "-fno-vectorize".
@@ -133,6 +139,10 @@ def build_config(build):
             config[name] = value
     for flag in build.get("compiler_flags", []):
         config[compiler_flag_option(flag)] = flag
+    # Vulkan switches: a variable that is set is ON whatever its value, see
+    # llama_gpu_bench-profile.py. Switches that are not set keep their default.
+    for name in build.get("runtime_environment", {}):
+        config[name] = "ON"
     # clang-CUDA builds (--cuda-compiler clang): GPU flags as "cuda:<group>" options,
     # like GROMACS. nvcc builds record neither field and keep the defaults.
     if build.get("cuda_compiler", "nvcc") != "nvcc":

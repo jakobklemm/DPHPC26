@@ -1,0 +1,246 @@
+{
+  "device": {
+    "CUDA": {
+      "GGML_CUDA": [
+        "ON"
+      ],
+      "GGML_CUDA_FORCE_MMQ": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_FORCE_CUBLAS": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_NO_VMM": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_FA": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_FA_ALL_QUANTS": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_GRAPHS": [
+        "ON",
+        "OFF"
+      ]
+    },
+    "VULKAN": {
+      "GGML_VULKAN": [
+        "ON"
+      ],
+      "GGML_VK_DISABLE_F16": [
+        "1",
+        "0"
+      ],
+      "GGML_VK_DISABLE_FUSION": [
+        "1",
+        "0"
+      ],
+      "GGML_VK_DISABLE_GRAPH_OPTIMIZE": [
+        "1",
+        "0"
+      ],
+      "GGML_VK_DISABLE_ASYNC": [
+        "1",
+        "0"
+      ],
+      "GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM": [
+        "1",
+        "0"
+      ],
+      "GGML_VK_SERIALIZE_SUBMISSIONS": [
+        "1",
+        "0"
+      ],
+      "GGML_VK_ALLOW_GRAPHICS_QUEUE": [
+        "1",
+        "0"
+      ]
+    }
+  },
+  "cpu": {
+    "GGML_LLAMAFILE": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_CPU_REPACK": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_NATIVE": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_LTO": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_OPENMP": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_SSE42": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_AVX": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_AVX2": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_FMA": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_F16C": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_BMI2": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_AVX_VNNI": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_AVX512": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_AVX512_VBMI": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_AVX512_VNNI": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_AVX512_BF16": [
+      "ON",
+      "OFF"
+    ],
+    "GGML_CPU_KLEIDIAI": [
+      "ON",
+      "OFF"
+    ]
+  },
+  "compiler": {
+    "-O": [
+      "-O3",
+      "-O1",
+      "-O2",
+      "-Os",
+      "-Oz",
+      "-Ofast"
+    ],
+    "-fvectorize": [
+      "-fvectorize",
+      "-fno-vectorize"
+    ],
+    "-fslp-vectorize": [
+      "-fslp-vectorize",
+      "-fno-slp-vectorize"
+    ],
+    "-funroll-loops": [
+      "-funroll-loops",
+      "-fno-unroll-loops"
+    ],
+    "-finline-functions": [
+      "-finline-functions",
+      "-fno-inline-functions"
+    ],
+    "-fstrict-aliasing": [
+      "-fstrict-aliasing",
+      "-fno-strict-aliasing"
+    ],
+    "-ffast-math": [
+      "-ffast-math",
+      "-fno-fast-math"
+    ],
+    "-funsafe-math-optimizations": [
+      "-funsafe-math-optimizations",
+      "-fno-unsafe-math-optimizations"
+    ],
+    "-ffp-contract": [
+      "-ffp-contract=fast",
+      "-ffp-contract=on"
+    ],
+    "-fmath-errno": [
+      "-fmath-errno",
+      "-fno-math-errno"
+    ],
+    "-march": [
+      "-march=native",
+      "-march=x86-64-v2",
+      "-march=x86-64-v3",
+      "-march=x86-64-v4"
+    ],
+    "-mprefer-vector-width": [
+      "-mprefer-vector-width=256",
+      "-mprefer-vector-width=512"
+    ],
+    "-mcpu": [
+      "-mcpu=native",
+      "-mcpu=generic+dotprod",
+      "-mcpu=generic+dotprod+fp16",
+      "-mcpu=generic+dotprod+fp16+i8mm",
+      "-mcpu=generic+dotprod+fp16+i8mm+sve"
+    ]
+  },
+  "invalid_combinations": [
+    {
+      "GGML_VK_DISABLE_MMVQ": "1",
+      "GGML_VK_FORCE_MMVQ": "1"
+    },
+    {
+      "GGML_CUDA_FORCE_MMQ": "ON",
+      "GGML_CUDA_FORCE_CUBLAS": "ON"
+    },
+    {
+      "GGML_CUDA_FA_ALL_QUANTS": "ON",
+      "GGML_CUDA_FA": "OFF"
+    },
+    {
+      "GGML_AVX2": "ON",
+      "GGML_NATIVE": "OFF",
+      "GGML_FMA": "OFF",
+      "-march": "-march=x86-64"
+    },
+    {
+      "GGML_AVX2": "ON",
+      "GGML_NATIVE": "OFF",
+      "GGML_F16C": "OFF",
+      "-march": "-march=x86-64"
+    },
+    {
+      "GGML_AVX2": "ON",
+      "GGML_NATIVE": "OFF",
+      "GGML_FMA": "OFF",
+      "-march": "-march=x86-64-v2"
+    },
+    {
+      "GGML_AVX2": "ON",
+      "GGML_NATIVE": "OFF",
+      "GGML_F16C": "OFF",
+      "-march": "-march=x86-64-v2"
+    },
+    {
+      "-O": "-O0"
+    },
+    {
+      "-O": "-Ofast"
+    },
+    {
+      "-ffast-math": "-ffast-math"
+    }
+  ]
+}

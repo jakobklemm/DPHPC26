@@ -178,6 +178,12 @@ def main():
                      "(llama/clang-cuda.patch)")
     if any(not name.startswith("GGML_VK_") for name in runtime):
         parser.error("--runtime-arg only accepts GGML_VK_* settings")
+    if runtime:   # a misspelled variable would be silently ignored by llama.cpp
+        backend = source / "ggml" / "src" / "ggml-vulkan" / "ggml-vulkan.cpp"
+        text = backend.read_text() if backend.is_file() else ""
+        unknown = [name for name in runtime if f'getenv("{name}")' not in text]
+        if unknown:
+            parser.error("llama.cpp does not read " + ", ".join(unknown))
     flags_file = args.flags_file.expanduser().resolve()
     if not flags_file.is_file():
         parser.error(f"Flag catalog not found: {flags_file}")
@@ -264,11 +270,15 @@ def main():
         binary = build / "bin" / "llama-bench"
         if not binary.is_file():
             raise RuntimeError(f"Built benchmark not found at {binary}")
-        env = os.environ.copy()
-        env.update(runtime)
+        # llama.cpp tests whether a GGML_VK_* variable exists, not its value, so "0" (off)
+        # must leave it unset. Variables inherited from the shell are dropped as well.
+        active = {name: value for name, value in runtime.items() if value != "0"}
+        env = {name: value for name, value in os.environ.items()
+               if not name.startswith("GGML_VK_")}
+        env.update(active)
         bench = benchmark_args(binary, model, args, args.repetitions)
         record["benchmark_command"] = bench
-        record["runtime_environment"] = runtime
+        record["runtime_environment"] = active   # what was really set
         save()
         benchmark_file = output / "benchmark.json"
         with benchmark_file.open("w") as stdout, (output / "benchmark.log").open("w") as stderr:
