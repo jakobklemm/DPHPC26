@@ -1,0 +1,350 @@
+{
+  "metric": "ns_per_day",
+  "unit": "ns/day",
+  "higher_is_better": true,
+  "aggregate": "mean",
+  "mean": 9.397666666666668,
+  "std": 0.01855622087962187,
+  "n_runs": 3,
+  "warmup_runs": 1,
+  "nsteps": 2000,
+  "threads": 8,
+  "input": {
+    "name": "water_0048",
+    "source": "water_GMX50_bare/0048",
+    "tpr_sha256": "2da18113ce528b848aaa024e8d316fd0b2fd18a96a248cafe3f50353a0d440c4",
+    "atoms": 48000,
+    "nsteps": 2000,
+    "dt_ps": 0.002,
+    "simulated_ps": 4.0,
+    "mdp": "bench.mdp",
+    "mdrun_options": [
+      "-ntmpi",
+      "1",
+      "-ntomp",
+      "8",
+      "-pin",
+      "on",
+      "-nb",
+      "cpu",
+      "-pme",
+      "cpu",
+      "-bonded",
+      "cpu",
+      "-update",
+      "cpu",
+      "-nsteps",
+      "2000",
+      "-resethway",
+      "-notunepme",
+      "-noconfout",
+      "-g",
+      "md.log"
+    ]
+  },
+  "runs": [
+    {
+      "kind": "measured",
+      "index": 0,
+      "value": 9.417,
+      "core_s": 146.939,
+      "wall_s": 18.367,
+      "phases": {
+        "Domain decomp.": {
+          "wall_s": 0.05,
+          "gcycles": 0.01,
+          "percent": 0.3,
+          "calls": 26,
+          "group": "main"
+        },
+        "Neighbor search": {
+          "wall_s": 0.218,
+          "gcycles": 0.042,
+          "percent": 1.2,
+          "calls": 26,
+          "group": "main"
+        },
+        "Force": {
+          "wall_s": 15.846,
+          "gcycles": 3.042,
+          "percent": 86.3,
+          "calls": 1001,
+          "group": "main"
+        },
+        "PME mesh": {
+          "wall_s": 1.645,
+          "gcycles": 0.316,
+          "percent": 9.0,
+          "calls": 1001,
+          "group": "main"
+        },
+        "NB X/F buffer ops.": {
+          "wall_s": 0.184,
+          "gcycles": 0.035,
+          "percent": 1.0,
+          "calls": 2002,
+          "group": "main"
+        },
+        "Update": {
+          "wall_s": 0.134,
+          "gcycles": 0.026,
+          "percent": 0.7,
+          "calls": 1001,
+          "group": "main"
+        },
+        "Constraints": {
+          "wall_s": 0.262,
+          "gcycles": 0.05,
+          "percent": 1.4,
+          "calls": 1001,
+          "group": "main"
+        },
+        "Kinetic energy": {
+          "wall_s": 0.019,
+          "gcycles": 0.004,
+          "percent": 0.1,
+          "calls": 201,
+          "group": "main"
+        },
+        "Rest": {
+          "wall_s": 0.011,
+          "gcycles": 0.002,
+          "percent": 0.1,
+          "calls": null,
+          "group": "main"
+        },
+        "PME spread": {
+          "wall_s": 0.587,
+          "gcycles": 0.113,
+          "percent": 3.2,
+          "calls": 1001,
+          "group": "pme"
+        },
+        "PME gather": {
+          "wall_s": 0.404,
+          "gcycles": 0.078,
+          "percent": 2.2,
+          "calls": 1001,
+          "group": "pme"
+        },
+        "PME 3D-FFT": {
+          "wall_s": 0.567,
+          "gcycles": 0.109,
+          "percent": 3.1,
+          "calls": 2002,
+          "group": "pme"
+        },
+        "PME solve Elec": {
+          "wall_s": 0.08,
+          "gcycles": 0.015,
+          "percent": 0.4,
+          "calls": 1001,
+          "group": "pme"
+        }
+      },
+      "process_s": 36.803
+    },
+    {
+      "kind": "measured",
+      "index": 1,
+      "value": 9.396,
+      "core_s": 147.273,
+      "wall_s": 18.409,
+      "phases": {
+        "Domain decomp.": {
+          "wall_s": 0.048,
+          "gcycles": 0.009,
+          "percent": 0.3,
+          "calls": 26,
+          "group": "main"
+        },
+        "Neighbor search": {
+          "wall_s": 0.219,
+          "gcycles": 0.042,
+          "percent": 1.2,
+          "calls": 26,
+          "group": "main"
+        },
+        "Force": {
+          "wall_s": 15.859,
+          "gcycles": 3.045,
+          "percent": 86.1,
+          "calls": 1001,
+          "group": "main"
+        },
+        "PME mesh": {
+          "wall_s": 1.673,
+          "gcycles": 0.321,
+          "percent": 9.1,
+          "calls": 1001,
+          "group": "main"
+        },
+        "NB X/F buffer ops.": {
+          "wall_s": 0.186,
+          "gcycles": 0.036,
+          "percent": 1.0,
+          "calls": 2002,
+          "group": "main"
+        },
+        "Update": {
+          "wall_s": 0.133,
+          "gcycles": 0.026,
+          "percent": 0.7,
+          "calls": 1001,
+          "group": "main"
+        },
+        "Constraints": {
+          "wall_s": 0.26,
+          "gcycles": 0.05,
+          "percent": 1.4,
+          "calls": 1001,
+          "group": "main"
+        },
+        "Kinetic energy": {
+          "wall_s": 0.019,
+          "gcycles": 0.004,
+          "percent": 0.1,
+          "calls": 201,
+          "group": "main"
+        },
+        "Rest": {
+          "wall_s": 0.011,
+          "gcycles": 0.002,
+          "percent": 0.1,
+          "calls": null,
+          "group": "main"
+        },
+        "PME spread": {
+          "wall_s": 0.612,
+          "gcycles": 0.117,
+          "percent": 3.3,
+          "calls": 1001,
+          "group": "pme"
+        },
+        "PME gather": {
+          "wall_s": 0.405,
+          "gcycles": 0.078,
+          "percent": 2.2,
+          "calls": 1001,
+          "group": "pme"
+        },
+        "PME 3D-FFT": {
+          "wall_s": 0.57,
+          "gcycles": 0.109,
+          "percent": 3.1,
+          "calls": 2002,
+          "group": "pme"
+        },
+        "PME solve Elec": {
+          "wall_s": 0.08,
+          "gcycles": 0.015,
+          "percent": 0.4,
+          "calls": 1001,
+          "group": "pme"
+        }
+      },
+      "process_s": 36.971
+    },
+    {
+      "kind": "measured",
+      "index": 2,
+      "value": 9.38,
+      "core_s": 147.528,
+      "wall_s": 18.441,
+      "phases": {
+        "Domain decomp.": {
+          "wall_s": 0.049,
+          "gcycles": 0.009,
+          "percent": 0.3,
+          "calls": 26,
+          "group": "main"
+        },
+        "Neighbor search": {
+          "wall_s": 0.217,
+          "gcycles": 0.042,
+          "percent": 1.2,
+          "calls": 26,
+          "group": "main"
+        },
+        "Force": {
+          "wall_s": 15.892,
+          "gcycles": 3.051,
+          "percent": 86.2,
+          "calls": 1001,
+          "group": "main"
+        },
+        "PME mesh": {
+          "wall_s": 1.671,
+          "gcycles": 0.321,
+          "percent": 9.1,
+          "calls": 1001,
+          "group": "main"
+        },
+        "NB X/F buffer ops.": {
+          "wall_s": 0.186,
+          "gcycles": 0.036,
+          "percent": 1.0,
+          "calls": 2002,
+          "group": "main"
+        },
+        "Update": {
+          "wall_s": 0.134,
+          "gcycles": 0.026,
+          "percent": 0.7,
+          "calls": 1001,
+          "group": "main"
+        },
+        "Constraints": {
+          "wall_s": 0.261,
+          "gcycles": 0.05,
+          "percent": 1.4,
+          "calls": 1001,
+          "group": "main"
+        },
+        "Kinetic energy": {
+          "wall_s": 0.019,
+          "gcycles": 0.004,
+          "percent": 0.1,
+          "calls": 201,
+          "group": "main"
+        },
+        "Rest": {
+          "wall_s": 0.011,
+          "gcycles": 0.002,
+          "percent": 0.1,
+          "calls": null,
+          "group": "main"
+        },
+        "PME spread": {
+          "wall_s": 0.609,
+          "gcycles": 0.117,
+          "percent": 3.3,
+          "calls": 1001,
+          "group": "pme"
+        },
+        "PME gather": {
+          "wall_s": 0.403,
+          "gcycles": 0.077,
+          "percent": 2.2,
+          "calls": 1001,
+          "group": "pme"
+        },
+        "PME 3D-FFT": {
+          "wall_s": 0.568,
+          "gcycles": 0.109,
+          "percent": 3.1,
+          "calls": 2002,
+          "group": "pme"
+        },
+        "PME solve Elec": {
+          "wall_s": 0.083,
+          "gcycles": 0.016,
+          "percent": 0.5,
+          "calls": 1001,
+          "group": "pme"
+        }
+      },
+      "process_s": 36.913
+    }
+  ]
+}
