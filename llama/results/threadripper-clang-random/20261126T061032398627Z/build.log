@@ -1,0 +1,84 @@
++ cmake -S /home/pub/DPHPC26/llama/llama.cpp-clang -B /home/pub/DPHPC26/build-threadripper-clang -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ '-DCMAKE_C_FLAGS_RELEASE=-g -DNDEBUG -O3 -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -fno-inline-functions -fno-strict-aliasing -fno-unsafe-math-optimizations -ffp-contract=off -fno-math-errno -march=x86-64 -mprefer-vector-width=128' '-DCMAKE_CXX_FLAGS_RELEASE=-g -DNDEBUG -O3 -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -fno-inline-functions -fno-strict-aliasing -fno-unsafe-math-optimizations -ffp-contract=off -fno-math-errno -march=x86-64 -mprefer-vector-width=128' -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF -DGGML_LLAMAFILE=OFF -DGGML_CPU_REPACK=OFF -DGGML_NATIVE=ON -DGGML_LTO=OFF -DGGML_OPENMP=OFF -DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BMI2=OFF -DGGML_AVX_VNNI=OFF -DGGML_AVX512=OFF -DGGML_AVX512_VBMI=OFF -DGGML_AVX512_VNNI=OFF -DGGML_AVX512_BF16=OFF -DGGML_CUDA=ON -DGGML_VULKAN=OFF -DCMAKE_CUDA_ARCHITECTURES=75 -DGGML_CUDA_FORCE_MMQ=OFF -DGGML_CUDA_FORCE_CUBLAS=OFF -DGGML_CUDA_NO_VMM=OFF -DGGML_CUDA_FA=OFF -DGGML_CUDA_FA_ALL_QUANTS=OFF -DGGML_CUDA_GRAPHS=OFF -DCMAKE_CUDA_COMPILER=/home/pub/toolchains/LLVM-22.1.8-Linux-X64/bin/clang++ -DCUDAToolkit_ROOT=/home/pub/toolchains/cuda-12.8.1 '-DCMAKE_CUDA_FLAGS=--cuda-path=/home/pub/toolchains/cuda-12.8.1 --cuda-gpu-arch=sm_75 --no-offload-new-driver -Wno-unknown-cuda-version -I/home/pub/toolchains/cuda-12.8.1/include/cccl' '-DCMAKE_CUDA_FLAGS_RELEASE=-DNDEBUG -O3 -finline-functions -funroll-loops'
+-- The C compiler identification is Clang 22.1.8
+-- The CXX compiler identification is Clang 22.1.8
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /home/pub/toolchains/LLVM-22.1.8-Linux-X64/bin/clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /home/pub/toolchains/LLVM-22.1.8-Linux-X64/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- llama.cpp version: 0.6.0-dev
+CMAKE_BUILD_TYPE=Release
+-- Found Git: /usr/bin/git (found version "2.52.0")
+-- The ASM compiler identification is Clang with GNU-like command-line
+-- Found assembler: /home/pub/toolchains/LLVM-22.1.8-Linux-X64/bin/clang
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- ccache found, compilation results will be cached. Disable with GGML_CCACHE=OFF.
+-- CMAKE_SYSTEM_PROCESSOR: x86_64
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: -march=native 
+-- Found CUDAToolkit: /home/pub/toolchains/cuda-12.8.1/targets/x86_64-linux/include (found version "12.8.93")
+-- CUDA Toolkit found
+-- The CUDA compiler identification is Clang 22.1.8
+-- Detecting CUDA compiler ABI info
+-- Detecting CUDA compiler ABI info - done
+-- Check for working CUDA compiler: /home/pub/toolchains/LLVM-22.1.8-Linux-X64/bin/clang++ - skipped
+-- Detecting CUDA compile features
+-- Detecting CUDA compile features - done
+-- Using CMAKE_CUDA_ARCHITECTURES=75 CMAKE_CUDA_ARCHITECTURES_NATIVE=75-real
+-- FlashAttention K-V type combinations: f16-f16;q4_0-q4_0;q8_0-q8_0;bf16-bf16
+-- Could NOT find NCCL (missing: NCCL_LIBRARY NCCL_INCLUDE_DIR) 
+-- Warning: NCCL not found, performance for multiple CUDA GPUs will be suboptimal
+-- CUDA host compiler is Clang 22.1.8
+-- Including CUDA backend
+-- ggml version: 0.26.0
+-- ggml commit:  62df1815b-dirty
+-- Found OpenSSL: /usr/lib64/libcrypto.so (found version "3.5.8")
+-- Performing Test OPENSSL_VERSION_SUPPORTED
+-- Performing Test OPENSSL_VERSION_SUPPORTED - Success
+-- OpenSSL found: 3.5.8
+-- Generating embedded license file for target: llama-app
+-- Configuring done (4.0s)
+-- Generating done (0.2s)
+-- Build files have been written to: /home/pub/DPHPC26/build-threadripper-clang
++ cmake --build /home/pub/DPHPC26/build-threadripper-clang --target llama-bench -j 4
+[  0%] Built target llama-common-base
+[  0%] Built target cpp-httplib
+[  2%] Built target ggml-base
+[  4%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[  4%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[  4%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[  4%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[  5%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[  5%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[  5%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[  5%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[  6%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled.cpp.o
+[  6%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled-kernel.cpp.o
+[  6%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[  6%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[  8%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[  8%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+[  8%] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/quants.c.o
+[  8%] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/repack.cpp.o
+[  9%] Linking CXX shared library ../../bin/libggml-cpu.so
+[ 61%] Built target ggml-cuda
+[ 61%] Built target ggml-cpu
+[ 61%] Linking CXX shared library ../../bin/libggml.so
+[ 62%] Built target ggml
+[ 62%] Linking CXX shared library ../bin/libllama.so
+[ 77%] Built target llama
+[ 79%] Linking CXX shared library ../bin/libllama-common.so
+[ 97%] Built target llama-common
+[ 98%] Linking CXX shared library ../../bin/libllama-bench-impl.so
+[ 98%] Built target llama-bench-impl
+[ 98%] Linking CXX executable ../../bin/llama-bench
+[100%] Built target llama-bench

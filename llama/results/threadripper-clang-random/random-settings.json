@@ -1,0 +1,206 @@
+{
+  "source": "/home/pub/DPHPC26/llama/llama.cpp-clang",
+  "model": "/home/pub/xaas-models/qwen2.5-3b-instruct-q4_k_m.gguf",
+  "model_sha256": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
+  "device": "cuda",
+  "cuda_arch": "75",
+  "workers": 4,
+  "prompt": 512,
+  "generate": 128,
+  "repetitions": 3,
+  "gpu_layers": 99,
+  "profile": false,
+  "build_dir": "/home/pub/DPHPC26/build-threadripper-clang",
+  "cuda_compiler": "clang",
+  "sampling": "harmonic-toggle-count-v1",
+  "seed": 20261021,
+  "options": {
+    "cmake": {
+      "GGML_LLAMAFILE": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CPU_REPACK": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_NATIVE": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_LTO": [
+        "OFF"
+      ],
+      "GGML_OPENMP": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_SSE42": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_AVX": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_AVX2": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_FMA": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_F16C": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_BMI2": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_AVX_VNNI": [
+        "OFF"
+      ],
+      "GGML_AVX512": [
+        "OFF"
+      ],
+      "GGML_AVX512_VBMI": [
+        "OFF"
+      ],
+      "GGML_AVX512_VNNI": [
+        "OFF"
+      ],
+      "GGML_AVX512_BF16": [
+        "OFF"
+      ]
+    },
+    "device": {
+      "GGML_CUDA": [
+        "ON"
+      ],
+      "GGML_CUDA_FORCE_MMQ": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_FORCE_CUBLAS": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_NO_VMM": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_FA": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_FA_ALL_QUANTS": [
+        "ON",
+        "OFF"
+      ],
+      "GGML_CUDA_GRAPHS": [
+        "ON",
+        "OFF"
+      ]
+    },
+    "compiler": {
+      "-O": [
+        "-O1",
+        "-O2",
+        "-Os",
+        "-Oz"
+      ],
+      "-fvectorize": [
+        "-fvectorize"
+      ],
+      "-fslp-vectorize": [
+        "-fslp-vectorize"
+      ],
+      "-funroll-loops": [
+        "-funroll-loops"
+      ],
+      "-finline-functions": [
+        "-finline-functions"
+      ],
+      "-fstrict-aliasing": [
+        "-fstrict-aliasing"
+      ],
+      "-funsafe-math-optimizations": [
+        "-funsafe-math-optimizations"
+      ],
+      "-ffp-contract": [
+        "-ffp-contract=fast",
+        "-ffp-contract=on"
+      ],
+      "-fmath-errno": [
+        "-fmath-errno"
+      ],
+      "-march": [
+        "-march=native",
+        "-march=x86-64-v2",
+        "-march=x86-64-v3"
+      ],
+      "-mprefer-vector-width": [
+        "-mprefer-vector-width=256"
+      ]
+    },
+    "invalid_combinations": [
+      {
+        "GGML_CUDA_FORCE_MMQ": "ON",
+        "GGML_CUDA_FORCE_CUBLAS": "ON"
+      },
+      {
+        "GGML_CUDA_FA_ALL_QUANTS": "ON",
+        "GGML_CUDA_FA": "OFF"
+      },
+      {
+        "GGML_AVX2": "ON",
+        "GGML_NATIVE": "OFF",
+        "GGML_FMA": "OFF",
+        "-march": "-march=x86-64"
+      },
+      {
+        "GGML_AVX2": "ON",
+        "GGML_NATIVE": "OFF",
+        "GGML_F16C": "OFF",
+        "-march": "-march=x86-64"
+      },
+      {
+        "GGML_AVX2": "ON",
+        "GGML_NATIVE": "OFF",
+        "GGML_FMA": "OFF",
+        "-march": "-march=x86-64-v2"
+      },
+      {
+        "GGML_AVX2": "ON",
+        "GGML_NATIVE": "OFF",
+        "GGML_F16C": "OFF",
+        "-march": "-march=x86-64-v2"
+      },
+      {
+        "-O": "-O0"
+      },
+      {
+        "-O": "-Ofast"
+      }
+    ],
+    "cuda_compiler": {
+      "cuda:-O": [
+        "-O3",
+        "-O2",
+        "-O1"
+      ],
+      "cuda:-finline-functions": [
+        "-finline-functions",
+        "-fno-inline-functions"
+      ],
+      "cuda:-funroll-loops": [
+        "-funroll-loops",
+        "-fno-unroll-loops"
+      ]
+    }
+  },
+  "min_flags": 1,
+  "threads": 16
+}
