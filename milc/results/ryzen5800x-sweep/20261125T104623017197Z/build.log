@@ -1,0 +1,223 @@
++ cmake -G Ninja -S /opt/src/milc -B /tmp/milc-build -DSUBDIR=ks_imp_rhmc -DMPP=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_AR=/usr/bin/llvm-ar -DCMAKE_RANLIB=/usr/bin/llvm-ranlib -DWANTQUDA=OFF -DPRECISION=2 -DOMP=ON -DKS_MULTICG=HYBRID -DINLINE_C=OFF -DINLINE_C_GLOBAL=ON -DINLINE_SSE=OFF -DINLINE_SSE_GLOBAL=OFF '-DCMAKE_C_FLAGS_RELEASE=-DNDEBUG -O3 -march=x86-64-v3 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -fno-lto' '-DCMAKE_CXX_FLAGS_RELEASE=-DNDEBUG -O3 -march=x86-64-v3 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -fno-lto' '-DCMAKE_C_COMPILE_OBJECT=<CMAKE_C_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -O3 -march=x86-64-v3 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -fno-lto -o <OBJECT> -c <SOURCE>' '-DCMAKE_CXX_COMPILE_OBJECT=<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -O3 -march=x86-64-v3 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -fno-lto -o <OBJECT> -c <SOURCE>' -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld
+-- The C compiler identification is Clang 18.1.3
+-- The CXX compiler identification is Clang 18.1.3
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/clang - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/clang++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found Git: /usr/bin/git (found version "2.43.0") 
+-- Found OpenMP_C: -fopenmp=libomp (found version "5.1") 
+-- Found OpenMP_CXX: -fopenmp=libomp (found version "5.1") 
+-- Found OpenMP: TRUE (found version "5.1")  
+-- Configuring done (0.8s)
+-- Generating done (0.1s)
+-- Build files have been written to: /tmp/milc-build
++ cmake --build /tmp/milc-build --target su3_rhmd_hisq -j 16
+[1/202] Building C object libraries/CMakeFiles/complex.2.dir/csub.c.o
+[2/202] Building C object libraries/CMakeFiles/complex.2.dir/cadd.c.o
+[3/202] Building C object libraries/CMakeFiles/complex.2.dir/cdiv.c.o
+[4/202] Building C object libraries/CMakeFiles/complex.2.dir/cmul.c.o
+[5/202] Building C object libraries/CMakeFiles/complex.2.dir/conjg.c.o
+[6/202] Building C object libraries/CMakeFiles/complex.2.dir/dcadd.c.o
+[7/202] Building C object libraries/CMakeFiles/complex.2.dir/dcdiv.c.o
+[8/202] Building C object libraries/CMakeFiles/complex.2.dir/cmplx.c.o
+[9/202] Building C object libraries/CMakeFiles/complex.2.dir/ce_itheta.c.o
+[10/202] Building C object libraries/CMakeFiles/complex.2.dir/cexp.c.o
+[11/202] Building C object libraries/CMakeFiles/complex.2.dir/dce_itheta.c.o
+[12/202] Building C object libraries/CMakeFiles/complex.2.dir/dcexp.c.o
+[13/202] Building C object libraries/CMakeFiles/complex.2.dir/dclog.c.o
+[14/202] Building C object libraries/CMakeFiles/complex.2.dir/clog.c.o
+[15/202] Building C object libraries/CMakeFiles/complex.2.dir/csqrt.c.o
+[16/202] Building C object libraries/CMakeFiles/misc_objs.dir/crc32.c.o
+[17/202] Building C object libraries/CMakeFiles/complex.2.dir/dcmplx.c.o
+[18/202] Building C object libraries/CMakeFiles/complex.2.dir/dcmul.c.o
+[19/202] Building C object libraries/CMakeFiles/complex.2.dir/dconjg.c.o
+[20/202] Building C object libraries/CMakeFiles/complex.2.dir/dcsub.c.o
+[21/202] Building C object libraries/CMakeFiles/su3.2.dir/cmp_ahmat.c.o
+[22/202] Building C object libraries/CMakeFiles/su3.2.dir/addvec.c.o
+[23/202] Building C object libraries/CMakeFiles/su3.2.dir/addmat.c.o
+[24/202] Building C object libraries/CMakeFiles/complex.2.dir/dcsqrt.c.o
+[25/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_a_vec.c.o
+[26/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_s_vec.c.o
+[27/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_vec.c.o
+[28/202] Building C object libraries/CMakeFiles/su3.2.dir/clear_mat.c.o
+[29/202] Building C object libraries/CMakeFiles/su3.2.dir/det_su3.c.o
+[30/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_a_mat.c.o
+[31/202] Building C object libraries/CMakeFiles/su3.2.dir/dumpmat.c.o
+[32/202] Building C object libraries/CMakeFiles/su3.2.dir/clearvec.c.o
+[33/202] Building C object libraries/CMakeFiles/su3.2.dir/m_amatvec.c.o
+[34/202] Building C object libraries/CMakeFiles/su3.2.dir/m_amatvec_ns.c.o
+[35/202] Building C object libraries/CMakeFiles/su3.2.dir/m_amatvec_s.c.o
+[36/202] Building C object libraries/CMakeFiles/su3.2.dir/dumpvec.c.o
+[37/202] Building C object libraries/CMakeFiles/su3.2.dir/m_mat_an.c.o
+[38/202] Building C object libraries/CMakeFiles/su3.2.dir/dumptensor4.c.o
+[39/202] Building C object libraries/CMakeFiles/su3.2.dir/m_mat_na.c.o
+[40/202] Building C object libraries/CMakeFiles/su3.2.dir/make_ahmat.c.o
+[41/202] Linking C static library libraries/libcomplex.2.a
+[42/202] Building C object libraries/CMakeFiles/su3.2.dir/m_matvec.c.o
+[43/202] Building C object libraries/CMakeFiles/su3.2.dir/m_matvec_ns.c.o
+[44/202] Building C object libraries/CMakeFiles/su3.2.dir/m_matvec_s.c.o
+[45/202] Building C object libraries/CMakeFiles/su3.2.dir/m_mat_nn.c.o
+[46/202] Building C object libraries/CMakeFiles/su3.2.dir/realtr.c.o
+[47/202] Building C object libraries/CMakeFiles/su3.2.dir/rand_ahmat.c.o
+[48/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_a_vec.c.o
+[49/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_a_mat.c.o
+[50/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_s_mat.c.o
+[51/202] Building C object libraries/CMakeFiles/su3.2.dir/complextr.c.o
+[52/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_a_hwvec_proj.c.o
+[53/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_s_vec.c.o
+[54/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_sum_vec.c.o
+[55/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_vec.c.o
+[56/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_mat.c.o
+[57/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_mat.c.o
+[58/202] Building C object libraries/CMakeFiles/su3.2.dir/su3_rdot.c.o
+[59/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_s_mat.c.o
+[60/202] Building C object libraries/CMakeFiles/su3.2.dir/su3_adjoint.c.o
+[61/202] Building C object libraries/CMakeFiles/su3.2.dir/su3_dot.c.o
+[62/202] Building C object libraries/CMakeFiles/su3.2.dir/su3_proj.c.o
+[63/202] Building C object libraries/CMakeFiles/su3.2.dir/trace_su3.c.o
+[64/202] Building C object libraries/CMakeFiles/su3.2.dir/su3mat_copy.c.o
+[65/202] Building C object libraries/CMakeFiles/su3.2.dir/su3vec_copy.c.o
+[66/202] Building C object libraries/CMakeFiles/su3.2.dir/subvec.c.o
+[67/202] Building C object libraries/CMakeFiles/su3.2.dir/flush_to_zero.c.o
+[68/202] Building C object libraries/CMakeFiles/su3.2.dir/msq_su3vec.c.o
+[69/202] Building C object libraries/CMakeFiles/su3.2.dir/submat.c.o
+[70/202] Building C object libraries/CMakeFiles/su3.2.dir/sub4vecs.c.o
+[71/202] Building C object libraries/CMakeFiles/su3.2.dir/uncmp_ahmat.c.o
+[72/202] Building C object libraries/CMakeFiles/su3.2.dir/l_su2_hit_n.c.o
+[73/202] Building C object libraries/CMakeFiles/su3.2.dir/r_su2_hit_a.c.o
+[74/202] Building C object libraries/CMakeFiles/su3.2.dir/m_su2_mat_vec_n.c.o
+[75/202] Building C object libraries/CMakeFiles/su3.2.dir/m_amv_4dir.c.o
+[76/202] Building C object libraries/CMakeFiles/su3.2.dir/m_amv_4vec.c.o
+[77/202] Building C object libraries/CMakeFiles/su3.2.dir/m_mv_s_4dir.c.o
+[78/202] Building C object libraries/CMakeFiles/su3.2.dir/dumpsu2.c.o
+[79/202] Building C object libraries/CMakeFiles/su3.2.dir/m_su2_mat_vec_a.c.o
+[80/202] Building C object libraries/CMakeFiles/su3.2.dir/z2rand.c.o
+[81/202] Building C object libraries/CMakeFiles/su3.2.dir/byterevn.c.o
+[82/202] Building C object libraries/CMakeFiles/su3.2.dir/prefetch.c.o
+[83/202] Building C object libraries/CMakeFiles/su3.2.dir/gaussrand.c.o
+[84/202] Building C object libraries/CMakeFiles/su3.2.dir/eigen_su3_UdU.c.o
+[85/202] Building C object libraries/CMakeFiles/su3.2.dir/clear_wvec.c.o
+[86/202] Building C object libraries/CMakeFiles/su3.2.dir/sub_wvec.c.o
+[87/202] Building C object libraries/CMakeFiles/su3.2.dir/copy_wvec.c.o
+[88/202] Building C object libraries/CMakeFiles/su3.2.dir/add_wvec.c.o
+[89/202] Building C object libraries/CMakeFiles/su3.2.dir/dump_wvec.c.o
+[90/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_wvec.c.o
+[91/202] Building C object libraries/CMakeFiles/su3.2.dir/wp_shrink.c.o
+[92/202] Building C object libraries/CMakeFiles/su3.2.dir/wp_grow.c.o
+[93/202] Building C object libraries/CMakeFiles/su3.2.dir/su3_proj_w.c.o
+[94/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_hwvec.c.o
+[95/202] Building C object libraries/CMakeFiles/su3.2.dir/msq_wvec.c.o
+[96/202] Building C object libraries/CMakeFiles/su3.2.dir/wvec_dot.c.o
+[97/202] Building C object libraries/CMakeFiles/su3.2.dir/wvec2_dot.c.o
+[98/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_a_wvec.c.o
+[99/202] Building C object libraries/CMakeFiles/su3.2.dir/wp_grow_a.c.o
+[100/202] Building C object libraries/CMakeFiles/su3.2.dir/wvec_rdot.c.o
+[101/202] Building C object libraries/CMakeFiles/su3.2.dir/s_m_atm_wvec.c.o
+[102/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_wvec.c.o
+[103/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_a_wvec.c.o
+[104/202] Building C object libraries/CMakeFiles/su3.2.dir/cs_m_a_wvec2.c.o
+[105/202] Building C object libraries/CMakeFiles/su3.2.dir/m_mat_wvec.c.o
+[106/202] Building C object libraries/CMakeFiles/su3.2.dir/m_amat_wvec.c.o
+[107/202] Building C object libraries/CMakeFiles/su3.2.dir/mb_gamma.c.o
+[108/202] Building C object libraries/CMakeFiles/su3.2.dir/m_mat_hwvec.c.o
+[109/202] Building C object libraries/CMakeFiles/su3.2.dir/m_amat_hwvec.c.o
+[110/202] Building C object libraries/CMakeFiles/su3.2.dir/wp_shrink4.c.o
+[111/202] Building C object libraries/CMakeFiles/su3.2.dir/mb_gamma_r.c.o
+[112/202] Building C object libraries/CMakeFiles/su3.2.dir/mswvb_gamma_r.c.o
+[113/202] Building C object libraries/CMakeFiles/su3.2.dir/grow4wvecs.c.o
+[114/202] Building C object libraries/CMakeFiles/su3.2.dir/mswvb_gamma_l.c.o
+[115/202] Building C object libraries/CMakeFiles/su3.2.dir/mb_gamma_l.c.o
+[116/202] Linking C static library libraries/libsu3.2.a
+[117/202] Copying symanzik_1loop_hisq_action.h to gauge_action.h
+[118/202] Copying hisq/hisq_u3_action.h to quark_action.h
+[119/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/gauge_measure_ks.c.o
+[120/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/ploop3_ks.c.o
+[121/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/reunitarize_ks.c.o
+[122/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/gauge_force_imp_ks.c.o
+[123/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/eo_fermion_force_rhmc.c.o
+[124/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/gauge_action_imp_ks.c.o
+[125/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/gauge_info.c.o
+[126/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/update_h_rhmc.c.o
+[127/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/control.c.o
+[128/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/load_rhmc_params.c.o
+[129/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/update_rhmc.c.o
+[130/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/d_action_rhmc.c.o
+[131/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/grsource_rhmc.c.o
+[132/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/ks_ratinv.c.o
+[133/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/setup.c.o
+[134/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/show_scidac_opts.c.o
+[135/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/blind_data.c.o
+[136/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/check_unitarity.c.o
+[137/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/d_plaq4.c.o
+[138/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/show_generic_opts.c.o
+[139/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/project_su3_hit.c.o
+[140/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/reunitarize2.c.o
+[141/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/mmap_cache.c.o
+[142/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/gauge_utilities.c.o
+[143/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/field_translation.c.o
+[144/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/layout_hyper_prime.c.o
+[145/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/io_detect.c.o
+[146/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/gaugefix2.c.o
+[147/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/nersc_cksum.c.o
+[148/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/make_lattice.c.o
+[149/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/io_ansi.c.o
+[150/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/show_generic_ks_md_opts.c.o
+[151/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/remap_stdio_from_args.c.o
+[152/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/momentum_twist.c.o
+[153/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/charge_utilities.c.o
+[154/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/path_product.c.o
+[155/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/ranstuff.c.o
+[156/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/ploop3.c.o
+[157/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fermion_links_from_site.c.o
+[158/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/naik_eps_utilities.c.o
+[159/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/io_helpers.c.o
+[160/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/ape_smear.c.o
+[161/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/gauss_smear_ks_QUDA.c.o
+[162/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/gauss_smear_ks.c.o
+[163/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/show_generic_ks_opts.c.o
+[164/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/grsource_imp.c.o
+[165/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/f_meas.c.o
+[166/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/show_hisq_links_opts.c.o
+[167/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/com_vanilla.c.o
+[168/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fermion_links_hisq_milc.c.o
+[169/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/io_lat_utils.c.o
+[170/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fermion_links.c.o
+[171/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/rephase.c.o
+[172/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/update_u.c.o
+[173/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/ks_action_paths_hisq.c.o
+[174/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/d_congrad5_two_src.c.o
+[175/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fermion_links_fn_load_milc.c.o
+[176/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/io_lat4.c.o
+[177/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/stout_smear.c.o
+[178/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/ks_invert.c.o
+[179/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fermion_links_hisq_load.c.o
+[180/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/gauss_smear_ks_cpu.c.o
+[181/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/report_invert_status.c.o
+[182/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/d_congrad5_fn.c.o
+[183/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fermion_force_hisq_multi.c.o
+[184/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/d_congrad5_fn_milc.c.o
+[185/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/d_congrad_opt.c.o
+[186/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/general_staple.c.o
+[187/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/ks_multicg.c.o
+[188/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fermion_links_fn_twist_milc.c.o
+[189/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fn_links_milc.c.o
+[190/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/show_hisq_force_opts.c.o
+[191/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/field_utilities.c.o
+[192/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/gauge_action_imp.c.o
+[193/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/ranmom.c.o
+[194/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/mat_invert.c.o
+[195/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/ks_multicg_offset.c.o
+[196/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/gauge_force_imp.c.o
+[197/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic/gauge_stuff.c.o
+[198/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/dslash_fn_dblstore.c.o
+[199/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/path_transport.c.o
+[200/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/fermion_force_hisq_multi_cpu.c.o
+[201/202] Building C object ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/__/generic_ks/su3_mat_op.c.o
+[202/202] Linking C executable ks_imp_rhmc/su3_rhmd_hisq

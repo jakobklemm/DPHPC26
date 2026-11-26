@@ -1,0 +1,4025 @@
+SU3 with improved KS action
+Microcanonical simulation with refreshing
+Rational function hybrid Monte Carlo algorithm
+MIMD version 551d
+Machine = Scalar processor, with 1 nodes
+Host(0) = 1b5eebfa908b
+Username = (null)
+start: Wed Nov 25 11:44:05 2026
+
+Options selected...
+Generic double precision
+C_GLOBAL_INLINE
+DBLSTORE_FN
+D_FN_GATHER13
+FEWSUMS
+KS_MULTICG=HYBRID
+KS_MULTIFF=FNMAT
+VECLENGTH=4
+INT_ALG=INT_3G1F
+HISQ_REUNIT_ALLOW_SVD
+HISQ_REUNIT_SVD_REL_ERROR = 1e-08
+HISQ_REUNIT_SVD_ABS_ERROR = 1e-08
+HISQ_FORCE_FILTER = 5e-05
+HISQ_FF_MULTI_WRAPPER is ON
+type 0 for no prompts, 1 for prompts, or 2 for proofreading
+nx 8
+ny 8
+nz 8
+nt 8
+iseed 86658
+n_pseudo 4
+load_rhmc_params /opt/src/milc/ks_imp_rhmc/test/rationals.sample.su3_rhmc_hisq
+beta 7.4
+n_dyn_masses 2
+dyn_mass 0.0018 0.018 
+dyn_flavors 2 1 
+u0 0.89
+n_pseudo 4
+Loading rational function parameters for phi field 0
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.001800^2)^(2/4) (x+4*0.018000^2)^(1/4) (x+4*0.200000^2)^(-3/4) (x+4*1.000000^2)^(0/4)
+# Converged at 2193 iterations, error = 7.142803e-07
+# Rational function for MD
+y_MD -2 -1 3 0 
+z_MD 4 4 4 4 
+m_MD 0.0018 0.018 0.2 1 
+order_MD 9
+Loading order 9 rational function approximation for MD:
+f(x) = (x+4*0.001800^2)^(-2/4) (x+4*0.018000^2)^(-1/4)
+       (x+4*0.200000^2)^(3/4) (x+4*1.000000^2)^(0/4)
+res_MD 1
+res_MD 0.00204485
+res_MD 0.00290467
+res_MD 0.00501695
+res_MD 0.00952897
+res_MD 0.0212092
+res_MD 0.0199943
+res_MD 0.0226512
+res_MD 0.0237042
+res_MD 0.0126097
+pole_MD 99.9
+pole_MD 1.43113e-05
+pole_MD 2.87352e-05
+pole_MD 8.40811e-05
+pole_MD 0.000281161
+pole_MD 0.000954202
+pole_MD 0.0029716
+pole_MD 0.0107592
+pole_MD 0.036199
+pole_MD 0.0989838
+# CHECK: f(1.000000e-15) = 3.703701e+02 = 6.085806e+01?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (11,11)
+# Approximating the function (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8) (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+# Converged at 1854 iterations, error = 2.609214e-08
+# Rational function for GR
+y_GR 2 1 -3 0 
+z_GR 8 8 8 8 
+m_GR 0.0018 0.018 0.2 1 
+order_GR 11
+Loading order 11 rational function approximation for GR:
+f(x) = (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8)
+       (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+res_GR 1
+res_GR -6.1182e-08
+res_GR -3.19729e-07
+res_GR -1.28897e-06
+res_GR -4.91642e-06
+res_GR -1.78857e-05
+res_GR -8.96491e-05
+res_GR -0.000423832
+res_GR -0.00175458
+res_GR -0.00654152
+res_GR -0.0192293
+res_GR -0.0317711
+pole_GR 99.9
+pole_GR 1.60773e-05
+pole_GR 3.10382e-05
+pole_GR 7.66803e-05
+pole_GR 0.000210211
+pole_GR 0.000600022
+pole_GR 0.00186906
+pole_GR 0.00519622
+pole_GR 0.0143729
+pole_GR 0.0377859
+pole_GR 0.0865726
+pole_GR 0.146356
+# CHECK: f(1.000000e-15) = 5.196153e-02 = 1.281861e-01?
+# Rational function for FA
+y_FA -2 -1 3 0 
+z_FA 8 8 8 8 
+m_FA 0.0018 0.018 0.2 1 
+order_FA 11
+Loading order 11 rational function approximation for FA:
+f(x) = (x+4*0.001800^2)^(-2/8) (x+4*0.018000^2)^(-1/8)
+       (x+4*0.200000^2)^(3/8) (x+4*1.000000^2)^(0/8)
+res_FA 1
+res_FA 3.67927e-05
+res_FA 8.34287e-05
+res_FA 0.000179646
+res_FA 0.000397614
+res_FA 0.000916432
+res_FA 0.00260832
+res_FA 0.00468862
+res_FA 0.00831646
+res_FA 0.0138142
+res_FA 0.0178882
+res_FA 0.0109047
+pole_FA 99.9
+pole_FA 1.45263e-05
+pole_FA 2.55335e-05
+pole_FA 6.03301e-05
+pole_FA 0.000162506
+pole_FA 0.000460594
+pole_FA 0.00131886
+pole_FA 0.00353418
+pole_FA 0.00984542
+pole_FA 0.0265604
+pole_FA 0.0650361
+pole_FA 0.126233
+Loading rational function parameters for phi field 1
+# CHECK: f(1.000000e-15) = 1.924501e+01 = 7.801158e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 2
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 3
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+naik_term_epsilon 0
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Maximum rational func order is 11
+Naik term correction structure of multi_x:
+n_naiks 1
+n_pseudo_naik[0]=4
+n_orders_naik[0]=30
+eps_naik[0]=0.000000
+n_order_naik_total 30
+LAYOUT = Hypercubes, options = with fixed input-parameter node_geometry
+ON EACH NODE (RANK) 8 x 8 x 8 x 8
+Mallocing 6.4 MBytes per node for lattice
+Aggregate time to setup 6.154060e-03
+
+
+warms 0
+trajecs 1
+traj_between_meas 1
+microcanonical_time_step 0.02
+steps_per_trajectory 10
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+prec_ff 2
+number_of_pbp_masses 1
+max_cg_prop 500
+max_cg_prop_restarts 5
+npbp_reps 1
+prec_pbp 2
+mass 0.018
+naik_term_epsilon 0
+error_for_propagator 0.0001
+rel_error_for_propagator 0
+reload_serial /opt/data/lattice.l8888
+forget 
+r_serial_i: Open for sniffing succeeded
+Restored binary gauge configuration serially from file /opt/data/lattice.l8888
+Time stamp Wed Nov 25 10:44:20 2026
+Checksums b14557e1 2cde1c84 OK
+Time to reload gauge configuration = 2.372026e-03
+CHECK PLAQ: 2.2865314552790932e+00 2.2861678489746695e+00
+CHECK NERSC LINKTR: 9.1278576835793501e-01 CKSUM: b00aebe4
+Reunitarized for double precision. Max deviation 5.70e-08 changed to 4.44e-16
+Time to check unitarity = 1.311779e-03
+"Fat 7 (level 1)"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -6.250000e-02
+                    2      1.562500e-02
+                    3      -2.604167e-03
+Unitarization method = UNITARIZE_ANALYTIC
+Unitarization group = U(3)
+"Fat7 + 2xLepage"
+path coefficients: npath  path_coeff
+                    0      1.000000e+00
+                    1      -4.166667e-02
+                    2      -6.250000e-02
+                    3      1.562500e-02
+                    4      -2.604167e-03
+                    5      -1.250000e-01
+"1-link + Naik"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -4.166667e-02
+MAKING PATH TABLES
+Combined fattening and long-link calculation time: 0.004533
+FLTIME: time = 1.248503e-02 (HISQ MILC D) mflops = 4.201043e+04
+Symanzik 1x1 + 1x2 + 1x1x1 action with HISQ quark loops
+gauge_action: total_dyn_flavors = 3
+loop coefficients: nloop rep loop_coeff  multiplicity
+                    0 0      1.000000e+00     6
+                    1 0      -4.181006e-02     12
+                    2 0      5.149203e-04     16
+WARMUPS COMPLETED
+Omelyan integration, 3 gauge for one 1 fermion step, steps= 10 eps= 2.000000e-02 alpha= 1.000000e-01 beta= 1.000000e-01
+GRSOURCE: sum = 6.0700710496e+03
+CONGRAD5: time = 2.964973e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 6.056332e+04
+ OK converged final_rsq= 8.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+GRSOURCETIME: time = 5.197525e-05
+GRSOURCE: sum = 6.0352003870e+03
+CONGRAD5: time = 2.079010e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.128070e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.480911e-05
+GRSOURCE: sum = 6.1700772691e+03
+CONGRAD5: time = 2.053976e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.214947e+04
+ OK converged final_rsq= 8.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.385544e-05
+GRSOURCE: sum = 6.0994675541e+03
+CONGRAD5: time = 2.038956e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.268097e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.504753e-05
+PLAQUETTE ACTION: -1.386003e+05
+CONGRAD5: time = 2.561092e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 7.011408e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 2.050877e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.225851e+04
+ OK converged final_rsq= 7.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.120018e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 6.990190e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.092123e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.083392e+04
+ OK converged final_rsq= 7.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+ACTION: g,h,f = 3.78212797883492e+04  -1.42789381311028e+02  2.43748162596294e+04  6.20533066666676e+04
+DG = 3.782128e+04, DH = -1.427894e+02, DF = 2.437482e+04, D = 6.205331e+04
+ACTIONTIME: time = 1.275706e-02
+LINK_UPDATE: time = 1.436949e-03  mflops = 1.600832e+04
+GFTIME:   time = 1.214218e-02 (Symanzik1) mflops = 5.161382e+04
+LINK_UPDATE: time = 2.617836e-04  mflops = 8.787081e+04
+Combined fattening and long-link calculation time: 0.004520
+FLTIME: time = 1.039696e-02 (HISQ MILC D) mflops = 5.044219e+04
+CONGRAD5: time = 2.573013e-03 (multicg_offset D) masses = 9 iters = 32 mflops = 6.826101e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 1.988888e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.284248e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.005100e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.225350e+04
+ OK converged final_rsq= 7.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.032042e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.129555e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.882448e-01 (HISQ MILC D) terms = 30 flops/site = 2152508 mflops = 4.683621e+04
+LINK_UPDATE: time = 1.771212e-03  mflops = 1.298723e+04
+GFTIME:   time = 1.412892e-02 (Symanzik1) mflops = 4.435613e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.184392e-02 (Symanzik1) mflops = 5.291360e+04
+LINK_UPDATE: time = 2.679825e-04  mflops = 8.583821e+04
+GFTIME:   time = 1.186013e-02 (Symanzik1) mflops = 5.284126e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+GFTIME:   time = 1.185513e-02 (Symanzik1) mflops = 5.286358e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+Combined fattening and long-link calculation time: 0.004244
+FLTIME: time = 1.062894e-02 (HISQ MILC D) mflops = 4.933613e+04
+CONGRAD5: time = 2.724171e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.648817e+04
+ OK converged final_rsq= 6.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 1.970053e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.353891e+04
+ OK converged final_rsq= 9.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.976967e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.328171e+04
+ OK converged final_rsq= 9.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.981974e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.309659e+04
+ OK converged final_rsq= 9.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.737831e-01 (HISQ MILC D) terms = 30 flops/site = 2152528 mflops = 5.073428e+04
+LINK_UPDATE: time = 1.900911e-03  mflops = 1.210111e+04
+GFTIME:   time = 1.469207e-02 (Symanzik1) mflops = 4.265597e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.191401e-02 (Symanzik1) mflops = 5.260228e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004849
+FLTIME: time = 1.128411e-02 (HISQ MILC D) mflops = 4.647054e+04
+CONGRAD5: time = 2.741098e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.607757e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.045155e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.346207e+04
+ OK converged final_rsq= 2.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.053976e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.314656e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.051115e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.324859e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.735692e-01 (HISQ MILC D) terms = 30 flops/site = 2152535 mflops = 5.079695e+04
+LINK_UPDATE: time = 1.894951e-03  mflops = 1.213917e+04
+GFTIME:   time = 1.452208e-02 (Symanzik1) mflops = 4.315529e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.192808e-02 (Symanzik1) mflops = 5.254025e+04
+LINK_UPDATE: time = 2.591610e-04  mflops = 8.876002e+04
+GFTIME:   time = 1.188302e-02 (Symanzik1) mflops = 5.273949e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+GFTIME:   time = 1.177907e-02 (Symanzik1) mflops = 5.320491e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004741
+FLTIME: time = 1.032019e-02 (HISQ MILC D) mflops = 5.081274e+04
+CONGRAD5: time = 2.692938e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.725930e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.017975e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.445151e+04
+ OK converged final_rsq= 3.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.035141e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.382352e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.032995e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.390144e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.739879e-01 (HISQ MILC D) terms = 30 flops/site = 2152556 mflops = 5.067521e+04
+LINK_UPDATE: time = 1.806021e-03  mflops = 1.273692e+04
+GFTIME:   time = 1.433706e-02 (Symanzik1) mflops = 4.371219e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.198697e-02 (Symanzik1) mflops = 5.228213e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004950
+FLTIME: time = 1.058388e-02 (HISQ MILC D) mflops = 4.955410e+04
+CONGRAD5: time = 2.814054e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.631491e+04
+ OK converged final_rsq= 4.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.044916e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.347063e+04
+ OK converged final_rsq= 4.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.043962e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.350491e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.046108e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.342783e+04
+ OK converged final_rsq= 4.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.746590e-01 (HISQ MILC D) terms = 30 flops/site = 2152533 mflops = 5.047994e+04
+LINK_UPDATE: time = 1.902819e-03  mflops = 1.208898e+04
+GFTIME:   time = 1.462889e-02 (Symanzik1) mflops = 4.284020e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+GFTIME:   time = 1.202488e-02 (Symanzik1) mflops = 5.211731e+04
+LINK_UPDATE: time = 2.648830e-04  mflops = 8.684262e+04
+GFTIME:   time = 1.199794e-02 (Symanzik1) mflops = 5.223434e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.196098e-02 (Symanzik1) mflops = 5.239572e+04
+LINK_UPDATE: time = 2.648830e-04  mflops = 8.684262e+04
+Combined fattening and long-link calculation time: 0.004501
+FLTIME: time = 1.090908e-02 (HISQ MILC D) mflops = 4.807129e+04
+CONGRAD5: time = 2.813101e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.633739e+04
+ OK converged final_rsq= 6.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.047777e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.336798e+04
+ OK converged final_rsq= 5.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.097845e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.161696e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.058983e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.296869e+04
+ OK converged final_rsq= 5.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.741879e-01 (HISQ MILC D) terms = 30 flops/site = 2152524 mflops = 5.061626e+04
+LINK_UPDATE: time = 1.914978e-03  mflops = 1.201222e+04
+GFTIME:   time = 1.418805e-02 (Symanzik1) mflops = 4.417128e+04
+LINK_UPDATE: time = 2.698898e-04  mflops = 8.523158e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+GFTIME:   time = 1.202703e-02 (Symanzik1) mflops = 5.210801e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.005110
+FLTIME: time = 1.169300e-02 (HISQ MILC D) mflops = 4.485716e+04
+CONGRAD5: time = 2.794027e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.679024e+04
+ OK converged final_rsq= 8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.043009e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.353922e+04
+ OK converged final_rsq= 6.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.059937e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.293491e+04
+ OK converged final_rsq= 7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.075195e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.239862e+04
+ OK converged final_rsq= 6.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.747348e-01 (HISQ MILC D) terms = 30 flops/site = 2152542 mflops = 5.045826e+04
+LINK_UPDATE: time = 1.840115e-03  mflops = 1.250093e+04
+GFTIME:   time = 1.463604e-02 (Symanzik1) mflops = 4.281926e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+GFTIME:   time = 1.197410e-02 (Symanzik1) mflops = 5.233835e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+GFTIME:   time = 1.193595e-02 (Symanzik1) mflops = 5.250562e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.203203e-02 (Symanzik1) mflops = 5.208633e+04
+LINK_UPDATE: time = 2.617836e-04  mflops = 8.787081e+04
+Combined fattening and long-link calculation time: 0.004950
+FLTIME: time = 1.088500e-02 (HISQ MILC D) mflops = 4.817720e+04
+CONGRAD5: time = 2.890110e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.646889e+04
+ OK converged final_rsq= 3.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.048016e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.335944e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.051115e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.324859e+04
+ OK converged final_rsq= 9.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.057076e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.303635e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.736221e-01 (HISQ MILC D) terms = 30 flops/site = 2152549 mflops = 5.078179e+04
+LINK_UPDATE: time = 1.881123e-03  mflops = 1.222841e+04
+GFTIME:   time = 1.461911e-02 (Symanzik1) mflops = 4.286884e+04
+LINK_UPDATE: time = 2.667904e-04  mflops = 8.622176e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.202512e-02 (Symanzik1) mflops = 5.211628e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004471
+FLTIME: time = 1.081896e-02 (HISQ MILC D) mflops = 4.846859e+04
+CONGRAD5: time = 2.862215e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.711669e+04
+ OK converged final_rsq= 3.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.125025e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.322599e+04
+ OK converged final_rsq= 3.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.116919e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.350639e+04
+ OK converged final_rsq= 4.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.055883e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.307870e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.764920e-01 (HISQ MILC D) terms = 30 flops/site = 2152533 mflops = 4.995568e+04
+LINK_UPDATE: time = 1.954079e-03  mflops = 1.177186e+04
+GFTIME:   time = 1.389194e-02 (Symanzik1) mflops = 4.511282e+04
+LINK_UPDATE: time = 2.717972e-04  mflops = 8.463346e+04
+GFTIME:   time = 1.201010e-02 (Symanzik1) mflops = 5.218146e+04
+LINK_UPDATE: time = 2.667904e-04  mflops = 8.622176e+04
+GFTIME:   time = 1.200700e-02 (Symanzik1) mflops = 5.219493e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+GFTIME:   time = 1.196098e-02 (Symanzik1) mflops = 5.239572e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004449
+FLTIME: time = 1.004601e-02 (HISQ MILC D) mflops = 5.220554e+04
+CONGRAD5: time = 2.851963e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.735796e+04
+ OK converged final_rsq= 5.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.113104e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.363909e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.125978e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.319314e+04
+ OK converged final_rsq= 5.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.106905e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.385575e+04
+ OK converged final_rsq= 5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+FFTIME:  time = 1.748531e-01 (HISQ MILC D) terms = 30 flops/site = 2152517 mflops = 5.042354e+04
+LINK_UPDATE: time = 1.834154e-03  mflops = 1.254155e+04
+GFTIME:   time = 1.462603e-02 (Symanzik1) mflops = 4.284858e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+PLAQUETTE ACTION: -1.208342e+05
+Combined fattening and long-link calculation time: 0.004962
+FLTIME: time = 1.052809e-02 (HISQ MILC D) mflops = 4.980625e+04
+CONGRAD5: time = 3.035069e-03 (multicg_offset D) masses = 11 iters = 35 mflops = 6.471129e+04
+ OK converged final_rsq= 6.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.226830e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.147856e+04
+ OK converged final_rsq= 5.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.210855e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.199501e+04
+ OK converged final_rsq= 6.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.218008e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.176284e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+ACTION: g,h,f = 5.33720953627225e+04  -1.57111296714889e+04  2.43923995649163e+04  6.20533652561499e+04
+DG = 1.555082e+04, DH = -1.556834e+04, DF = 1.758331e+01, D = 5.858948e-02
+ACTIONTIME: time = 2.324104e-02
+CHECK: delta S = 5.858948e-02
+Aggregate time to do one trajectory 2.438079e+00
+PLAQ:	1.9937350040386699	1.9928230166455101
+P_LOOP:	9.092708e-01	-1.469729e-04
+G_LOOP:  0  0  4   	1.9814834885261920e+00	( 0 1 7 6  )
+G_LOOP:  0  1  4   	1.9974009062008813e+00	( 0 2 7 5  )
+G_LOOP:  0  2  4   	1.9950754205426111e+00	( 0 3 7 4  )
+G_LOOP:  0  3  4   	2.0023206173889307e+00	( 1 2 6 5  )
+G_LOOP:  0  4  4   	1.9810246274597489e+00	( 1 3 6 4  )
+G_LOOP:  0  5  4   	2.0023690019341691e+00	( 2 3 5 4  )
+G_LOOP:  1  0  6   	1.4535270493884038e+00	( 0 0 1 7 7 6  )
+G_LOOP:  1  1  6   	1.4828382532612023e+00	( 0 0 2 7 7 5  )
+G_LOOP:  1  2  6   	1.4625170053000169e+00	( 0 0 3 7 7 4  )
+G_LOOP:  1  3  6   	1.4556788843521891e+00	( 1 1 0 6 6 7  )
+G_LOOP:  1  4  6   	1.4762705640768286e+00	( 1 1 2 6 6 5  )
+G_LOOP:  1  5  6   	1.4345354024434185e+00	( 1 1 3 6 6 4  )
+G_LOOP:  1  6  6   	1.4792788491232687e+00	( 2 2 0 5 5 7  )
+G_LOOP:  1  7  6   	1.4719856732533152e+00	( 2 2 1 5 5 6  )
+G_LOOP:  1  8  6   	1.4745565988387990e+00	( 2 2 3 5 5 4  )
+G_LOOP:  1  9  6   	1.4522696396714549e+00	( 3 3 0 4 4 7  )
+G_LOOP:  1  10  6   	1.4614567393572617e+00	( 3 3 1 4 4 6  )
+G_LOOP:  1  11  6   	1.4710913788919093e+00	( 3 3 2 4 4 5  )
+G_LOOP:  2  0  6   	1.4739778540036612e+00	( 0 1 2 7 6 5  )
+G_LOOP:  2  1  6   	1.4810263037027285e+00	( 0 1 5 7 6 2  )
+G_LOOP:  2  2  6   	1.4729224217030357e+00	( 0 6 2 7 1 5  )
+G_LOOP:  2  3  6   	1.4780057261740318e+00	( 0 6 5 7 1 2  )
+G_LOOP:  2  4  6   	1.4734252494940250e+00	( 0 1 3 7 6 4  )
+G_LOOP:  2  5  6   	1.4564963139496165e+00	( 0 1 4 7 6 3  )
+G_LOOP:  2  6  6   	1.4669685203041229e+00	( 0 6 3 7 1 4  )
+G_LOOP:  2  7  6   	1.4746450696323155e+00	( 0 6 4 7 1 3  )
+G_LOOP:  2  8  6   	1.5022460308723735e+00	( 0 2 3 7 5 4  )
+G_LOOP:  2  9  6   	1.4842522180696407e+00	( 0 2 4 7 5 3  )
+G_LOOP:  2  10  6   	1.4925522494767600e+00	( 0 5 3 7 2 4  )
+G_LOOP:  2  11  6   	1.4790930789891126e+00	( 0 5 4 7 2 3  )
+G_LOOP:  2  12  6   	1.4711387958853523e+00	( 1 2 3 6 5 4  )
+G_LOOP:  2  13  6   	1.4858539090144467e+00	( 1 2 4 6 5 3  )
+G_LOOP:  2  14  6   	1.4805153105450943e+00	( 1 5 3 6 2 4  )
+G_LOOP:  2  15  6   	1.4832656804965465e+00	( 1 5 4 6 2 3  )
+GACTION: 5.282553e+00
+Aggregate time to do gauge measurement 3.872871e-03
+Combined fattening and long-link calculation time: 0.004919
+FLTIME: time = 1.129603e-02 (HISQ MILC D) mflops = 4.642388e+04
+UML inversion with mass 0.018000
+CONGRAD5: time = 1.914978e-03 (fn D) masses = 1 iters = 27 mflops = 6.855050e+04
+ OK converged final_rsq= 7.2e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 27
+CONGRAD5: time = 9.930134e-04 (fn D) masses = 1 iters = 13 mflops = 6.365007e+04
+ OK converged final_rsq= 6.7e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 13
+PBP: mass 1.800000e-02     1.078524e-02  1.932347e-02  -1.738323e-02  -1.738194e-02 ( 1 of 1 )
+FACTION: mass = 1.800000e-02,  1.539328e+00 ( 1 of 1 )
+Aggregate time to do pbp measurements 1.642394e-02
+RUNNING COMPLETED
+average cg iters for step= 1.170000e+02
+Time = 2.483927e+00 seconds
+total_iters = 1565
+
+
+get_i(0): EOF on input.
+exit: Wed Nov 25 11:44:07 2026
+
+SU3 with improved KS action
+Microcanonical simulation with refreshing
+Rational function hybrid Monte Carlo algorithm
+MIMD version 551d
+Machine = Scalar processor, with 1 nodes
+Host(0) = 1b5eebfa908b
+Username = (null)
+start: Wed Nov 25 11:44:07 2026
+
+Options selected...
+Generic double precision
+C_GLOBAL_INLINE
+DBLSTORE_FN
+D_FN_GATHER13
+FEWSUMS
+KS_MULTICG=HYBRID
+KS_MULTIFF=FNMAT
+VECLENGTH=4
+INT_ALG=INT_3G1F
+HISQ_REUNIT_ALLOW_SVD
+HISQ_REUNIT_SVD_REL_ERROR = 1e-08
+HISQ_REUNIT_SVD_ABS_ERROR = 1e-08
+HISQ_FORCE_FILTER = 5e-05
+HISQ_FF_MULTI_WRAPPER is ON
+type 0 for no prompts, 1 for prompts, or 2 for proofreading
+nx 8
+ny 8
+nz 8
+nt 8
+iseed 86658
+n_pseudo 4
+load_rhmc_params /opt/src/milc/ks_imp_rhmc/test/rationals.sample.su3_rhmc_hisq
+beta 7.4
+n_dyn_masses 2
+dyn_mass 0.0018 0.018 
+dyn_flavors 2 1 
+u0 0.89
+n_pseudo 4
+Loading rational function parameters for phi field 0
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.001800^2)^(2/4) (x+4*0.018000^2)^(1/4) (x+4*0.200000^2)^(-3/4) (x+4*1.000000^2)^(0/4)
+# Converged at 2193 iterations, error = 7.142803e-07
+# Rational function for MD
+y_MD -2 -1 3 0 
+z_MD 4 4 4 4 
+m_MD 0.0018 0.018 0.2 1 
+order_MD 9
+Loading order 9 rational function approximation for MD:
+f(x) = (x+4*0.001800^2)^(-2/4) (x+4*0.018000^2)^(-1/4)
+       (x+4*0.200000^2)^(3/4) (x+4*1.000000^2)^(0/4)
+res_MD 1
+res_MD 0.00204485
+res_MD 0.00290467
+res_MD 0.00501695
+res_MD 0.00952897
+res_MD 0.0212092
+res_MD 0.0199943
+res_MD 0.0226512
+res_MD 0.0237042
+res_MD 0.0126097
+pole_MD 99.9
+pole_MD 1.43113e-05
+pole_MD 2.87352e-05
+pole_MD 8.40811e-05
+pole_MD 0.000281161
+pole_MD 0.000954202
+pole_MD 0.0029716
+pole_MD 0.0107592
+pole_MD 0.036199
+pole_MD 0.0989838
+# CHECK: f(1.000000e-15) = 3.703701e+02 = 6.085806e+01?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (11,11)
+# Approximating the function (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8) (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+# Converged at 1854 iterations, error = 2.609214e-08
+# Rational function for GR
+y_GR 2 1 -3 0 
+z_GR 8 8 8 8 
+m_GR 0.0018 0.018 0.2 1 
+order_GR 11
+Loading order 11 rational function approximation for GR:
+f(x) = (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8)
+       (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+res_GR 1
+res_GR -6.1182e-08
+res_GR -3.19729e-07
+res_GR -1.28897e-06
+res_GR -4.91642e-06
+res_GR -1.78857e-05
+res_GR -8.96491e-05
+res_GR -0.000423832
+res_GR -0.00175458
+res_GR -0.00654152
+res_GR -0.0192293
+res_GR -0.0317711
+pole_GR 99.9
+pole_GR 1.60773e-05
+pole_GR 3.10382e-05
+pole_GR 7.66803e-05
+pole_GR 0.000210211
+pole_GR 0.000600022
+pole_GR 0.00186906
+pole_GR 0.00519622
+pole_GR 0.0143729
+pole_GR 0.0377859
+pole_GR 0.0865726
+pole_GR 0.146356
+# CHECK: f(1.000000e-15) = 5.196153e-02 = 1.281861e-01?
+# Rational function for FA
+y_FA -2 -1 3 0 
+z_FA 8 8 8 8 
+m_FA 0.0018 0.018 0.2 1 
+order_FA 11
+Loading order 11 rational function approximation for FA:
+f(x) = (x+4*0.001800^2)^(-2/8) (x+4*0.018000^2)^(-1/8)
+       (x+4*0.200000^2)^(3/8) (x+4*1.000000^2)^(0/8)
+res_FA 1
+res_FA 3.67927e-05
+res_FA 8.34287e-05
+res_FA 0.000179646
+res_FA 0.000397614
+res_FA 0.000916432
+res_FA 0.00260832
+res_FA 0.00468862
+res_FA 0.00831646
+res_FA 0.0138142
+res_FA 0.0178882
+res_FA 0.0109047
+pole_FA 99.9
+pole_FA 1.45263e-05
+pole_FA 2.55335e-05
+pole_FA 6.03301e-05
+pole_FA 0.000162506
+pole_FA 0.000460594
+pole_FA 0.00131886
+pole_FA 0.00353418
+pole_FA 0.00984542
+pole_FA 0.0265604
+pole_FA 0.0650361
+pole_FA 0.126233
+Loading rational function parameters for phi field 1
+# CHECK: f(1.000000e-15) = 1.924501e+01 = 7.801158e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 2
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 3
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+naik_term_epsilon 0
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Maximum rational func order is 11
+Naik term correction structure of multi_x:
+n_naiks 1
+n_pseudo_naik[0]=4
+n_orders_naik[0]=30
+eps_naik[0]=0.000000
+n_order_naik_total 30
+LAYOUT = Hypercubes, options = with fixed input-parameter node_geometry
+ON EACH NODE (RANK) 8 x 8 x 8 x 8
+Mallocing 6.4 MBytes per node for lattice
+Aggregate time to setup 4.976034e-03
+
+
+warms 0
+trajecs 1
+traj_between_meas 1
+microcanonical_time_step 0.02
+steps_per_trajectory 10
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+prec_ff 2
+number_of_pbp_masses 1
+max_cg_prop 500
+max_cg_prop_restarts 5
+npbp_reps 1
+prec_pbp 2
+mass 0.018
+naik_term_epsilon 0
+error_for_propagator 0.0001
+rel_error_for_propagator 0
+reload_serial /opt/data/lattice.l8888
+forget 
+r_serial_i: Open for sniffing succeeded
+Restored binary gauge configuration serially from file /opt/data/lattice.l8888
+Time stamp Wed Nov 25 10:44:20 2026
+Checksums b14557e1 2cde1c84 OK
+Time to reload gauge configuration = 1.317024e-03
+CHECK PLAQ: 2.2865314552790932e+00 2.2861678489746695e+00
+CHECK NERSC LINKTR: 9.1278576835793501e-01 CKSUM: b00aebe4
+Reunitarized for double precision. Max deviation 5.70e-08 changed to 4.44e-16
+Time to check unitarity = 1.169920e-03
+"Fat 7 (level 1)"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -6.250000e-02
+                    2      1.562500e-02
+                    3      -2.604167e-03
+Unitarization method = UNITARIZE_ANALYTIC
+Unitarization group = U(3)
+"Fat7 + 2xLepage"
+path coefficients: npath  path_coeff
+                    0      1.000000e+00
+                    1      -4.166667e-02
+                    2      -6.250000e-02
+                    3      1.562500e-02
+                    4      -2.604167e-03
+                    5      -1.250000e-01
+"1-link + Naik"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -4.166667e-02
+MAKING PATH TABLES
+Combined fattening and long-link calculation time: 0.004866
+FLTIME: time = 1.114702e-02 (HISQ MILC D) mflops = 4.704035e+04
+Symanzik 1x1 + 1x2 + 1x1x1 action with HISQ quark loops
+gauge_action: total_dyn_flavors = 3
+loop coefficients: nloop rep loop_coeff  multiplicity
+                    0 0      1.000000e+00     6
+                    1 0      -4.181006e-02     12
+                    2 0      5.149203e-04     16
+WARMUPS COMPLETED
+Omelyan integration, 3 gauge for one 1 fermion step, steps= 10 eps= 2.000000e-02 alpha= 1.000000e-01 beta= 1.000000e-01
+GRSOURCE: sum = 6.0700710496e+03
+CONGRAD5: time = 3.019810e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 5.946356e+04
+ OK converged final_rsq= 8.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+GRSOURCETIME: time = 5.102158e-05
+GRSOURCE: sum = 6.0352003870e+03
+CONGRAD5: time = 2.095938e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.070500e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.290176e-05
+GRSOURCE: sum = 6.1700772691e+03
+CONGRAD5: time = 2.082825e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.115015e+04
+ OK converged final_rsq= 8.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.409386e-05
+GRSOURCE: sum = 6.0994675541e+03
+CONGRAD5: time = 2.084017e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.110945e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.504753e-05
+PLAQUETTE ACTION: -1.386003e+05
+CONGRAD5: time = 2.613068e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 6.871948e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 2.073050e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.148564e+04
+ OK converged final_rsq= 7.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.104044e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.043260e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.115011e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.006737e+04
+ OK converged final_rsq= 7.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+ACTION: g,h,f = 3.78212797883492e+04  -1.42789381311028e+02  2.43748162596294e+04  6.20533066666676e+04
+DG = 3.782128e+04, DH = -1.427894e+02, DF = 2.437482e+04, D = 6.205331e+04
+ACTIONTIME: time = 1.287508e-02
+LINK_UPDATE: time = 1.611948e-03  mflops = 1.427040e+04
+GFTIME:   time = 1.228595e-02 (Symanzik1) mflops = 5.100985e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+Combined fattening and long-link calculation time: 0.004925
+FLTIME: time = 1.123691e-02 (HISQ MILC D) mflops = 4.666731e+04
+CONGRAD5: time = 2.575874e-03 (multicg_offset D) masses = 9 iters = 32 mflops = 6.818519e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 2.002001e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.236537e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.008200e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.214199e+04
+ OK converged final_rsq= 7.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.022028e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.164862e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.848168e-01 (HISQ MILC D) terms = 30 flops/site = 2152524 mflops = 4.770528e+04
+LINK_UPDATE: time = 1.785994e-03  mflops = 1.287974e+04
+GFTIME:   time = 1.432395e-02 (Symanzik1) mflops = 4.375220e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.194620e-02 (Symanzik1) mflops = 5.246056e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+GFTIME:   time = 1.195908e-02 (Symanzik1) mflops = 5.240408e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+GFTIME:   time = 1.193380e-02 (Symanzik1) mflops = 5.251506e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+Combined fattening and long-link calculation time: 0.004433
+FLTIME: time = 1.006413e-02 (HISQ MILC D) mflops = 5.210840e+04
+CONGRAD5: time = 2.696991e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.715822e+04
+ OK converged final_rsq= 6.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 1.945019e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.448541e+04
+ OK converged final_rsq= 9.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.971006e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.350332e+04
+ OK converged final_rsq= 9.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.959085e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.395059e+04
+ OK converged final_rsq= 9.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.746418e-01 (HISQ MILC D) terms = 30 flops/site = 2152473 mflops = 5.048350e+04
+LINK_UPDATE: time = 1.888037e-03  mflops = 1.218363e+04
+GFTIME:   time = 1.448417e-02 (Symanzik1) mflops = 4.326824e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+LINK_UPDATE: time = 2.667904e-04  mflops = 8.622176e+04
+GFTIME:   time = 1.202893e-02 (Symanzik1) mflops = 5.209975e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+Combined fattening and long-link calculation time: 0.004545
+FLTIME: time = 1.092100e-02 (HISQ MILC D) mflops = 4.801694e+04
+CONGRAD5: time = 2.688169e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.737861e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.098083e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.160882e+04
+ OK converged final_rsq= 2.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.038956e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.368541e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.053022e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.318054e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.750989e-01 (HISQ MILC D) terms = 30 flops/site = 2152501 mflops = 5.035238e+04
+LINK_UPDATE: time = 1.968145e-03  mflops = 1.168772e+04
+GFTIME:   time = 1.480699e-02 (Symanzik1) mflops = 4.232491e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+GFTIME:   time = 1.197481e-02 (Symanzik1) mflops = 5.233522e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.194906e-02 (Symanzik1) mflops = 5.244800e+04
+LINK_UPDATE: time = 2.617836e-04  mflops = 8.787081e+04
+GFTIME:   time = 1.193595e-02 (Symanzik1) mflops = 5.250562e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+Combined fattening and long-link calculation time: 0.004636
+FLTIME: time = 1.054502e-02 (HISQ MILC D) mflops = 4.973290e+04
+CONGRAD5: time = 2.694845e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.721170e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.019882e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.438121e+04
+ OK converged final_rsq= 3.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.036095e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.378895e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.039909e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.365096e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.824150e-01 (HISQ MILC D) terms = 30 flops/site = 2152489 mflops = 4.833264e+04
+LINK_UPDATE: time = 1.914024e-03  mflops = 1.201820e+04
+GFTIME:   time = 1.432705e-02 (Symanzik1) mflops = 4.374274e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+LINK_UPDATE: time = 2.648830e-04  mflops = 8.684262e+04
+GFTIME:   time = 1.194501e-02 (Symanzik1) mflops = 5.246579e+04
+LINK_UPDATE: time = 2.648830e-04  mflops = 8.684262e+04
+Combined fattening and long-link calculation time: 0.004971
+FLTIME: time = 1.095510e-02 (HISQ MILC D) mflops = 4.786620e+04
+CONGRAD5: time = 2.799034e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.667077e+04
+ OK converged final_rsq= 4.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.038002e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.371989e+04
+ OK converged final_rsq= 4.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.043962e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.350491e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.051115e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.324859e+04
+ OK converged final_rsq= 4.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.772959e-01 (HISQ MILC D) terms = 30 flops/site = 2152524 mflops = 4.972895e+04
+LINK_UPDATE: time = 1.973867e-03  mflops = 1.165384e+04
+GFTIME:   time = 1.396012e-02 (Symanzik1) mflops = 4.489247e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.200008e-02 (Symanzik1) mflops = 5.222500e+04
+LINK_UPDATE: time = 2.579689e-04  mflops = 8.917019e+04
+GFTIME:   time = 1.194096e-02 (Symanzik1) mflops = 5.248360e+04
+LINK_UPDATE: time = 2.608299e-04  mflops = 8.819209e+04
+GFTIME:   time = 1.199794e-02 (Symanzik1) mflops = 5.223434e+04
+LINK_UPDATE: time = 2.579689e-04  mflops = 8.917019e+04
+Combined fattening and long-link calculation time: 0.004425
+FLTIME: time = 1.040602e-02 (HISQ MILC D) mflops = 5.039614e+04
+CONGRAD5: time = 2.761126e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.758612e+04
+ OK converged final_rsq= 6.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.016783e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.449552e+04
+ OK converged final_rsq= 5.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.043009e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.353922e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.058983e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.296869e+04
+ OK converged final_rsq= 5.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.755209e-01 (HISQ MILC D) terms = 30 flops/site = 2152528 mflops = 5.023196e+04
+LINK_UPDATE: time = 1.823902e-03  mflops = 1.261205e+04
+GFTIME:   time = 1.410103e-02 (Symanzik1) mflops = 4.444388e+04
+LINK_UPDATE: time = 2.660751e-04  mflops = 8.645354e+04
+LINK_UPDATE: time = 2.679825e-04  mflops = 8.583821e+04
+GFTIME:   time = 1.204205e-02 (Symanzik1) mflops = 5.204302e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+Combined fattening and long-link calculation time: 0.004455
+FLTIME: time = 1.044607e-02 (HISQ MILC D) mflops = 5.019503e+04
+CONGRAD5: time = 2.762794e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.754529e+04
+ OK converged final_rsq= 8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.022982e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.426725e+04
+ OK converged final_rsq= 6.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.032042e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.393613e+04
+ OK converged final_rsq= 7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.038956e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.368541e+04
+ OK converged final_rsq= 6.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.765559e-01 (HISQ MILC D) terms = 30 flops/site = 2152515 mflops = 4.993718e+04
+LINK_UPDATE: time = 1.958132e-03  mflops = 1.174749e+04
+GFTIME:   time = 1.478219e-02 (Symanzik1) mflops = 4.239591e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.196313e-02 (Symanzik1) mflops = 5.238633e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+GFTIME:   time = 1.199007e-02 (Symanzik1) mflops = 5.226862e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+GFTIME:   time = 1.196289e-02 (Symanzik1) mflops = 5.238737e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004452
+FLTIME: time = 1.010609e-02 (HISQ MILC D) mflops = 5.188711e+04
+CONGRAD5: time = 2.867937e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.698278e+04
+ OK converged final_rsq= 3.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.025127e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.418856e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.038002e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.371989e+04
+ OK converged final_rsq= 9.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.050161e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.328266e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.781301e-01 (HISQ MILC D) terms = 30 flops/site = 2152517 mflops = 4.949590e+04
+LINK_UPDATE: time = 1.900911e-03  mflops = 1.210111e+04
+GFTIME:   time = 1.479411e-02 (Symanzik1) mflops = 4.236175e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+LINK_UPDATE: time = 2.670288e-04  mflops = 8.614477e+04
+GFTIME:   time = 1.203704e-02 (Symanzik1) mflops = 5.206466e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+Combined fattening and long-link calculation time: 0.004423
+FLTIME: time = 1.038480e-02 (HISQ MILC D) mflops = 5.049873e+04
+CONGRAD5: time = 2.842903e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.757262e+04
+ OK converged final_rsq= 3.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.099037e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.413258e+04
+ OK converged final_rsq= 3.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.119064e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.343196e+04
+ OK converged final_rsq= 4.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.044201e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.349634e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.753612e-01 (HISQ MILC D) terms = 30 flops/site = 2152478 mflops = 5.027653e+04
+LINK_UPDATE: time = 1.921892e-03  mflops = 1.196900e+04
+GFTIME:   time = 1.469183e-02 (Symanzik1) mflops = 4.265666e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.374102e-02 (Symanzik1) mflops = 4.560830e+04
+LINK_UPDATE: time = 2.608299e-04  mflops = 8.819209e+04
+GFTIME:   time = 1.394200e-02 (Symanzik1) mflops = 4.495081e+04
+LINK_UPDATE: time = 2.617836e-04  mflops = 8.787081e+04
+GFTIME:   time = 1.395607e-02 (Symanzik1) mflops = 4.490551e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+Combined fattening and long-link calculation time: 0.005063
+FLTIME: time = 1.148391e-02 (HISQ MILC D) mflops = 4.566605e+04
+CONGRAD5: time = 2.898932e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.626662e+04
+ OK converged final_rsq= 5.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.130985e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.302117e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.135992e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.285001e+04
+ OK converged final_rsq= 5.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.119064e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.343196e+04
+ OK converged final_rsq= 5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+FFTIME:  time = 1.752920e-01 (HISQ MILC D) terms = 30 flops/site = 2152510 mflops = 5.029712e+04
+LINK_UPDATE: time = 1.832008e-03  mflops = 1.255624e+04
+GFTIME:   time = 1.480412e-02 (Symanzik1) mflops = 4.233309e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+PLAQUETTE ACTION: -1.208342e+05
+Combined fattening and long-link calculation time: 0.004996
+FLTIME: time = 1.140189e-02 (HISQ MILC D) mflops = 4.599412e+04
+CONGRAD5: time = 3.062963e-03 (multicg_offset D) masses = 11 iters = 35 mflops = 6.412195e+04
+ OK converged final_rsq= 6.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.228975e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.140975e+04
+ OK converged final_rsq= 5.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.214909e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.186326e+04
+ OK converged final_rsq= 6.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.217054e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.179371e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+ACTION: g,h,f = 5.33720953627225e+04  -1.57111296714889e+04  2.43923995649163e+04  6.20533652561499e+04
+DG = 1.555082e+04, DH = -1.556834e+04, DF = 1.758331e+01, D = 5.858948e-02
+ACTIONTIME: time = 2.417994e-02
+CHECK: delta S = 5.858948e-02
+Aggregate time to do one trajectory 2.462521e+00
+PLAQ:	1.9937350040386699	1.9928230166455101
+P_LOOP:	9.092708e-01	-1.469729e-04
+G_LOOP:  0  0  4   	1.9814834885261920e+00	( 0 1 7 6  )
+G_LOOP:  0  1  4   	1.9974009062008813e+00	( 0 2 7 5  )
+G_LOOP:  0  2  4   	1.9950754205426111e+00	( 0 3 7 4  )
+G_LOOP:  0  3  4   	2.0023206173889307e+00	( 1 2 6 5  )
+G_LOOP:  0  4  4   	1.9810246274597489e+00	( 1 3 6 4  )
+G_LOOP:  0  5  4   	2.0023690019341691e+00	( 2 3 5 4  )
+G_LOOP:  1  0  6   	1.4535270493884038e+00	( 0 0 1 7 7 6  )
+G_LOOP:  1  1  6   	1.4828382532612023e+00	( 0 0 2 7 7 5  )
+G_LOOP:  1  2  6   	1.4625170053000169e+00	( 0 0 3 7 7 4  )
+G_LOOP:  1  3  6   	1.4556788843521891e+00	( 1 1 0 6 6 7  )
+G_LOOP:  1  4  6   	1.4762705640768286e+00	( 1 1 2 6 6 5  )
+G_LOOP:  1  5  6   	1.4345354024434185e+00	( 1 1 3 6 6 4  )
+G_LOOP:  1  6  6   	1.4792788491232687e+00	( 2 2 0 5 5 7  )
+G_LOOP:  1  7  6   	1.4719856732533152e+00	( 2 2 1 5 5 6  )
+G_LOOP:  1  8  6   	1.4745565988387990e+00	( 2 2 3 5 5 4  )
+G_LOOP:  1  9  6   	1.4522696396714549e+00	( 3 3 0 4 4 7  )
+G_LOOP:  1  10  6   	1.4614567393572617e+00	( 3 3 1 4 4 6  )
+G_LOOP:  1  11  6   	1.4710913788919093e+00	( 3 3 2 4 4 5  )
+G_LOOP:  2  0  6   	1.4739778540036612e+00	( 0 1 2 7 6 5  )
+G_LOOP:  2  1  6   	1.4810263037027285e+00	( 0 1 5 7 6 2  )
+G_LOOP:  2  2  6   	1.4729224217030357e+00	( 0 6 2 7 1 5  )
+G_LOOP:  2  3  6   	1.4780057261740318e+00	( 0 6 5 7 1 2  )
+G_LOOP:  2  4  6   	1.4734252494940250e+00	( 0 1 3 7 6 4  )
+G_LOOP:  2  5  6   	1.4564963139496165e+00	( 0 1 4 7 6 3  )
+G_LOOP:  2  6  6   	1.4669685203041229e+00	( 0 6 3 7 1 4  )
+G_LOOP:  2  7  6   	1.4746450696323155e+00	( 0 6 4 7 1 3  )
+G_LOOP:  2  8  6   	1.5022460308723735e+00	( 0 2 3 7 5 4  )
+G_LOOP:  2  9  6   	1.4842522180696407e+00	( 0 2 4 7 5 3  )
+G_LOOP:  2  10  6   	1.4925522494767600e+00	( 0 5 3 7 2 4  )
+G_LOOP:  2  11  6   	1.4790930789891126e+00	( 0 5 4 7 2 3  )
+G_LOOP:  2  12  6   	1.4711387958853523e+00	( 1 2 3 6 5 4  )
+G_LOOP:  2  13  6   	1.4858539090144467e+00	( 1 2 4 6 5 3  )
+G_LOOP:  2  14  6   	1.4805153105450943e+00	( 1 5 3 6 2 4  )
+G_LOOP:  2  15  6   	1.4832656804965465e+00	( 1 5 4 6 2 3  )
+GACTION: 5.282553e+00
+Aggregate time to do gauge measurement 3.871918e-03
+Combined fattening and long-link calculation time: 0.004367
+FLTIME: time = 1.063108e-02 (HISQ MILC D) mflops = 4.932639e+04
+UML inversion with mass 0.018000
+CONGRAD5: time = 1.935005e-03 (fn D) masses = 1 iters = 27 mflops = 6.784101e+04
+ OK converged final_rsq= 7.2e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 27
+CONGRAD5: time = 9.820461e-04 (fn D) masses = 1 iters = 13 mflops = 6.436090e+04
+ OK converged final_rsq= 6.7e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 13
+PBP: mass 1.800000e-02     1.078524e-02  1.932347e-02  -1.738323e-02  -1.738194e-02 ( 1 of 1 )
+FACTION: mass = 1.800000e-02,  1.539328e+00 ( 1 of 1 )
+Aggregate time to do pbp measurements 1.573420e-02
+RUNNING COMPLETED
+average cg iters for step= 1.170000e+02
+Time = 2.502968e+00 seconds
+total_iters = 1565
+
+
+get_i(0): EOF on input.
+exit: Wed Nov 25 11:44:10 2026
+
+SU3 with improved KS action
+Microcanonical simulation with refreshing
+Rational function hybrid Monte Carlo algorithm
+MIMD version 551d
+Machine = Scalar processor, with 1 nodes
+Host(0) = 1b5eebfa908b
+Username = (null)
+start: Wed Nov 25 11:44:10 2026
+
+Options selected...
+Generic double precision
+C_GLOBAL_INLINE
+DBLSTORE_FN
+D_FN_GATHER13
+FEWSUMS
+KS_MULTICG=HYBRID
+KS_MULTIFF=FNMAT
+VECLENGTH=4
+INT_ALG=INT_3G1F
+HISQ_REUNIT_ALLOW_SVD
+HISQ_REUNIT_SVD_REL_ERROR = 1e-08
+HISQ_REUNIT_SVD_ABS_ERROR = 1e-08
+HISQ_FORCE_FILTER = 5e-05
+HISQ_FF_MULTI_WRAPPER is ON
+type 0 for no prompts, 1 for prompts, or 2 for proofreading
+nx 8
+ny 8
+nz 8
+nt 8
+iseed 86658
+n_pseudo 4
+load_rhmc_params /opt/src/milc/ks_imp_rhmc/test/rationals.sample.su3_rhmc_hisq
+beta 7.4
+n_dyn_masses 2
+dyn_mass 0.0018 0.018 
+dyn_flavors 2 1 
+u0 0.89
+n_pseudo 4
+Loading rational function parameters for phi field 0
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.001800^2)^(2/4) (x+4*0.018000^2)^(1/4) (x+4*0.200000^2)^(-3/4) (x+4*1.000000^2)^(0/4)
+# Converged at 2193 iterations, error = 7.142803e-07
+# Rational function for MD
+y_MD -2 -1 3 0 
+z_MD 4 4 4 4 
+m_MD 0.0018 0.018 0.2 1 
+order_MD 9
+Loading order 9 rational function approximation for MD:
+f(x) = (x+4*0.001800^2)^(-2/4) (x+4*0.018000^2)^(-1/4)
+       (x+4*0.200000^2)^(3/4) (x+4*1.000000^2)^(0/4)
+res_MD 1
+res_MD 0.00204485
+res_MD 0.00290467
+res_MD 0.00501695
+res_MD 0.00952897
+res_MD 0.0212092
+res_MD 0.0199943
+res_MD 0.0226512
+res_MD 0.0237042
+res_MD 0.0126097
+pole_MD 99.9
+pole_MD 1.43113e-05
+pole_MD 2.87352e-05
+pole_MD 8.40811e-05
+pole_MD 0.000281161
+pole_MD 0.000954202
+pole_MD 0.0029716
+pole_MD 0.0107592
+pole_MD 0.036199
+pole_MD 0.0989838
+# CHECK: f(1.000000e-15) = 3.703701e+02 = 6.085806e+01?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (11,11)
+# Approximating the function (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8) (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+# Converged at 1854 iterations, error = 2.609214e-08
+# Rational function for GR
+y_GR 2 1 -3 0 
+z_GR 8 8 8 8 
+m_GR 0.0018 0.018 0.2 1 
+order_GR 11
+Loading order 11 rational function approximation for GR:
+f(x) = (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8)
+       (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+res_GR 1
+res_GR -6.1182e-08
+res_GR -3.19729e-07
+res_GR -1.28897e-06
+res_GR -4.91642e-06
+res_GR -1.78857e-05
+res_GR -8.96491e-05
+res_GR -0.000423832
+res_GR -0.00175458
+res_GR -0.00654152
+res_GR -0.0192293
+res_GR -0.0317711
+pole_GR 99.9
+pole_GR 1.60773e-05
+pole_GR 3.10382e-05
+pole_GR 7.66803e-05
+pole_GR 0.000210211
+pole_GR 0.000600022
+pole_GR 0.00186906
+pole_GR 0.00519622
+pole_GR 0.0143729
+pole_GR 0.0377859
+pole_GR 0.0865726
+pole_GR 0.146356
+# CHECK: f(1.000000e-15) = 5.196153e-02 = 1.281861e-01?
+# Rational function for FA
+y_FA -2 -1 3 0 
+z_FA 8 8 8 8 
+m_FA 0.0018 0.018 0.2 1 
+order_FA 11
+Loading order 11 rational function approximation for FA:
+f(x) = (x+4*0.001800^2)^(-2/8) (x+4*0.018000^2)^(-1/8)
+       (x+4*0.200000^2)^(3/8) (x+4*1.000000^2)^(0/8)
+res_FA 1
+res_FA 3.67927e-05
+res_FA 8.34287e-05
+res_FA 0.000179646
+res_FA 0.000397614
+res_FA 0.000916432
+res_FA 0.00260832
+res_FA 0.00468862
+res_FA 0.00831646
+res_FA 0.0138142
+res_FA 0.0178882
+res_FA 0.0109047
+pole_FA 99.9
+pole_FA 1.45263e-05
+pole_FA 2.55335e-05
+pole_FA 6.03301e-05
+pole_FA 0.000162506
+pole_FA 0.000460594
+pole_FA 0.00131886
+pole_FA 0.00353418
+pole_FA 0.00984542
+pole_FA 0.0265604
+pole_FA 0.0650361
+pole_FA 0.126233
+Loading rational function parameters for phi field 1
+# CHECK: f(1.000000e-15) = 1.924501e+01 = 7.801158e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 2
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 3
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+naik_term_epsilon 0
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Maximum rational func order is 11
+Naik term correction structure of multi_x:
+n_naiks 1
+n_pseudo_naik[0]=4
+n_orders_naik[0]=30
+eps_naik[0]=0.000000
+n_order_naik_total 30
+LAYOUT = Hypercubes, options = with fixed input-parameter node_geometry
+ON EACH NODE (RANK) 8 x 8 x 8 x 8
+Mallocing 6.4 MBytes per node for lattice
+Aggregate time to setup 5.745888e-03
+
+
+warms 0
+trajecs 1
+traj_between_meas 1
+microcanonical_time_step 0.02
+steps_per_trajectory 10
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+prec_ff 2
+number_of_pbp_masses 1
+max_cg_prop 500
+max_cg_prop_restarts 5
+npbp_reps 1
+prec_pbp 2
+mass 0.018
+naik_term_epsilon 0
+error_for_propagator 0.0001
+rel_error_for_propagator 0
+reload_serial /opt/data/lattice.l8888
+forget 
+r_serial_i: Open for sniffing succeeded
+Restored binary gauge configuration serially from file /opt/data/lattice.l8888
+Time stamp Wed Nov 25 10:44:20 2026
+Checksums b14557e1 2cde1c84 OK
+Time to reload gauge configuration = 1.685858e-03
+CHECK PLAQ: 2.2865314552790932e+00 2.2861678489746695e+00
+CHECK NERSC LINKTR: 9.1278576835793501e-01 CKSUM: b00aebe4
+Reunitarized for double precision. Max deviation 5.70e-08 changed to 4.44e-16
+Time to check unitarity = 1.275063e-03
+"Fat 7 (level 1)"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -6.250000e-02
+                    2      1.562500e-02
+                    3      -2.604167e-03
+Unitarization method = UNITARIZE_ANALYTIC
+Unitarization group = U(3)
+"Fat7 + 2xLepage"
+path coefficients: npath  path_coeff
+                    0      1.000000e+00
+                    1      -4.166667e-02
+                    2      -6.250000e-02
+                    3      1.562500e-02
+                    4      -2.604167e-03
+                    5      -1.250000e-01
+"1-link + Naik"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -4.166667e-02
+MAKING PATH TABLES
+Combined fattening and long-link calculation time: 0.005170
+FLTIME: time = 1.159000e-02 (HISQ MILC D) mflops = 4.524392e+04
+Symanzik 1x1 + 1x2 + 1x1x1 action with HISQ quark loops
+gauge_action: total_dyn_flavors = 3
+loop coefficients: nloop rep loop_coeff  multiplicity
+                    0 0      1.000000e+00     6
+                    1 0      -4.181006e-02     12
+                    2 0      5.149203e-04     16
+WARMUPS COMPLETED
+Omelyan integration, 3 gauge for one 1 fermion step, steps= 10 eps= 2.000000e-02 alpha= 1.000000e-01 beta= 1.000000e-01
+GRSOURCE: sum = 6.0700710496e+03
+CONGRAD5: time = 2.950191e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 6.086677e+04
+ OK converged final_rsq= 8.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+GRSOURCETIME: time = 4.792213e-05
+GRSOURCE: sum = 6.0352003870e+03
+CONGRAD5: time = 2.047062e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.239316e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.170967e-05
+GRSOURCE: sum = 6.1700772691e+03
+CONGRAD5: time = 2.050161e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.228372e+04
+ OK converged final_rsq= 8.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.218651e-05
+GRSOURCE: sum = 6.0994675541e+03
+CONGRAD5: time = 2.029896e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.300536e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.409386e-05
+PLAQUETTE ACTION: -1.386003e+05
+CONGRAD5: time = 2.560139e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 7.014020e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 2.025843e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.315143e+04
+ OK converged final_rsq= 7.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.019882e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.336729e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.012014e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.365418e+04
+ OK converged final_rsq= 7.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+ACTION: g,h,f = 3.78212797883492e+04  -1.42789381311028e+02  2.43748162596294e+04  6.20533066666676e+04
+DG = 3.782128e+04, DH = -1.427894e+02, DF = 2.437482e+04, D = 6.205331e+04
+ACTIONTIME: time = 1.248503e-02
+LINK_UPDATE: time = 1.395941e-03  mflops = 1.647859e+04
+GFTIME:   time = 1.203299e-02 (Symanzik1) mflops = 5.208220e+04
+LINK_UPDATE: time = 2.579689e-04  mflops = 8.917019e+04
+Combined fattening and long-link calculation time: 0.004520
+FLTIME: time = 1.092601e-02 (HISQ MILC D) mflops = 4.799443e+04
+CONGRAD5: time = 2.500057e-03 (multicg_offset D) masses = 9 iters = 32 mflops = 7.025298e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 1.998186e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.250352e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.013922e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.193702e+04
+ OK converged final_rsq= 7.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.008915e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.211630e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.854281e-01 (HISQ MILC D) terms = 30 flops/site = 2152517 mflops = 4.754786e+04
+LINK_UPDATE: time = 1.972914e-03  mflops = 1.165947e+04
+GFTIME:   time = 1.452208e-02 (Symanzik1) mflops = 4.315529e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+GFTIME:   time = 1.206803e-02 (Symanzik1) mflops = 5.193095e+04
+LINK_UPDATE: time = 2.808571e-04  mflops = 8.190335e+04
+GFTIME:   time = 1.201105e-02 (Symanzik1) mflops = 5.217731e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.200199e-02 (Symanzik1) mflops = 5.221670e+04
+LINK_UPDATE: time = 2.579689e-04  mflops = 8.917019e+04
+Combined fattening and long-link calculation time: 0.004575
+FLTIME: time = 1.059794e-02 (HISQ MILC D) mflops = 4.948071e+04
+CONGRAD5: time = 2.717972e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.663981e+04
+ OK converged final_rsq= 6.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 1.963854e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.377103e+04
+ OK converged final_rsq= 9.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.959801e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.392360e+04
+ OK converged final_rsq= 9.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.968861e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.358343e+04
+ OK converged final_rsq= 9.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.753972e-01 (HISQ MILC D) terms = 30 flops/site = 2152510 mflops = 5.026697e+04
+LINK_UPDATE: time = 1.843929e-03  mflops = 1.247506e+04
+GFTIME:   time = 1.400495e-02 (Symanzik1) mflops = 4.474879e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.198602e-02 (Symanzik1) mflops = 5.228629e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+Combined fattening and long-link calculation time: 0.004935
+FLTIME: time = 1.049399e-02 (HISQ MILC D) mflops = 4.996957e+04
+CONGRAD5: time = 2.727032e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.641841e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.051115e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.324859e+04
+ OK converged final_rsq= 2.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.086163e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.201801e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.057076e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.303635e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.760409e-01 (HISQ MILC D) terms = 30 flops/site = 2152533 mflops = 5.008369e+04
+LINK_UPDATE: time = 1.953125e-03  mflops = 1.177761e+04
+GFTIME:   time = 1.480985e-02 (Symanzik1) mflops = 4.231674e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+GFTIME:   time = 1.203799e-02 (Symanzik1) mflops = 5.206054e+04
+LINK_UPDATE: time = 2.679825e-04  mflops = 8.583821e+04
+GFTIME:   time = 1.202202e-02 (Symanzik1) mflops = 5.212971e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.196504e-02 (Symanzik1) mflops = 5.237798e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+Combined fattening and long-link calculation time: 0.004620
+FLTIME: time = 1.063609e-02 (HISQ MILC D) mflops = 4.929693e+04
+CONGRAD5: time = 2.707005e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.690980e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.043009e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.353922e+04
+ OK converged final_rsq= 3.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.052069e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.321455e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.043009e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.353922e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.755068e-01 (HISQ MILC D) terms = 30 flops/site = 2152487 mflops = 5.023502e+04
+LINK_UPDATE: time = 1.946926e-03  mflops = 1.181510e+04
+GFTIME:   time = 1.493216e-02 (Symanzik1) mflops = 4.197012e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.207399e-02 (Symanzik1) mflops = 5.190531e+04
+LINK_UPDATE: time = 2.579689e-04  mflops = 8.917019e+04
+Combined fattening and long-link calculation time: 0.004419
+FLTIME: time = 1.010799e-02 (HISQ MILC D) mflops = 5.187607e+04
+CONGRAD5: time = 2.787828e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.693875e+04
+ OK converged final_rsq= 4.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.022028e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.430228e+04
+ OK converged final_rsq= 4.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.044916e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.347063e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.056122e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.307022e+04
+ OK converged final_rsq= 4.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.762249e-01 (HISQ MILC D) terms = 30 flops/site = 2152540 mflops = 5.003154e+04
+LINK_UPDATE: time = 1.792908e-03  mflops = 1.283007e+04
+GFTIME:   time = 1.498294e-02 (Symanzik1) mflops = 4.182787e+04
+LINK_UPDATE: time = 2.670288e-04  mflops = 8.614477e+04
+GFTIME:   time = 1.213813e-02 (Symanzik1) mflops = 5.163106e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+GFTIME:   time = 1.206994e-02 (Symanzik1) mflops = 5.192274e+04
+LINK_UPDATE: time = 2.591610e-04  mflops = 8.876002e+04
+GFTIME:   time = 1.209903e-02 (Symanzik1) mflops = 5.179791e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004235
+FLTIME: time = 1.030993e-02 (HISQ MILC D) mflops = 5.086695e+04
+CONGRAD5: time = 2.806902e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.648389e+04
+ OK converged final_rsq= 6.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.032042e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.393613e+04
+ OK converged final_rsq= 5.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.064943e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.275807e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.102137e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.147075e+04
+ OK converged final_rsq= 5.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.760771e-01 (HISQ MILC D) terms = 30 flops/site = 2152524 mflops = 5.007317e+04
+LINK_UPDATE: time = 1.943827e-03  mflops = 1.183394e+04
+GFTIME:   time = 1.490498e-02 (Symanzik1) mflops = 4.204666e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.209593e-02 (Symanzik1) mflops = 5.181119e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+Combined fattening and long-link calculation time: 0.004224
+FLTIME: time = 9.925842e-03 (HISQ MILC D) mflops = 5.283141e+04
+CONGRAD5: time = 2.792835e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.681875e+04
+ OK converged final_rsq= 8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.018929e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.441634e+04
+ OK converged final_rsq= 6.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.050877e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.325710e+04
+ OK converged final_rsq= 7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.052069e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.321455e+04
+ OK converged final_rsq= 6.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.758609e-01 (HISQ MILC D) terms = 30 flops/site = 2152503 mflops = 5.013426e+04
+LINK_UPDATE: time = 1.899004e-03  mflops = 1.211326e+04
+GFTIME:   time = 1.497293e-02 (Symanzik1) mflops = 4.185584e+04
+LINK_UPDATE: time = 2.648830e-04  mflops = 8.684262e+04
+GFTIME:   time = 1.206803e-02 (Symanzik1) mflops = 5.193095e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+GFTIME:   time = 1.206207e-02 (Symanzik1) mflops = 5.195661e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.204681e-02 (Symanzik1) mflops = 5.202242e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+Combined fattening and long-link calculation time: 0.004512
+FLTIME: time = 1.024914e-02 (HISQ MILC D) mflops = 5.116144e+04
+CONGRAD5: time = 2.884150e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.660625e+04
+ OK converged final_rsq= 3.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.030134e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.400559e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.067089e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.268254e+04
+ OK converged final_rsq= 9.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.047062e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.339362e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.756389e-01 (HISQ MILC D) terms = 30 flops/site = 2152510 mflops = 5.019778e+04
+LINK_UPDATE: time = 2.017021e-03  mflops = 1.140451e+04
+GFTIME:   time = 1.406288e-02 (Symanzik1) mflops = 4.456444e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+GFTIME:   time = 1.203990e-02 (Symanzik1) mflops = 5.205229e+04
+LINK_UPDATE: time = 2.608299e-04  mflops = 8.819209e+04
+Combined fattening and long-link calculation time: 0.004509
+FLTIME: time = 1.055598e-02 (HISQ MILC D) mflops = 4.967433e+04
+CONGRAD5: time = 2.874136e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.683831e+04
+ OK converged final_rsq= 3.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.137899e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.278502e+04
+ OK converged final_rsq= 3.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.135992e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.285001e+04
+ OK converged final_rsq= 4.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.053976e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.314656e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.774471e-01 (HISQ MILC D) terms = 30 flops/site = 2152505 mflops = 4.968616e+04
+LINK_UPDATE: time = 1.893044e-03  mflops = 1.215140e+04
+GFTIME:   time = 1.457500e-02 (Symanzik1) mflops = 4.299857e+04
+LINK_UPDATE: time = 2.648830e-04  mflops = 8.684262e+04
+GFTIME:   time = 1.209402e-02 (Symanzik1) mflops = 5.181936e+04
+LINK_UPDATE: time = 2.698898e-04  mflops = 8.523158e+04
+GFTIME:   time = 1.206183e-02 (Symanzik1) mflops = 5.195763e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.202393e-02 (Symanzik1) mflops = 5.212144e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+Combined fattening and long-link calculation time: 0.004149
+FLTIME: time = 9.865999e-03 (HISQ MILC D) mflops = 5.315122e+04
+CONGRAD5: time = 2.854109e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.730731e+04
+ OK converged final_rsq= 5.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.112865e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.364740e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.118111e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.346502e+04
+ OK converged final_rsq= 5.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.119064e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.343196e+04
+ OK converged final_rsq= 5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+FFTIME:  time = 1.774380e-01 (HISQ MILC D) terms = 30 flops/site = 2152492 mflops = 4.968838e+04
+LINK_UPDATE: time = 1.820087e-03  mflops = 1.263848e+04
+GFTIME:   time = 1.448703e-02 (Symanzik1) mflops = 4.325969e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+PLAQUETTE ACTION: -1.208342e+05
+Combined fattening and long-link calculation time: 0.005039
+FLTIME: time = 1.149797e-02 (HISQ MILC D) mflops = 4.561768e+04
+CONGRAD5: time = 3.077984e-03 (multicg_offset D) masses = 11 iters = 35 mflops = 6.380904e+04
+ OK converged final_rsq= 6.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.241135e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.102231e+04
+ OK converged final_rsq= 5.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.224922e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.153983e+04
+ OK converged final_rsq= 6.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.230167e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.137158e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+ACTION: g,h,f = 5.33720953627225e+04  -1.57111296714889e+04  2.43923995649163e+04  6.20533652561499e+04
+DG = 1.555082e+04, DH = -1.556834e+04, DF = 1.758331e+01, D = 5.858948e-02
+ACTIONTIME: time = 2.476001e-02
+CHECK: delta S = 5.858948e-02
+Aggregate time to do one trajectory 2.451959e+00
+PLAQ:	1.9937350040386699	1.9928230166455101
+P_LOOP:	9.092708e-01	-1.469729e-04
+G_LOOP:  0  0  4   	1.9814834885261920e+00	( 0 1 7 6  )
+G_LOOP:  0  1  4   	1.9974009062008813e+00	( 0 2 7 5  )
+G_LOOP:  0  2  4   	1.9950754205426111e+00	( 0 3 7 4  )
+G_LOOP:  0  3  4   	2.0023206173889307e+00	( 1 2 6 5  )
+G_LOOP:  0  4  4   	1.9810246274597489e+00	( 1 3 6 4  )
+G_LOOP:  0  5  4   	2.0023690019341691e+00	( 2 3 5 4  )
+G_LOOP:  1  0  6   	1.4535270493884038e+00	( 0 0 1 7 7 6  )
+G_LOOP:  1  1  6   	1.4828382532612023e+00	( 0 0 2 7 7 5  )
+G_LOOP:  1  2  6   	1.4625170053000169e+00	( 0 0 3 7 7 4  )
+G_LOOP:  1  3  6   	1.4556788843521891e+00	( 1 1 0 6 6 7  )
+G_LOOP:  1  4  6   	1.4762705640768286e+00	( 1 1 2 6 6 5  )
+G_LOOP:  1  5  6   	1.4345354024434185e+00	( 1 1 3 6 6 4  )
+G_LOOP:  1  6  6   	1.4792788491232687e+00	( 2 2 0 5 5 7  )
+G_LOOP:  1  7  6   	1.4719856732533152e+00	( 2 2 1 5 5 6  )
+G_LOOP:  1  8  6   	1.4745565988387990e+00	( 2 2 3 5 5 4  )
+G_LOOP:  1  9  6   	1.4522696396714549e+00	( 3 3 0 4 4 7  )
+G_LOOP:  1  10  6   	1.4614567393572617e+00	( 3 3 1 4 4 6  )
+G_LOOP:  1  11  6   	1.4710913788919093e+00	( 3 3 2 4 4 5  )
+G_LOOP:  2  0  6   	1.4739778540036612e+00	( 0 1 2 7 6 5  )
+G_LOOP:  2  1  6   	1.4810263037027285e+00	( 0 1 5 7 6 2  )
+G_LOOP:  2  2  6   	1.4729224217030357e+00	( 0 6 2 7 1 5  )
+G_LOOP:  2  3  6   	1.4780057261740318e+00	( 0 6 5 7 1 2  )
+G_LOOP:  2  4  6   	1.4734252494940250e+00	( 0 1 3 7 6 4  )
+G_LOOP:  2  5  6   	1.4564963139496165e+00	( 0 1 4 7 6 3  )
+G_LOOP:  2  6  6   	1.4669685203041229e+00	( 0 6 3 7 1 4  )
+G_LOOP:  2  7  6   	1.4746450696323155e+00	( 0 6 4 7 1 3  )
+G_LOOP:  2  8  6   	1.5022460308723735e+00	( 0 2 3 7 5 4  )
+G_LOOP:  2  9  6   	1.4842522180696407e+00	( 0 2 4 7 5 3  )
+G_LOOP:  2  10  6   	1.4925522494767600e+00	( 0 5 3 7 2 4  )
+G_LOOP:  2  11  6   	1.4790930789891126e+00	( 0 5 4 7 2 3  )
+G_LOOP:  2  12  6   	1.4711387958853523e+00	( 1 2 3 6 5 4  )
+G_LOOP:  2  13  6   	1.4858539090144467e+00	( 1 2 4 6 5 3  )
+G_LOOP:  2  14  6   	1.4805153105450943e+00	( 1 5 3 6 2 4  )
+G_LOOP:  2  15  6   	1.4832656804965465e+00	( 1 5 4 6 2 3  )
+GACTION: 5.282553e+00
+Aggregate time to do gauge measurement 3.957033e-03
+Combined fattening and long-link calculation time: 0.004907
+FLTIME: time = 1.057601e-02 (HISQ MILC D) mflops = 4.958064e+04
+UML inversion with mass 0.018000
+CONGRAD5: time = 1.913071e-03 (fn D) masses = 1 iters = 27 mflops = 6.861885e+04
+ OK converged final_rsq= 7.2e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 27
+CONGRAD5: time = 9.980202e-04 (fn D) masses = 1 iters = 13 mflops = 6.333076e+04
+ OK converged final_rsq= 6.7e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 13
+PBP: mass 1.800000e-02     1.078524e-02  1.932347e-02  -1.738323e-02  -1.738194e-02 ( 1 of 1 )
+FACTION: mass = 1.800000e-02,  1.539328e+00 ( 1 of 1 )
+Aggregate time to do pbp measurements 1.565814e-02
+RUNNING COMPLETED
+average cg iters for step= 1.170000e+02
+Time = 2.494569e+00 seconds
+total_iters = 1565
+
+
+get_i(0): EOF on input.
+exit: Wed Nov 25 11:44:12 2026
+
+SU3 with improved KS action
+Microcanonical simulation with refreshing
+Rational function hybrid Monte Carlo algorithm
+MIMD version 551d
+Machine = Scalar processor, with 1 nodes
+Host(0) = 1b5eebfa908b
+Username = (null)
+start: Wed Nov 25 11:44:12 2026
+
+Options selected...
+Generic double precision
+C_GLOBAL_INLINE
+DBLSTORE_FN
+D_FN_GATHER13
+FEWSUMS
+KS_MULTICG=HYBRID
+KS_MULTIFF=FNMAT
+VECLENGTH=4
+INT_ALG=INT_3G1F
+HISQ_REUNIT_ALLOW_SVD
+HISQ_REUNIT_SVD_REL_ERROR = 1e-08
+HISQ_REUNIT_SVD_ABS_ERROR = 1e-08
+HISQ_FORCE_FILTER = 5e-05
+HISQ_FF_MULTI_WRAPPER is ON
+type 0 for no prompts, 1 for prompts, or 2 for proofreading
+nx 8
+ny 8
+nz 8
+nt 8
+iseed 86658
+n_pseudo 4
+load_rhmc_params /opt/src/milc/ks_imp_rhmc/test/rationals.sample.su3_rhmc_hisq
+beta 7.4
+n_dyn_masses 2
+dyn_mass 0.0018 0.018 
+dyn_flavors 2 1 
+u0 0.89
+n_pseudo 4
+Loading rational function parameters for phi field 0
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.001800^2)^(2/4) (x+4*0.018000^2)^(1/4) (x+4*0.200000^2)^(-3/4) (x+4*1.000000^2)^(0/4)
+# Converged at 2193 iterations, error = 7.142803e-07
+# Rational function for MD
+y_MD -2 -1 3 0 
+z_MD 4 4 4 4 
+m_MD 0.0018 0.018 0.2 1 
+order_MD 9
+Loading order 9 rational function approximation for MD:
+f(x) = (x+4*0.001800^2)^(-2/4) (x+4*0.018000^2)^(-1/4)
+       (x+4*0.200000^2)^(3/4) (x+4*1.000000^2)^(0/4)
+res_MD 1
+res_MD 0.00204485
+res_MD 0.00290467
+res_MD 0.00501695
+res_MD 0.00952897
+res_MD 0.0212092
+res_MD 0.0199943
+res_MD 0.0226512
+res_MD 0.0237042
+res_MD 0.0126097
+pole_MD 99.9
+pole_MD 1.43113e-05
+pole_MD 2.87352e-05
+pole_MD 8.40811e-05
+pole_MD 0.000281161
+pole_MD 0.000954202
+pole_MD 0.0029716
+pole_MD 0.0107592
+pole_MD 0.036199
+pole_MD 0.0989838
+# CHECK: f(1.000000e-15) = 3.703701e+02 = 6.085806e+01?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (11,11)
+# Approximating the function (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8) (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+# Converged at 1854 iterations, error = 2.609214e-08
+# Rational function for GR
+y_GR 2 1 -3 0 
+z_GR 8 8 8 8 
+m_GR 0.0018 0.018 0.2 1 
+order_GR 11
+Loading order 11 rational function approximation for GR:
+f(x) = (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8)
+       (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+res_GR 1
+res_GR -6.1182e-08
+res_GR -3.19729e-07
+res_GR -1.28897e-06
+res_GR -4.91642e-06
+res_GR -1.78857e-05
+res_GR -8.96491e-05
+res_GR -0.000423832
+res_GR -0.00175458
+res_GR -0.00654152
+res_GR -0.0192293
+res_GR -0.0317711
+pole_GR 99.9
+pole_GR 1.60773e-05
+pole_GR 3.10382e-05
+pole_GR 7.66803e-05
+pole_GR 0.000210211
+pole_GR 0.000600022
+pole_GR 0.00186906
+pole_GR 0.00519622
+pole_GR 0.0143729
+pole_GR 0.0377859
+pole_GR 0.0865726
+pole_GR 0.146356
+# CHECK: f(1.000000e-15) = 5.196153e-02 = 1.281861e-01?
+# Rational function for FA
+y_FA -2 -1 3 0 
+z_FA 8 8 8 8 
+m_FA 0.0018 0.018 0.2 1 
+order_FA 11
+Loading order 11 rational function approximation for FA:
+f(x) = (x+4*0.001800^2)^(-2/8) (x+4*0.018000^2)^(-1/8)
+       (x+4*0.200000^2)^(3/8) (x+4*1.000000^2)^(0/8)
+res_FA 1
+res_FA 3.67927e-05
+res_FA 8.34287e-05
+res_FA 0.000179646
+res_FA 0.000397614
+res_FA 0.000916432
+res_FA 0.00260832
+res_FA 0.00468862
+res_FA 0.00831646
+res_FA 0.0138142
+res_FA 0.0178882
+res_FA 0.0109047
+pole_FA 99.9
+pole_FA 1.45263e-05
+pole_FA 2.55335e-05
+pole_FA 6.03301e-05
+pole_FA 0.000162506
+pole_FA 0.000460594
+pole_FA 0.00131886
+pole_FA 0.00353418
+pole_FA 0.00984542
+pole_FA 0.0265604
+pole_FA 0.0650361
+pole_FA 0.126233
+Loading rational function parameters for phi field 1
+# CHECK: f(1.000000e-15) = 1.924501e+01 = 7.801158e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 2
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 3
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+naik_term_epsilon 0
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Maximum rational func order is 11
+Naik term correction structure of multi_x:
+n_naiks 1
+n_pseudo_naik[0]=4
+n_orders_naik[0]=30
+eps_naik[0]=0.000000
+n_order_naik_total 30
+LAYOUT = Hypercubes, options = with fixed input-parameter node_geometry
+ON EACH NODE (RANK) 8 x 8 x 8 x 8
+Mallocing 6.4 MBytes per node for lattice
+Aggregate time to setup 4.837990e-03
+
+
+warms 0
+trajecs 1
+traj_between_meas 1
+microcanonical_time_step 0.02
+steps_per_trajectory 10
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+prec_ff 2
+number_of_pbp_masses 1
+max_cg_prop 500
+max_cg_prop_restarts 5
+npbp_reps 1
+prec_pbp 2
+mass 0.018
+naik_term_epsilon 0
+error_for_propagator 0.0001
+rel_error_for_propagator 0
+reload_serial /opt/data/lattice.l8888
+forget 
+r_serial_i: Open for sniffing succeeded
+Restored binary gauge configuration serially from file /opt/data/lattice.l8888
+Time stamp Wed Nov 25 10:44:20 2026
+Checksums b14557e1 2cde1c84 OK
+Time to reload gauge configuration = 1.513958e-03
+CHECK PLAQ: 2.2865314552790932e+00 2.2861678489746695e+00
+CHECK NERSC LINKTR: 9.1278576835793501e-01 CKSUM: b00aebe4
+Reunitarized for double precision. Max deviation 5.70e-08 changed to 4.44e-16
+Time to check unitarity = 1.101971e-03
+"Fat 7 (level 1)"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -6.250000e-02
+                    2      1.562500e-02
+                    3      -2.604167e-03
+Unitarization method = UNITARIZE_ANALYTIC
+Unitarization group = U(3)
+"Fat7 + 2xLepage"
+path coefficients: npath  path_coeff
+                    0      1.000000e+00
+                    1      -4.166667e-02
+                    2      -6.250000e-02
+                    3      1.562500e-02
+                    4      -2.604167e-03
+                    5      -1.250000e-01
+"1-link + Naik"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -4.166667e-02
+MAKING PATH TABLES
+Combined fattening and long-link calculation time: 0.004673
+FLTIME: time = 1.121020e-02 (HISQ MILC D) mflops = 4.678447e+04
+Symanzik 1x1 + 1x2 + 1x1x1 action with HISQ quark loops
+gauge_action: total_dyn_flavors = 3
+loop coefficients: nloop rep loop_coeff  multiplicity
+                    0 0      1.000000e+00     6
+                    1 0      -4.181006e-02     12
+                    2 0      5.149203e-04     16
+WARMUPS COMPLETED
+Omelyan integration, 3 gauge for one 1 fermion step, steps= 10 eps= 2.000000e-02 alpha= 1.000000e-01 beta= 1.000000e-01
+GRSOURCE: sum = 6.0700710496e+03
+CONGRAD5: time = 2.943993e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 6.099494e+04
+ OK converged final_rsq= 8.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+GRSOURCETIME: time = 5.221367e-05
+GRSOURCE: sum = 6.0352003870e+03
+CONGRAD5: time = 2.129793e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 6.958107e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.385544e-05
+GRSOURCE: sum = 6.1700772691e+03
+CONGRAD5: time = 2.102137e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.049650e+04
+ OK converged final_rsq= 8.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.409386e-05
+GRSOURCE: sum = 6.0994675541e+03
+CONGRAD5: time = 2.103090e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.046454e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.361702e-05
+PLAQUETTE ACTION: -1.386003e+05
+CONGRAD5: time = 2.603054e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 6.898383e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 2.072811e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.149387e+04
+ OK converged final_rsq= 7.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.068043e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.165871e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.063036e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.183262e+04
+ OK converged final_rsq= 7.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+ACTION: g,h,f = 3.78212797883492e+04  -1.42789381311028e+02  2.43748162596294e+04  6.20533066666676e+04
+DG = 3.782128e+04, DH = -1.427894e+02, DF = 2.437482e+04, D = 6.205331e+04
+ACTIONTIME: time = 1.271296e-02
+LINK_UPDATE: time = 1.550913e-03  mflops = 1.483200e+04
+GFTIME:   time = 1.198816e-02 (Symanzik1) mflops = 5.227693e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004324
+FLTIME: time = 1.011705e-02 (HISQ MILC D) mflops = 5.183251e+04
+CONGRAD5: time = 2.531052e-03 (multicg_offset D) masses = 9 iters = 32 mflops = 6.939269e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 2.002954e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.233091e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.038002e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.108703e+04
+ OK converged final_rsq= 7.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.048016e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.073946e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.850390e-01 (HISQ MILC D) terms = 30 flops/site = 2152528 mflops = 4.764810e+04
+LINK_UPDATE: time = 1.861095e-03  mflops = 1.236000e+04
+GFTIME:   time = 1.422501e-02 (Symanzik1) mflops = 4.405653e+04
+LINK_UPDATE: time = 2.591610e-04  mflops = 8.876002e+04
+GFTIME:   time = 1.195812e-02 (Symanzik1) mflops = 5.240826e+04
+LINK_UPDATE: time = 2.579689e-04  mflops = 8.917019e+04
+GFTIME:   time = 1.196718e-02 (Symanzik1) mflops = 5.236858e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.193595e-02 (Symanzik1) mflops = 5.250562e+04
+LINK_UPDATE: time = 2.701283e-04  mflops = 8.515635e+04
+Combined fattening and long-link calculation time: 0.004539
+FLTIME: time = 1.020217e-02 (HISQ MILC D) mflops = 5.140248e+04
+CONGRAD5: time = 2.738953e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.612934e+04
+ OK converged final_rsq= 6.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 1.978159e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.323755e+04
+ OK converged final_rsq= 9.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.994133e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.265088e+04
+ OK converged final_rsq= 9.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.996994e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.254680e+04
+ OK converged final_rsq= 9.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.748710e-01 (HISQ MILC D) terms = 30 flops/site = 2152533 mflops = 5.041876e+04
+LINK_UPDATE: time = 1.837015e-03  mflops = 1.252202e+04
+GFTIME:   time = 1.485896e-02 (Symanzik1) mflops = 4.217686e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.201606e-02 (Symanzik1) mflops = 5.215557e+04
+LINK_UPDATE: time = 2.591610e-04  mflops = 8.876002e+04
+Combined fattening and long-link calculation time: 0.004940
+FLTIME: time = 1.081085e-02 (HISQ MILC D) mflops = 4.850654e+04
+CONGRAD5: time = 2.740145e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.610057e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.059937e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.293491e+04
+ OK converged final_rsq= 2.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.079010e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.226578e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.095222e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.170660e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.749899e-01 (HISQ MILC D) terms = 30 flops/site = 2152508 mflops = 5.038389e+04
+LINK_UPDATE: time = 1.839876e-03  mflops = 1.250255e+04
+GFTIME:   time = 1.472402e-02 (Symanzik1) mflops = 4.256341e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+GFTIME:   time = 1.380706e-02 (Symanzik1) mflops = 4.539015e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+GFTIME:   time = 1.367688e-02 (Symanzik1) mflops = 4.582217e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+GFTIME:   time = 1.205516e-02 (Symanzik1) mflops = 5.198641e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+Combined fattening and long-link calculation time: 0.004562
+FLTIME: time = 1.040888e-02 (HISQ MILC D) mflops = 5.037507e+04
+CONGRAD5: time = 2.771854e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.534438e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.050161e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.328266e+04
+ OK converged final_rsq= 3.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.068043e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.264902e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.080917e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.219954e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.747589e-01 (HISQ MILC D) terms = 30 flops/site = 2152473 mflops = 5.044969e+04
+LINK_UPDATE: time = 1.857042e-03  mflops = 1.238697e+04
+GFTIME:   time = 1.384997e-02 (Symanzik1) mflops = 4.524950e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+LINK_UPDATE: time = 2.601147e-04  mflops = 8.843460e+04
+GFTIME:   time = 1.193500e-02 (Symanzik1) mflops = 5.250981e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+Combined fattening and long-link calculation time: 0.004968
+FLTIME: time = 1.099396e-02 (HISQ MILC D) mflops = 4.769830e+04
+CONGRAD5: time = 2.835989e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.580200e+04
+ OK converged final_rsq= 4.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.056837e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.304481e+04
+ OK converged final_rsq= 4.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.074003e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.244023e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.074003e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.244023e+04
+ OK converged final_rsq= 4.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.753008e-01 (HISQ MILC D) terms = 30 flops/site = 2152489 mflops = 5.029410e+04
+LINK_UPDATE: time = 1.869202e-03  mflops = 1.230640e+04
+GFTIME:   time = 1.478696e-02 (Symanzik1) mflops = 4.238224e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+GFTIME:   time = 1.194000e-02 (Symanzik1) mflops = 5.248779e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.194501e-02 (Symanzik1) mflops = 5.246579e+04
+LINK_UPDATE: time = 2.579689e-04  mflops = 8.917019e+04
+GFTIME:   time = 1.188016e-02 (Symanzik1) mflops = 5.275219e+04
+LINK_UPDATE: time = 2.579689e-04  mflops = 8.917019e+04
+Combined fattening and long-link calculation time: 0.004289
+FLTIME: time = 1.030183e-02 (HISQ MILC D) mflops = 5.090237e+04
+CONGRAD5: time = 2.848864e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.550463e+04
+ OK converged final_rsq= 6.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.065897e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.272448e+04
+ OK converged final_rsq= 5.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.078056e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.229894e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.075195e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.239862e+04
+ OK converged final_rsq= 5.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.752031e-01 (HISQ MILC D) terms = 30 flops/site = 2152503 mflops = 5.032249e+04
+LINK_UPDATE: time = 1.864910e-03  mflops = 1.233472e+04
+GFTIME:   time = 1.379514e-02 (Symanzik1) mflops = 4.542937e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.191497e-02 (Symanzik1) mflops = 5.259807e+04
+LINK_UPDATE: time = 2.617836e-04  mflops = 8.787081e+04
+Combined fattening and long-link calculation time: 0.005186
+FLTIME: time = 1.150799e-02 (HISQ MILC D) mflops = 4.557228e+04
+CONGRAD5: time = 2.830029e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.594059e+04
+ OK converged final_rsq= 8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.063990e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.279168e+04
+ OK converged final_rsq= 6.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.127171e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.062963e+04
+ OK converged final_rsq= 7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.074003e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.244023e+04
+ OK converged final_rsq= 6.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.768661e-01 (HISQ MILC D) terms = 30 flops/site = 2152492 mflops = 4.984907e+04
+LINK_UPDATE: time = 1.864910e-03  mflops = 1.233472e+04
+GFTIME:   time = 1.305795e-02 (Symanzik1) mflops = 4.799410e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+GFTIME:   time = 1.192284e-02 (Symanzik1) mflops = 5.256336e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+GFTIME:   time = 1.190686e-02 (Symanzik1) mflops = 5.263388e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.190281e-02 (Symanzik1) mflops = 5.265180e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+Combined fattening and long-link calculation time: 0.004161
+FLTIME: time = 9.837866e-03 (HISQ MILC D) mflops = 5.330209e+04
+CONGRAD5: time = 2.882004e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.665585e+04
+ OK converged final_rsq= 3.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.043009e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.353922e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.066851e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.269092e+04
+ OK converged final_rsq= 9.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.054930e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.311261e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.748390e-01 (HISQ MILC D) terms = 30 flops/site = 2152505 mflops = 5.042733e+04
+LINK_UPDATE: time = 1.820087e-03  mflops = 1.263848e+04
+GFTIME:   time = 1.441693e-02 (Symanzik1) mflops = 4.347002e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.368213e-02 (Symanzik1) mflops = 4.580460e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+Combined fattening and long-link calculation time: 0.004974
+FLTIME: time = 1.100707e-02 (HISQ MILC D) mflops = 4.764269e+04
+CONGRAD5: time = 2.916098e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.587653e+04
+ OK converged final_rsq= 3.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.149105e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.240551e+04
+ OK converged final_rsq= 3.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.151966e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.230924e+04
+ OK converged final_rsq= 4.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.080917e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.219954e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.750741e-01 (HISQ MILC D) terms = 30 flops/site = 2152503 mflops = 5.035956e+04
+LINK_UPDATE: time = 1.960993e-03  mflops = 1.173035e+04
+GFTIME:   time = 1.474094e-02 (Symanzik1) mflops = 4.251454e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.200008e-02 (Symanzik1) mflops = 5.222500e+04
+LINK_UPDATE: time = 2.608299e-04  mflops = 8.819209e+04
+GFTIME:   time = 1.191592e-02 (Symanzik1) mflops = 5.259386e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+GFTIME:   time = 1.198792e-02 (Symanzik1) mflops = 5.227797e+04
+LINK_UPDATE: time = 2.608299e-04  mflops = 8.819209e+04
+Combined fattening and long-link calculation time: 0.004305
+FLTIME: time = 1.009703e-02 (HISQ MILC D) mflops = 5.193202e+04
+CONGRAD5: time = 2.897024e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.631025e+04
+ OK converged final_rsq= 5.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.123117e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.329177e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.131939e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.298851e+04
+ OK converged final_rsq= 5.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.140999e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.267965e+04
+ OK converged final_rsq= 5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+FFTIME:  time = 1.755531e-01 (HISQ MILC D) terms = 30 flops/site = 2152549 mflops = 5.022323e+04
+LINK_UPDATE: time = 1.910210e-03  mflops = 1.204220e+04
+GFTIME:   time = 1.388097e-02 (Symanzik1) mflops = 4.514846e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+PLAQUETTE ACTION: -1.208342e+05
+Combined fattening and long-link calculation time: 0.004929
+FLTIME: time = 1.053190e-02 (HISQ MILC D) mflops = 4.979309e+04
+CONGRAD5: time = 3.046989e-03 (multicg_offset D) masses = 11 iters = 35 mflops = 6.445812e+04
+ OK converged final_rsq= 6.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.240896e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.102987e+04
+ OK converged final_rsq= 5.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.234221e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.124210e+04
+ OK converged final_rsq= 6.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.228975e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.140975e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+ACTION: g,h,f = 5.33720953627225e+04  -1.57111296714889e+04  2.43923995649163e+04  6.20533652561499e+04
+DG = 1.555082e+04, DH = -1.556834e+04, DF = 1.758331e+01, D = 5.858948e-02
+ACTIONTIME: time = 2.333307e-02
+CHECK: delta S = 5.858948e-02
+Aggregate time to do one trajectory 2.444252e+00
+PLAQ:	1.9937350040386699	1.9928230166455101
+P_LOOP:	9.092708e-01	-1.469729e-04
+G_LOOP:  0  0  4   	1.9814834885261920e+00	( 0 1 7 6  )
+G_LOOP:  0  1  4   	1.9974009062008813e+00	( 0 2 7 5  )
+G_LOOP:  0  2  4   	1.9950754205426111e+00	( 0 3 7 4  )
+G_LOOP:  0  3  4   	2.0023206173889307e+00	( 1 2 6 5  )
+G_LOOP:  0  4  4   	1.9810246274597489e+00	( 1 3 6 4  )
+G_LOOP:  0  5  4   	2.0023690019341691e+00	( 2 3 5 4  )
+G_LOOP:  1  0  6   	1.4535270493884038e+00	( 0 0 1 7 7 6  )
+G_LOOP:  1  1  6   	1.4828382532612023e+00	( 0 0 2 7 7 5  )
+G_LOOP:  1  2  6   	1.4625170053000169e+00	( 0 0 3 7 7 4  )
+G_LOOP:  1  3  6   	1.4556788843521891e+00	( 1 1 0 6 6 7  )
+G_LOOP:  1  4  6   	1.4762705640768286e+00	( 1 1 2 6 6 5  )
+G_LOOP:  1  5  6   	1.4345354024434185e+00	( 1 1 3 6 6 4  )
+G_LOOP:  1  6  6   	1.4792788491232687e+00	( 2 2 0 5 5 7  )
+G_LOOP:  1  7  6   	1.4719856732533152e+00	( 2 2 1 5 5 6  )
+G_LOOP:  1  8  6   	1.4745565988387990e+00	( 2 2 3 5 5 4  )
+G_LOOP:  1  9  6   	1.4522696396714549e+00	( 3 3 0 4 4 7  )
+G_LOOP:  1  10  6   	1.4614567393572617e+00	( 3 3 1 4 4 6  )
+G_LOOP:  1  11  6   	1.4710913788919093e+00	( 3 3 2 4 4 5  )
+G_LOOP:  2  0  6   	1.4739778540036612e+00	( 0 1 2 7 6 5  )
+G_LOOP:  2  1  6   	1.4810263037027285e+00	( 0 1 5 7 6 2  )
+G_LOOP:  2  2  6   	1.4729224217030357e+00	( 0 6 2 7 1 5  )
+G_LOOP:  2  3  6   	1.4780057261740318e+00	( 0 6 5 7 1 2  )
+G_LOOP:  2  4  6   	1.4734252494940250e+00	( 0 1 3 7 6 4  )
+G_LOOP:  2  5  6   	1.4564963139496165e+00	( 0 1 4 7 6 3  )
+G_LOOP:  2  6  6   	1.4669685203041229e+00	( 0 6 3 7 1 4  )
+G_LOOP:  2  7  6   	1.4746450696323155e+00	( 0 6 4 7 1 3  )
+G_LOOP:  2  8  6   	1.5022460308723735e+00	( 0 2 3 7 5 4  )
+G_LOOP:  2  9  6   	1.4842522180696407e+00	( 0 2 4 7 5 3  )
+G_LOOP:  2  10  6   	1.4925522494767600e+00	( 0 5 3 7 2 4  )
+G_LOOP:  2  11  6   	1.4790930789891126e+00	( 0 5 4 7 2 3  )
+G_LOOP:  2  12  6   	1.4711387958853523e+00	( 1 2 3 6 5 4  )
+G_LOOP:  2  13  6   	1.4858539090144467e+00	( 1 2 4 6 5 3  )
+G_LOOP:  2  14  6   	1.4805153105450943e+00	( 1 5 3 6 2 4  )
+G_LOOP:  2  15  6   	1.4832656804965465e+00	( 1 5 4 6 2 3  )
+GACTION: 5.282553e+00
+Aggregate time to do gauge measurement 3.489017e-03
+Combined fattening and long-link calculation time: 0.004548
+FLTIME: time = 1.050496e-02 (HISQ MILC D) mflops = 4.991831e+04
+UML inversion with mass 0.018000
+CONGRAD5: time = 1.886129e-03 (fn D) masses = 1 iters = 27 mflops = 6.959899e+04
+ OK converged final_rsq= 7.2e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 27
+CONGRAD5: time = 9.760857e-04 (fn D) masses = 1 iters = 13 mflops = 6.475392e+04
+ OK converged final_rsq= 6.7e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 13
+PBP: mass 1.800000e-02     1.078524e-02  1.932347e-02  -1.738323e-02  -1.738194e-02 ( 1 of 1 )
+FACTION: mass = 1.800000e-02,  1.539328e+00 ( 1 of 1 )
+Aggregate time to do pbp measurements 1.553702e-02
+RUNNING COMPLETED
+average cg iters for step= 1.170000e+02
+Time = 2.484189e+00 seconds
+total_iters = 1565
+
+
+get_i(0): EOF on input.
+exit: Wed Nov 25 11:44:15 2026
+
+SU3 with improved KS action
+Microcanonical simulation with refreshing
+Rational function hybrid Monte Carlo algorithm
+MIMD version 551d
+Machine = Scalar processor, with 1 nodes
+Host(0) = 1b5eebfa908b
+Username = (null)
+start: Wed Nov 25 11:44:15 2026
+
+Options selected...
+Generic double precision
+C_GLOBAL_INLINE
+DBLSTORE_FN
+D_FN_GATHER13
+FEWSUMS
+KS_MULTICG=HYBRID
+KS_MULTIFF=FNMAT
+VECLENGTH=4
+INT_ALG=INT_3G1F
+HISQ_REUNIT_ALLOW_SVD
+HISQ_REUNIT_SVD_REL_ERROR = 1e-08
+HISQ_REUNIT_SVD_ABS_ERROR = 1e-08
+HISQ_FORCE_FILTER = 5e-05
+HISQ_FF_MULTI_WRAPPER is ON
+type 0 for no prompts, 1 for prompts, or 2 for proofreading
+nx 8
+ny 8
+nz 8
+nt 8
+iseed 86658
+n_pseudo 4
+load_rhmc_params /opt/src/milc/ks_imp_rhmc/test/rationals.sample.su3_rhmc_hisq
+beta 7.4
+n_dyn_masses 2
+dyn_mass 0.0018 0.018 
+dyn_flavors 2 1 
+u0 0.89
+n_pseudo 4
+Loading rational function parameters for phi field 0
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.001800^2)^(2/4) (x+4*0.018000^2)^(1/4) (x+4*0.200000^2)^(-3/4) (x+4*1.000000^2)^(0/4)
+# Converged at 2193 iterations, error = 7.142803e-07
+# Rational function for MD
+y_MD -2 -1 3 0 
+z_MD 4 4 4 4 
+m_MD 0.0018 0.018 0.2 1 
+order_MD 9
+Loading order 9 rational function approximation for MD:
+f(x) = (x+4*0.001800^2)^(-2/4) (x+4*0.018000^2)^(-1/4)
+       (x+4*0.200000^2)^(3/4) (x+4*1.000000^2)^(0/4)
+res_MD 1
+res_MD 0.00204485
+res_MD 0.00290467
+res_MD 0.00501695
+res_MD 0.00952897
+res_MD 0.0212092
+res_MD 0.0199943
+res_MD 0.0226512
+res_MD 0.0237042
+res_MD 0.0126097
+pole_MD 99.9
+pole_MD 1.43113e-05
+pole_MD 2.87352e-05
+pole_MD 8.40811e-05
+pole_MD 0.000281161
+pole_MD 0.000954202
+pole_MD 0.0029716
+pole_MD 0.0107592
+pole_MD 0.036199
+pole_MD 0.0989838
+# CHECK: f(1.000000e-15) = 3.703701e+02 = 6.085806e+01?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 75
+# Degree of the approximation is (11,11)
+# Approximating the function (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8) (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+# Converged at 1854 iterations, error = 2.609214e-08
+# Rational function for GR
+y_GR 2 1 -3 0 
+z_GR 8 8 8 8 
+m_GR 0.0018 0.018 0.2 1 
+order_GR 11
+Loading order 11 rational function approximation for GR:
+f(x) = (x+4*0.001800^2)^(2/8) (x+4*0.018000^2)^(1/8)
+       (x+4*0.200000^2)^(-3/8) (x+4*1.000000^2)^(0/8)
+res_GR 1
+res_GR -6.1182e-08
+res_GR -3.19729e-07
+res_GR -1.28897e-06
+res_GR -4.91642e-06
+res_GR -1.78857e-05
+res_GR -8.96491e-05
+res_GR -0.000423832
+res_GR -0.00175458
+res_GR -0.00654152
+res_GR -0.0192293
+res_GR -0.0317711
+pole_GR 99.9
+pole_GR 1.60773e-05
+pole_GR 3.10382e-05
+pole_GR 7.66803e-05
+pole_GR 0.000210211
+pole_GR 0.000600022
+pole_GR 0.00186906
+pole_GR 0.00519622
+pole_GR 0.0143729
+pole_GR 0.0377859
+pole_GR 0.0865726
+pole_GR 0.146356
+# CHECK: f(1.000000e-15) = 5.196153e-02 = 1.281861e-01?
+# Rational function for FA
+y_FA -2 -1 3 0 
+z_FA 8 8 8 8 
+m_FA 0.0018 0.018 0.2 1 
+order_FA 11
+Loading order 11 rational function approximation for FA:
+f(x) = (x+4*0.001800^2)^(-2/8) (x+4*0.018000^2)^(-1/8)
+       (x+4*0.200000^2)^(3/8) (x+4*1.000000^2)^(0/8)
+res_FA 1
+res_FA 3.67927e-05
+res_FA 8.34287e-05
+res_FA 0.000179646
+res_FA 0.000397614
+res_FA 0.000916432
+res_FA 0.00260832
+res_FA 0.00468862
+res_FA 0.00831646
+res_FA 0.0138142
+res_FA 0.0178882
+res_FA 0.0109047
+pole_FA 99.9
+pole_FA 1.45263e-05
+pole_FA 2.55335e-05
+pole_FA 6.03301e-05
+pole_FA 0.000162506
+pole_FA 0.000460594
+pole_FA 0.00131886
+pole_FA 0.00353418
+pole_FA 0.00984542
+pole_FA 0.0265604
+pole_FA 0.0650361
+pole_FA 0.126233
+Loading rational function parameters for phi field 1
+# CHECK: f(1.000000e-15) = 1.924501e+01 = 7.801158e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 2
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+naik_term_epsilon 0
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Loading rational function parameters for phi field 3
+# CHECK: f(1.000000e-15) = 1.257433e+00 = 1.257433e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (7,7)
+# Approximating the function (x+4*0.200000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 327 iterations, error = 2.398230e-07
+naik_term_epsilon 0
+# Rational function for MD
+y_MD -1 0 0 0 
+z_MD 4 4 4 4 
+m_MD 0.2 1 1 1 
+order_MD 7
+Loading order 7 rational function approximation for MD:
+f(x) = (x+4*0.200000^2)^(-1/4) (x+4*1.000000^2)^(0/4)
+       (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+res_MD 0.14923
+res_MD 0.046061
+res_MD 0.1138
+res_MD 0.274536
+res_MD 0.687619
+res_MD 1.83201
+res_MD 5.87481
+res_MD 38.0862
+pole_MD 99.9
+pole_MD 0.185283
+pole_MD 0.375399
+pole_MD 1.05812
+pole_MD 3.40313
+pole_MD 11.7405
+pole_MD 45.73
+pole_MD 283.916
+# CHECK: f(1.000000e-15) = 1.581138e+00 = 1.581139e+00?
+# New rational function
+# Approximation bounds are [1.000000e-15,9.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (9,9)
+# Approximating the function (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 422 iterations, error = 1.700228e-09
+# Rational function for GR
+y_GR 1 0 0 0 
+z_GR 8 8 8 8 
+m_GR 0.2 1 1 1 
+order_GR 9
+Loading order 9 rational function approximation for GR:
+f(x) = (x+4*0.200000^2)^(1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_GR 2.73277
+res_GR -0.00512886
+res_GR -0.0204789
+res_GR -0.0639514
+res_GR -0.192686
+res_GR -0.585195
+res_GR -1.85803
+res_GR -6.68946
+res_GR -34.4017
+res_GR -617.898
+pole_GR 99.9
+pole_GR 0.186425
+pole_GR 0.315826
+pole_GR 0.679106
+pole_GR 1.64209
+pole_GR 4.20254
+pole_GR 11.2153
+pole_GR 32.0724
+pole_GR 110.326
+pole_GR 764.415
+# CHECK: f(1.000000e-15) = 7.952707e-01 = 7.952707e-01?
+# Rational function for FA
+y_FA -1 0 0 0 
+z_FA 8 8 8 8 
+m_FA 0.2 1 1 1 
+order_FA 9
+Loading order 9 rational function approximation for FA:
+f(x) = (x+4*0.200000^2)^(-1/8) (x+4*1.000000^2)^(0/8)
+       (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+res_FA 0.365929
+res_FA 0.0109316
+res_FA 0.0292903
+res_FA 0.0678756
+res_FA 0.157093
+res_FA 0.370027
+res_FA 0.906451
+res_FA 2.45234
+res_FA 8.71503
+res_FA 75.8971
+pole_FA 99.9
+pole_FA 0.178875
+pole_FA 0.290944
+pole_FA 0.612037
+pole_FA 1.46486
+pole_FA 3.72845
+pole_FA 9.8933
+pole_FA 27.9493
+pole_FA 92.735
+pole_FA 546.062
+Maximum rational func order is 11
+Naik term correction structure of multi_x:
+n_naiks 1
+n_pseudo_naik[0]=4
+n_orders_naik[0]=30
+eps_naik[0]=0.000000
+n_order_naik_total 30
+LAYOUT = Hypercubes, options = with fixed input-parameter node_geometry
+ON EACH NODE (RANK) 8 x 8 x 8 x 8
+Mallocing 6.4 MBytes per node for lattice
+Aggregate time to setup 5.258083e-03
+
+
+warms 0
+trajecs 1
+traj_between_meas 1
+microcanonical_time_step 0.02
+steps_per_trajectory 10
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+cgresid_md_fa_gr 1e-05 1e-05 1e-05 
+max_multicg_md_fa_gr 2500 2500 2500 
+cgprec_md_fa_gr 2 2 2 
+prec_ff 2
+number_of_pbp_masses 1
+max_cg_prop 500
+max_cg_prop_restarts 5
+npbp_reps 1
+prec_pbp 2
+mass 0.018
+naik_term_epsilon 0
+error_for_propagator 0.0001
+rel_error_for_propagator 0
+reload_serial /opt/data/lattice.l8888
+forget 
+r_serial_i: Open for sniffing succeeded
+Restored binary gauge configuration serially from file /opt/data/lattice.l8888
+Time stamp Wed Nov 25 10:44:20 2026
+Checksums b14557e1 2cde1c84 OK
+Time to reload gauge configuration = 1.553059e-03
+CHECK PLAQ: 2.2865314552790932e+00 2.2861678489746695e+00
+CHECK NERSC LINKTR: 9.1278576835793501e-01 CKSUM: b00aebe4
+Reunitarized for double precision. Max deviation 5.70e-08 changed to 4.44e-16
+Time to check unitarity = 1.120090e-03
+"Fat 7 (level 1)"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -6.250000e-02
+                    2      1.562500e-02
+                    3      -2.604167e-03
+Unitarization method = UNITARIZE_ANALYTIC
+Unitarization group = U(3)
+"Fat7 + 2xLepage"
+path coefficients: npath  path_coeff
+                    0      1.000000e+00
+                    1      -4.166667e-02
+                    2      -6.250000e-02
+                    3      1.562500e-02
+                    4      -2.604167e-03
+                    5      -1.250000e-01
+"1-link + Naik"
+path coefficients: npath  path_coeff
+                    0      1.250000e-01
+                    1      -4.166667e-02
+MAKING PATH TABLES
+Combined fattening and long-link calculation time: 0.004450
+FLTIME: time = 1.035690e-02 (HISQ MILC D) mflops = 5.063475e+04
+Symanzik 1x1 + 1x2 + 1x1x1 action with HISQ quark loops
+gauge_action: total_dyn_flavors = 3
+loop coefficients: nloop rep loop_coeff  multiplicity
+                    0 0      1.000000e+00     6
+                    1 0      -4.181006e-02     12
+                    2 0      5.149203e-04     16
+WARMUPS COMPLETED
+Omelyan integration, 3 gauge for one 1 fermion step, steps= 10 eps= 2.000000e-02 alpha= 1.000000e-01 beta= 1.000000e-01
+GRSOURCE: sum = 6.0700710496e+03
+CONGRAD5: time = 2.866983e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 6.263330e+04
+ OK converged final_rsq= 8.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+GRSOURCETIME: time = 4.673004e-05
+GRSOURCE: sum = 6.0352003870e+03
+CONGRAD5: time = 2.054930e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.211598e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.170967e-05
+GRSOURCE: sum = 6.1700772691e+03
+CONGRAD5: time = 2.061844e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.187415e+04
+ OK converged final_rsq= 8.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.409386e-05
+GRSOURCE: sum = 6.0994675541e+03
+CONGRAD5: time = 2.065182e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.175799e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+GRSOURCETIME: time = 3.385544e-05
+PLAQUETTE ACTION: -1.386003e+05
+CONGRAD5: time = 2.588034e-03 (multicg_offset D) masses = 11 iters = 32 mflops = 6.938420e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 2.067089e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.169177e+04
+ OK converged final_rsq= 7.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.055168e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.210762e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.056122e-03 (multicg_offset D) masses = 9 iters = 27 mflops = 7.207417e+04
+ OK converged final_rsq= 7.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+ACTION: g,h,f = 3.78212797883492e+04  -1.42789381311028e+02  2.43748162596294e+04  6.20533066666676e+04
+DG = 3.782128e+04, DH = -1.427894e+02, DF = 2.437482e+04, D = 6.205331e+04
+ACTIONTIME: time = 1.266313e-02
+LINK_UPDATE: time = 1.446009e-03  mflops = 1.590802e+04
+GFTIME:   time = 1.204419e-02 (Symanzik1) mflops = 5.203375e+04
+LINK_UPDATE: time = 2.617836e-04  mflops = 8.787081e+04
+Combined fattening and long-link calculation time: 0.004434
+FLTIME: time = 9.989023e-03 (HISQ MILC D) mflops = 5.250311e+04
+CONGRAD5: time = 2.526999e-03 (multicg_offset D) masses = 9 iters = 32 mflops = 6.950399e+04
+ OK converged final_rsq= 8.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 32
+CONGRAD5: time = 2.001047e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.239985e+04
+ OK converged final_rsq= 7.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.044916e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.084668e+04
+ OK converged final_rsq= 7.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 2.104998e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 6.882455e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.855550e-01 (HISQ MILC D) terms = 30 flops/site = 2152533 mflops = 4.751571e+04
+LINK_UPDATE: time = 1.920938e-03  mflops = 1.197495e+04
+GFTIME:   time = 1.462007e-02 (Symanzik1) mflops = 4.286604e+04
+LINK_UPDATE: time = 2.639294e-04  mflops = 8.715641e+04
+GFTIME:   time = 1.200104e-02 (Symanzik1) mflops = 5.222085e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.198196e-02 (Symanzik1) mflops = 5.230398e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.192188e-02 (Symanzik1) mflops = 5.256757e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+Combined fattening and long-link calculation time: 0.004636
+FLTIME: time = 1.110196e-02 (HISQ MILC D) mflops = 4.723826e+04
+CONGRAD5: time = 2.770901e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.536687e+04
+ OK converged final_rsq= 6.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 1.985073e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.298246e+04
+ OK converged final_rsq= 9.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.991034e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.276398e+04
+ OK converged final_rsq= 9.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+CONGRAD5: time = 1.995087e-03 (multicg_offset D) masses = 7 iters = 27 mflops = 7.261615e+04
+ OK converged final_rsq= 9.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 27
+FFTIME:  time = 1.755199e-01 (HISQ MILC D) terms = 30 flops/site = 2152526 mflops = 5.023218e+04
+LINK_UPDATE: time = 1.909018e-03  mflops = 1.204972e+04
+GFTIME:   time = 1.451206e-02 (Symanzik1) mflops = 4.318507e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.197910e-02 (Symanzik1) mflops = 5.231647e+04
+LINK_UPDATE: time = 2.682209e-04  mflops = 8.576191e+04
+Combined fattening and long-link calculation time: 0.004989
+FLTIME: time = 1.140785e-02 (HISQ MILC D) mflops = 4.597168e+04
+CONGRAD5: time = 2.763987e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.553039e+04
+ OK converged final_rsq= 7.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.063036e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.282533e+04
+ OK converged final_rsq= 2.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.084017e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.209216e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.076149e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.236537e+04
+ OK converged final_rsq= 3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.755161e-01 (HISQ MILC D) terms = 30 flops/site = 2152508 mflops = 5.023284e+04
+LINK_UPDATE: time = 1.855850e-03  mflops = 1.239493e+04
+GFTIME:   time = 1.467800e-02 (Symanzik1) mflops = 4.269685e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.367188e-02 (Symanzik1) mflops = 4.583895e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.375103e-02 (Symanzik1) mflops = 4.557509e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.374102e-02 (Symanzik1) mflops = 4.560830e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+Combined fattening and long-link calculation time: 0.005057
+FLTIME: time = 1.155806e-02 (HISQ MILC D) mflops = 4.536638e+04
+CONGRAD5: time = 2.765179e-03 (multicg_offset D) masses = 9 iters = 33 mflops = 6.550214e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 33
+CONGRAD5: time = 2.084017e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.209216e+04
+ OK converged final_rsq= 3.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.082109e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.215820e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.068043e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.264902e+04
+ OK converged final_rsq= 3.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.761398e-01 (HISQ MILC D) terms = 30 flops/site = 2152542 mflops = 5.005577e+04
+LINK_UPDATE: time = 2.034903e-03  mflops = 1.130429e+04
+GFTIME:   time = 1.340914e-02 (Symanzik1) mflops = 4.673711e+04
+LINK_UPDATE: time = 2.651215e-04  mflops = 8.676452e+04
+LINK_UPDATE: time = 2.608299e-04  mflops = 8.819209e+04
+GFTIME:   time = 1.187992e-02 (Symanzik1) mflops = 5.275325e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+Combined fattening and long-link calculation time: 0.004595
+FLTIME: time = 1.103616e-02 (HISQ MILC D) mflops = 4.751741e+04
+CONGRAD5: time = 2.825022e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.605746e+04
+ OK converged final_rsq= 4.8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.041101e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.360794e+04
+ OK converged final_rsq= 4.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.068996e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.261553e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.057076e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.303635e+04
+ OK converged final_rsq= 4.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.754711e-01 (HISQ MILC D) terms = 30 flops/site = 2152533 mflops = 5.024633e+04
+LINK_UPDATE: time = 1.868963e-03  mflops = 1.230797e+04
+GFTIME:   time = 1.384115e-02 (Symanzik1) mflops = 4.527834e+04
+LINK_UPDATE: time = 2.632141e-04  mflops = 8.739325e+04
+GFTIME:   time = 1.374102e-02 (Symanzik1) mflops = 4.560830e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.381302e-02 (Symanzik1) mflops = 4.537056e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+GFTIME:   time = 1.278901e-02 (Symanzik1) mflops = 4.900335e+04
+LINK_UPDATE: time = 2.608299e-04  mflops = 8.819209e+04
+Combined fattening and long-link calculation time: 0.004966
+FLTIME: time = 1.132798e-02 (HISQ MILC D) mflops = 4.629100e+04
+CONGRAD5: time = 2.846003e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.557048e+04
+ OK converged final_rsq= 6.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.060175e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.292647e+04
+ OK converged final_rsq= 5.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.076149e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.236537e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.164125e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 6.942355e+04
+ OK converged final_rsq= 5.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.759360e-01 (HISQ MILC D) terms = 30 flops/site = 2152538 mflops = 5.011366e+04
+LINK_UPDATE: time = 1.873016e-03  mflops = 1.228133e+04
+GFTIME:   time = 1.367402e-02 (Symanzik1) mflops = 4.583176e+04
+LINK_UPDATE: time = 2.748966e-04  mflops = 8.367922e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.215982e-02 (Symanzik1) mflops = 5.153893e+04
+LINK_UPDATE: time = 2.651215e-04  mflops = 8.676452e+04
+Combined fattening and long-link calculation time: 0.004298
+FLTIME: time = 1.036906e-02 (HISQ MILC D) mflops = 5.057903e+04
+CONGRAD5: time = 2.833128e-03 (multicg_offset D) masses = 9 iters = 34 mflops = 6.586845e+04
+ OK converged final_rsq= 8e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 34
+CONGRAD5: time = 2.045155e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.346207e+04
+ OK converged final_rsq= 6.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.053976e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.314656e+04
+ OK converged final_rsq= 7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.073050e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.247356e+04
+ OK converged final_rsq= 6.7e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.763611e-01 (HISQ MILC D) terms = 30 flops/site = 2152524 mflops = 4.999255e+04
+LINK_UPDATE: time = 1.891851e-03  mflops = 1.215906e+04
+GFTIME:   time = 1.431012e-02 (Symanzik1) mflops = 4.379448e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+GFTIME:   time = 1.374006e-02 (Symanzik1) mflops = 4.561146e+04
+LINK_UPDATE: time = 2.620220e-04  mflops = 8.779085e+04
+GFTIME:   time = 1.267791e-02 (Symanzik1) mflops = 4.943279e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.196003e-02 (Symanzik1) mflops = 5.239990e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+Combined fattening and long-link calculation time: 0.004505
+FLTIME: time = 1.088786e-02 (HISQ MILC D) mflops = 4.816273e+04
+CONGRAD5: time = 2.876043e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.679399e+04
+ OK converged final_rsq= 3.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.048969e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.332530e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.055883e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.307870e+04
+ OK converged final_rsq= 9.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+CONGRAD5: time = 2.065897e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.272448e+04
+ OK converged final_rsq= 8.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.750078e-01 (HISQ MILC D) terms = 30 flops/site = 2152535 mflops = 5.037939e+04
+LINK_UPDATE: time = 1.914978e-03  mflops = 1.201222e+04
+GFTIME:   time = 1.433110e-02 (Symanzik1) mflops = 4.373037e+04
+LINK_UPDATE: time = 2.641678e-04  mflops = 8.707775e+04
+LINK_UPDATE: time = 2.589226e-04  mflops = 8.884175e+04
+GFTIME:   time = 1.194096e-02 (Symanzik1) mflops = 5.248360e+04
+LINK_UPDATE: time = 2.670288e-04  mflops = 8.614477e+04
+Combined fattening and long-link calculation time: 0.004238
+FLTIME: time = 9.926796e-03 (HISQ MILC D) mflops = 5.282952e+04
+CONGRAD5: time = 2.876043e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.679399e+04
+ OK converged final_rsq= 3.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.109051e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.378060e+04
+ OK converged final_rsq= 3.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.259016e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 6.888266e+04
+ OK converged final_rsq= 4.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.056122e-03 (multicg_offset D) masses = 7 iters = 28 mflops = 7.307022e+04
+ OK converged final_rsq= 9.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 28
+FFTIME:  time = 1.757729e-01 (HISQ MILC D) terms = 30 flops/site = 2152528 mflops = 5.015994e+04
+LINK_UPDATE: time = 1.860142e-03  mflops = 1.236633e+04
+GFTIME:   time = 1.384091e-02 (Symanzik1) mflops = 4.527912e+04
+LINK_UPDATE: time = 2.710819e-04  mflops = 8.485677e+04
+GFTIME:   time = 1.366997e-02 (Symanzik1) mflops = 4.584535e+04
+LINK_UPDATE: time = 2.610683e-04  mflops = 8.811155e+04
+GFTIME:   time = 1.233792e-02 (Symanzik1) mflops = 5.079497e+04
+LINK_UPDATE: time = 2.598763e-04  mflops = 8.851573e+04
+GFTIME:   time = 1.202893e-02 (Symanzik1) mflops = 5.209975e+04
+LINK_UPDATE: time = 2.629757e-04  mflops = 8.747248e+04
+Combined fattening and long-link calculation time: 0.004461
+FLTIME: time = 1.006293e-02 (HISQ MILC D) mflops = 5.212000e+04
+CONGRAD5: time = 2.893209e-03 (multicg_offset D) masses = 9 iters = 35 mflops = 6.639768e+04
+ OK converged final_rsq= 5.4e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.113104e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.363909e+04
+ OK converged final_rsq= 4.6e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.177000e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.147774e+04
+ OK converged final_rsq= 5.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.129793e-03 (multicg_offset D) masses = 7 iters = 29 mflops = 7.306204e+04
+ OK converged final_rsq= 5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+FFTIME:  time = 1.756790e-01 (HISQ MILC D) terms = 30 flops/site = 2152535 mflops = 5.018692e+04
+LINK_UPDATE: time = 1.981974e-03  mflops = 1.160618e+04
+GFTIME:   time = 1.453805e-02 (Symanzik1) mflops = 4.310787e+04
+LINK_UPDATE: time = 2.617836e-04  mflops = 8.787081e+04
+PLAQUETTE ACTION: -1.208342e+05
+Combined fattening and long-link calculation time: 0.004674
+FLTIME: time = 1.112795e-02 (HISQ MILC D) mflops = 4.712332e+04
+CONGRAD5: time = 3.093958e-03 (multicg_offset D) masses = 11 iters = 35 mflops = 6.347960e+04
+ OK converged final_rsq= 6.1e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 35
+CONGRAD5: time = 2.248049e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.080387e+04
+ OK converged final_rsq= 5.5e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.240896e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.102987e+04
+ OK converged final_rsq= 6.3e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+CONGRAD5: time = 2.232075e-03 (multicg_offset D) masses = 9 iters = 29 mflops = 7.131059e+04
+ OK converged final_rsq= 5.9e-11 (cf 1e-10) rel = 0 (cf 0) restarts = 0 iters= 29
+ACTION: g,h,f = 5.33720953627225e+04  -1.57111296714889e+04  2.43923995649163e+04  6.20533652561499e+04
+DG = 1.555082e+04, DH = -1.556834e+04, DF = 1.758331e+01, D = 5.858948e-02
+ACTIONTIME: time = 2.441096e-02
+CHECK: delta S = 5.858948e-02
+Aggregate time to do one trajectory 2.461427e+00
+PLAQ:	1.9937350040386699	1.9928230166455101
+P_LOOP:	9.092708e-01	-1.469729e-04
+G_LOOP:  0  0  4   	1.9814834885261920e+00	( 0 1 7 6  )
+G_LOOP:  0  1  4   	1.9974009062008813e+00	( 0 2 7 5  )
+G_LOOP:  0  2  4   	1.9950754205426111e+00	( 0 3 7 4  )
+G_LOOP:  0  3  4   	2.0023206173889307e+00	( 1 2 6 5  )
+G_LOOP:  0  4  4   	1.9810246274597489e+00	( 1 3 6 4  )
+G_LOOP:  0  5  4   	2.0023690019341691e+00	( 2 3 5 4  )
+G_LOOP:  1  0  6   	1.4535270493884038e+00	( 0 0 1 7 7 6  )
+G_LOOP:  1  1  6   	1.4828382532612023e+00	( 0 0 2 7 7 5  )
+G_LOOP:  1  2  6   	1.4625170053000169e+00	( 0 0 3 7 7 4  )
+G_LOOP:  1  3  6   	1.4556788843521891e+00	( 1 1 0 6 6 7  )
+G_LOOP:  1  4  6   	1.4762705640768286e+00	( 1 1 2 6 6 5  )
+G_LOOP:  1  5  6   	1.4345354024434185e+00	( 1 1 3 6 6 4  )
+G_LOOP:  1  6  6   	1.4792788491232687e+00	( 2 2 0 5 5 7  )
+G_LOOP:  1  7  6   	1.4719856732533152e+00	( 2 2 1 5 5 6  )
+G_LOOP:  1  8  6   	1.4745565988387990e+00	( 2 2 3 5 5 4  )
+G_LOOP:  1  9  6   	1.4522696396714549e+00	( 3 3 0 4 4 7  )
+G_LOOP:  1  10  6   	1.4614567393572617e+00	( 3 3 1 4 4 6  )
+G_LOOP:  1  11  6   	1.4710913788919093e+00	( 3 3 2 4 4 5  )
+G_LOOP:  2  0  6   	1.4739778540036612e+00	( 0 1 2 7 6 5  )
+G_LOOP:  2  1  6   	1.4810263037027285e+00	( 0 1 5 7 6 2  )
+G_LOOP:  2  2  6   	1.4729224217030357e+00	( 0 6 2 7 1 5  )
+G_LOOP:  2  3  6   	1.4780057261740318e+00	( 0 6 5 7 1 2  )
+G_LOOP:  2  4  6   	1.4734252494940250e+00	( 0 1 3 7 6 4  )
+G_LOOP:  2  5  6   	1.4564963139496165e+00	( 0 1 4 7 6 3  )
+G_LOOP:  2  6  6   	1.4669685203041229e+00	( 0 6 3 7 1 4  )
+G_LOOP:  2  7  6   	1.4746450696323155e+00	( 0 6 4 7 1 3  )
+G_LOOP:  2  8  6   	1.5022460308723735e+00	( 0 2 3 7 5 4  )
+G_LOOP:  2  9  6   	1.4842522180696407e+00	( 0 2 4 7 5 3  )
+G_LOOP:  2  10  6   	1.4925522494767600e+00	( 0 5 3 7 2 4  )
+G_LOOP:  2  11  6   	1.4790930789891126e+00	( 0 5 4 7 2 3  )
+G_LOOP:  2  12  6   	1.4711387958853523e+00	( 1 2 3 6 5 4  )
+G_LOOP:  2  13  6   	1.4858539090144467e+00	( 1 2 4 6 5 3  )
+G_LOOP:  2  14  6   	1.4805153105450943e+00	( 1 5 3 6 2 4  )
+G_LOOP:  2  15  6   	1.4832656804965465e+00	( 1 5 4 6 2 3  )
+GACTION: 5.282553e+00
+Aggregate time to do gauge measurement 3.525019e-03
+Combined fattening and long-link calculation time: 0.004925
+FLTIME: time = 1.141500e-02 (HISQ MILC D) mflops = 4.593865e+04
+UML inversion with mass 0.018000
+CONGRAD5: time = 1.927853e-03 (fn D) masses = 1 iters = 27 mflops = 6.809271e+04
+ OK converged final_rsq= 7.2e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 27
+CONGRAD5: time = 9.958744e-04 (fn D) masses = 1 iters = 13 mflops = 6.346722e+04
+ OK converged final_rsq= 6.7e-09 (cf 1e-08) rel = 1 (cf 0) restarts = 1 iters= 13
+PBP: mass 1.800000e-02     1.078524e-02  1.932347e-02  -1.738323e-02  -1.738194e-02 ( 1 of 1 )
+FACTION: mass = 1.800000e-02,  1.539328e+00 ( 1 of 1 )
+Aggregate time to do pbp measurements 1.639509e-02
+RUNNING COMPLETED
+average cg iters for step= 1.170000e+02
+Time = 2.502064e+00 seconds
+total_iters = 1565
+
+
+get_i(0): EOF on input.
+exit: Wed Nov 25 11:44:17 2026
+

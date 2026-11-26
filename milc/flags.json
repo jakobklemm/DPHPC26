@@ -1,0 +1,76 @@
+{
+  "application": {
+    "SUBDIR": ["ks_imp_rhmc"],
+    "TARGET": ["su3_rhmd_hisq"]
+  },
+  "device": {
+    "CPU": {
+      "WANTQUDA": ["OFF"]
+    },
+    "CUDA": {
+      "WANTQUDA": ["ON"],
+      "QUDA_TARGET_TYPE": ["CUDA"],
+      "QUDA_GPU_ARCH": ["sm_121", "sm_120", "sm_75", "sm_61"],
+      "QUDA_GPU_ARCH_SUFFIX": ["default", "real", "virtual"],
+      "GPU_FN_CG": ["ON"],
+      "GPU_FL": ["ON", "OFF"],
+      "GPU_GF": ["ON", "OFF"],
+      "GPU_FF": ["ON", "OFF"],
+      "GPU_GA": ["ON", "OFF"],
+      "MIXED_PRECISION_GPU": ["2", "1"]
+    }
+  },
+  "quda": {
+    "QUDA_MAX_MULTI_BLAS_N": ["4", "1", "2", "8", "16"],
+    "QUDA_BLAS_PREFETCH_TYPE": ["THREAD", "NONE", "BULK"],
+    "QUDA_BLAS_UNROLL_STREAMING": ["1", "2"],
+    "QUDA_BLAS_UNROLL_REDUCE": ["1", "2"],
+    "QUDA_HETEROGENEOUS_ATOMIC": ["ON", "OFF"],
+    "QUDA_LARGE_KERNEL_ARG": ["ON", "OFF"],
+    "QUDA_VECTORIZE_SINGLE": ["ON", "OFF"],
+    "LDG256": ["ON", "OFF"],
+    "QUDA_64BIT_INDEXING": ["OFF", "ON"],
+    "QUDA_FLUSH_DENORMALS": ["OFF", "ON"],
+    "QUDA_SHARED_MEMORY_SPILL": ["OFF", "ON"],
+    "QUDA_OPENMP": ["OFF", "ON"]
+  },
+  "cuda_compiler": {
+    "-Xptxas -O": ["-Xptxas=-O3", "-Xptxas=-O2", "-Xptxas=-O1"],
+    "-Xptxas -dlcm": ["default", "-Xptxas=-dlcm=ca", "-Xptxas=-dlcm=cg"],
+    "--extra-device-vectorization": ["default", "--extra-device-vectorization"]
+  },
+  "cpu": {
+    "PRECISION": ["2", "1"],
+    "OMP": ["ON", "OFF"],
+    "KS_MULTICG": ["HYBRID", "OFFSET", "FAKE", "REVERSE", "REVHYB"],
+    "INLINE_C": ["OFF", "ON"],
+    "INLINE_C_GLOBAL": ["ON", "OFF"],
+    "INLINE_SSE": ["OFF", "ON"],
+    "INLINE_SSE_GLOBAL": ["OFF", "ON"]
+  },
+  "compiler": {
+    "-O": ["-O3", "-O2", "-O1", "-Os", "-Oz"],
+    "-march": ["-march=x86-64", "-march=x86-64-v2", "-march=x86-64-v3", "-march=x86-64-v4", "-march=native"],
+    "-mprefer-vector-width": ["default", "-mprefer-vector-width=128", "-mprefer-vector-width=256", "-mprefer-vector-width=512"],
+    "-fvectorize": ["-fvectorize", "-fno-vectorize"],
+    "-fslp-vectorize": ["-fslp-vectorize", "-fno-slp-vectorize"],
+    "-funroll-loops": ["-funroll-loops", "-fno-unroll-loops"],
+    "-finline-functions": ["-finline-functions", "-fno-inline-functions"],
+    "-fstrict-aliasing": ["-fstrict-aliasing", "-fno-strict-aliasing"],
+    "-ffp-contract": ["-ffp-contract=on", "-ffp-contract=fast", "-ffp-contract=off"],
+    "-fmath-errno": ["-fmath-errno", "-fno-math-errno"],
+    "-flto": ["-fno-lto", "-flto=thin", "-flto=full"]
+  },
+  "invalid_combinations": [
+    {"PRECISION": "1", "KS_MULTICG": "FAKE"},
+    {"WANTQUDA": "ON", "GPU_FN_CG": "OFF"},
+    {"PRECISION": "1", "MIXED_PRECISION_GPU": "1"},
+    {"QUDA_GPU_ARCH": "sm_75", "QUDA_BLAS_PREFETCH_TYPE": "BULK"},
+    {"QUDA_GPU_ARCH": "sm_61", "QUDA_BLAS_PREFETCH_TYPE": "BULK"},
+    {"QUDA_GPU_ARCH": "sm_75", "LDG256": "ON"},
+    {"QUDA_GPU_ARCH": "sm_61", "LDG256": "ON"},
+    {"QUDA_GPU_ARCH": "sm_75", "QUDA_VECTORIZE_SINGLE": "ON"},
+    {"QUDA_GPU_ARCH": "sm_61", "QUDA_VECTORIZE_SINGLE": "ON"},
+    {"QUDA_GPU_ARCH": "sm_61", "QUDA_LARGE_KERNEL_ARG": "ON"}
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "device": "cpu",
+  "threads": 8,
+  "steps": 10,
+  "repetitions": 2,
+  "workers": 16,
+  "inputs": "prompt 0\nnx 8\nny 8\nnz 8\nnt 8\niseed 86658\nn_pseudo 4\nload_rhmc_params /opt/src/milc/ks_imp_rhmc/test/rationals.sample.su3_rhmc_hisq\nbeta 7.4\nn_dyn_masses 2\ndyn_mass .0018 .018\ndyn_flavors 2 1\nu0 0.890\nwarms @WARMS@\ntrajecs 1\ntraj_between_meas 1\nmicrocanonical_time_step .02\nsteps_per_trajectory @STEPS@\ncgresid_md_fa_gr 1e-5 1e-5 1e-5\nmax_multicg_md_fa_gr 2500 2500 2500\ncgprec_md_fa_gr 2 2 2\ncgresid_md_fa_gr 1e-5 1e-5 1e-5\nmax_multicg_md_fa_gr 2500 2500 2500\ncgprec_md_fa_gr 2 2 2\ncgresid_md_fa_gr 1e-5 1e-5 1e-5\nmax_multicg_md_fa_gr 2500 2500 2500\ncgprec_md_fa_gr 2 2 2\ncgresid_md_fa_gr 1e-5 1e-5 1e-5\nmax_multicg_md_fa_gr 2500 2500 2500\ncgprec_md_fa_gr 2 2 2\nprec_ff 2\nnumber_of_pbp_masses 1\nmax_cg_prop 500\nmax_cg_prop_restarts 5\nnpbp_reps 1\nprec_pbp 2\nmass 0.018\nnaik_term_epsilon 0\nerror_for_propagator 1e-4\nrel_error_for_propagator 0\n@LOAD@\n@SAVE@\n",
+  "sampling": "harmonic-toggle-count-v1",
+  "seed": 20261021,
+  "options": {
+    "cmake": {
+      "WANTQUDA": [
+        "OFF"
+      ],
+      "PRECISION": [
+        "2",
+        "1"
+      ],
+      "OMP": [
+        "ON",
+        "OFF"
+      ],
+      "KS_MULTICG": [
+        "HYBRID",
+        "FAKE"
+      ],
+      "INLINE_C": [
+        "OFF"
+      ],
+      "INLINE_C_GLOBAL": [
+        "ON",
+        "OFF"
+      ],
+      "INLINE_SSE": [
+        "OFF"
+      ],
+      "INLINE_SSE_GLOBAL": [
+        "OFF",
+        "ON"
+      ]
+    },
+    "compiler": {
+      "-O": [
+        "-O3",
+        "-O2",
+        "-O1",
+        "-Os",
+        "-Oz"
+      ],
+      "-march": [
+        "-march=x86-64",
+        "-march=x86-64-v2",
+        "-march=x86-64-v3",
+        "-march=native"
+      ],
+      "-mprefer-vector-width": [
+        "default",
+        "-mprefer-vector-width=128",
+        "-mprefer-vector-width=256"
+      ],
+      "-fvectorize": [
+        "-fvectorize",
+        "-fno-vectorize"
+      ],
+      "-fslp-vectorize": [
+        "-fslp-vectorize",
+        "-fno-slp-vectorize"
+      ],
+      "-funroll-loops": [
+        "-funroll-loops",
+        "-fno-unroll-loops"
+      ],
+      "-finline-functions": [
+        "-finline-functions",
+        "-fno-inline-functions"
+      ],
+      "-fstrict-aliasing": [
+        "-fstrict-aliasing",
+        "-fno-strict-aliasing"
+      ],
+      "-ffp-contract": [
+        "-ffp-contract=on",
+        "-ffp-contract=fast",
+        "-ffp-contract=off"
+      ],
+      "-fmath-errno": [
+        "-fmath-errno",
+        "-fno-math-errno"
+      ],
+      "-flto": [
+        "-fno-lto",
+        "-flto=thin",
+        "-flto=full"
+      ]
+    },
+    "invalid_combinations": [
+      {
+        "-mprefer-vector-width": "-mprefer-vector-width=128",
+        "-march": "-march=x86-64"
+      },
+      {
+        "-mprefer-vector-width": "-mprefer-vector-width=128",
+        "-march": "-march=x86-64-v2"
+      },
+      {
+        "-mprefer-vector-width": "-mprefer-vector-width=256",
+        "-march": "-march=x86-64"
+      },
+      {
+        "-mprefer-vector-width": "-mprefer-vector-width=256",
+        "-march": "-march=x86-64-v2"
+      }
+    ]
+  }
+}

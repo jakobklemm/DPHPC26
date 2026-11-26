@@ -1,0 +1,88 @@
+{
+  "run_timestamp_utc": "2026-11-25T10:52:54.993471+00:00",
+  "run_id": "20261125T105254993471Z",
+  "device": "cpu",
+  "source_git": {
+    "milc": "551dc47950876bda2ff784dde86eff0d861b6997"
+  },
+  "cmake": {
+    "WANTQUDA": "OFF",
+    "PRECISION": "2",
+    "OMP": "ON",
+    "KS_MULTICG": "HYBRID",
+    "INLINE_C": "OFF",
+    "INLINE_C_GLOBAL": "ON",
+    "INLINE_SSE": "OFF",
+    "INLINE_SSE_GLOBAL": "OFF"
+  },
+  "compiler_flags": [
+    "-O3",
+    "-march=x86-64-v2",
+    "-fvectorize",
+    "-fslp-vectorize",
+    "-funroll-loops",
+    "-finline-functions",
+    "-fstrict-aliasing",
+    "-ffp-contract=on",
+    "-fmath-errno",
+    "-flto=thin"
+  ],
+  "stages": {
+    "benchmark": "completed"
+  },
+  "script_sha256": "1c4b11254188cf185375f9c269a60c32f18067cf3080a8904cb23e6450b89532",
+  "configure_command": [
+    "cmake",
+    "-G",
+    "Ninja",
+    "-S",
+    "/opt/src/milc",
+    "-B",
+    "/tmp/milc-build",
+    "-DSUBDIR=ks_imp_rhmc",
+    "-DMPP=OFF",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_C_COMPILER=clang",
+    "-DCMAKE_CXX_COMPILER=clang++",
+    "-DCMAKE_AR=/usr/bin/llvm-ar",
+    "-DCMAKE_RANLIB=/usr/bin/llvm-ranlib",
+    "-DWANTQUDA=OFF",
+    "-DPRECISION=2",
+    "-DOMP=ON",
+    "-DKS_MULTICG=HYBRID",
+    "-DINLINE_C=OFF",
+    "-DINLINE_C_GLOBAL=ON",
+    "-DINLINE_SSE=OFF",
+    "-DINLINE_SSE_GLOBAL=OFF",
+    "-DCMAKE_C_FLAGS_RELEASE=-DNDEBUG -O3 -march=x86-64-v2 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -flto=thin",
+    "-DCMAKE_CXX_FLAGS_RELEASE=-DNDEBUG -O3 -march=x86-64-v2 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -flto=thin",
+    "-DCMAKE_C_COMPILE_OBJECT=<CMAKE_C_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -O3 -march=x86-64-v2 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -flto=thin -o <OBJECT> -c <SOURCE>",
+    "-DCMAKE_CXX_COMPILE_OBJECT=<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -O3 -march=x86-64-v2 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -flto=thin -o <OBJECT> -c <SOURCE>",
+    "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld -Wl,--lto-obj-path=/tmp/milc-build/lto/obj"
+  ],
+  "build_command": [
+    "cmake",
+    "--build",
+    "/tmp/milc-build",
+    "--target",
+    "su3_rhmd_hisq",
+    "-j",
+    "16"
+  ],
+  "build_time_seconds": 2.612,
+  "compile_commands_checked": 197,
+  "sample_compile_command": "/usr/bin/clang -DCGTIME -DCG_OK -DCL_CG=BICG -DC_GLOBAL_INLINE -DDBLSTORE_FN -DD_FN_GATHER13 -DFEWSUMS -DFFTIME -DFLTIME -DFN -DGATIME -DGAUSS_SMEAR_KS_TWOLINK -DGFTIME -DGS_TIME -DHISQ_FF_MULTI_WRAPPER -DHISQ_FORCE_FILTER=5.0e-5 -DHISQ_REUNIT_ALLOW_SVD -DHISQ_REUNIT_SVD_ABS_ERROR=1e-8 -DHISQ_REUNIT_SVD_REL_ERROR=1e-8 -DINT_ALG=INT_3G1F -DIOTIME -DKS_MULTICG=HYBRID -DKS_MULTIFF=FNMAT -DMAX_MIXED -DMILC_CODE_VERSION=\\\"551d\\\" -DMILC_PRECISION=2 -DNERSC_TIME -DOMP -DPRTIME -DREMAP -DREMAP_STDIO_APPEND -DSINGLE -DWMTIME -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -I/opt/src/milc/include -I/opt/src/milc/libraries/include -I/opt/src/milc/ks_imp_rhmc -I/tmp/milc-build/ks_imp_rhmc/su3_rhmd_hisq_include -DNDEBUG -O3 -march=x86-64-v2 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -flto=thin -std=gnu99 -fopenmp=libomp -MD -MT ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/control.c.o -MF ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/control.c.o.d -O3 -march=x86-64-v2 -fvectorize -fslp-vectorize -funroll-loops -finline-functions -fstrict-aliasing -ffp-contract=on -fmath-errno -flto=thin -o ks_imp_rhmc/CMakeFiles/su3_rhmd_hisq.dir/control.c.o -c /opt/src/milc/ks_imp_rhmc/control.c",
+  "binary": {
+    "name": "su3_rhmd_hisq",
+    "size_bytes": 462952,
+    "code_sha256": "e3fd81298caaed53620069c1948d76b6506e2fdcc6c4f80cd4e9f353976ae31e",
+    "hashed_objects": 95
+  },
+  "benchmark_command": [
+    "/tmp/milc-build/ks_imp_rhmc/su3_rhmd_hisq",
+    "bench.in"
+  ],
+  "threads": 8,
+  "benchmark_wall_seconds": 4.98,
+  "status": "completed"
+}

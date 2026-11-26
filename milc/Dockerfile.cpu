@@ -1,0 +1,21 @@
+# MILC CPU build-and-benchmark image; build with:  docker build -t dphpc26:milc-cpu -f milc/Dockerfile.cpu milc
+# Sources are pinned inside the image, so runs need no network.
+FROM docker.io/library/ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1
+
+# lld + llvm (llvm-ar, llvm-objdump) are required for LTO with clang and for the code hash.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates clang cmake git libomp-dev lld llvm \
+    ninja-build pkg-config python3 util-linux \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN set -e; git init -q /opt/src/milc; cd /opt/src/milc; \
+    git fetch -q --depth 1 https://github.com/milc-qcd/milc_qcd.git 551dc47950876bda2ff784dde86eff0d861b6997; \
+    git checkout -q FETCH_HEAD; test "$(git rev-parse HEAD)" = 551dc47950876bda2ff784dde86eff0d861b6997
+
+WORKDIR /workspace/milc
+COPY inputs_bench.template make_lattice.py ./
+RUN python3 make_lattice.py && rm -rf /tmp/ref /tmp/gen.in
+COPY . .
+ENTRYPOINT ["python3", "/workspace/milc/milc_bench-random.py"]
