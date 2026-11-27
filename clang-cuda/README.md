@@ -59,6 +59,16 @@ GROMACS energies match nvcc (~1e-4).
 - `campaign_5060ti_clang.sbatch <subdir> <sweep|random> [args]` or `... chain <count>`: llama on
   one 5060 Ti (sweep, then random). The cluster ignores `--nodelist`/`--exclude`, so jobs land on
   the always-on node `studgpu-node01` (shared with other users).
+- `campaign_5060ti_gromacs_clang.sbatch <subdir> <sweep|random> [args]`: GROMACS on one 5060 Ti
+  (catalog `gromacs/flags-5060ti-clang.json`), then one baseline build into `<subdir>-baseline`.
+  Results: `gromacs/results/5060TI_CLANG_README.md`.
+- `baseline_args.py <flags-file> <cuda-arch> [<option> <value> ...]`: prints the profile
+  arguments of the sweep baseline (sweep entry 0), optionally with some options changed.
+- `test_gromacs_5060ti_clang.sbatch`: 3-build test (clang baseline, nvcc baseline, clang +
+  `cuda:-fno-inline-functions`) with build time, ns/day and energies.
+
+On the cluster these files are in `clang-campaign/jobs/` and the runners in
+`clang-campaign/{llama,gromacs}/`, so paths in the job scripts point there.
 
 ## llama-bench threads (`--threads`)
 
