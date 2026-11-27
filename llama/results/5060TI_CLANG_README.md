@@ -1,8 +1,7 @@
 # llama.cpp CUDA runs on RTX 5060 Ti, GPU code compiled by clang (D-INFK student cluster)
 
-Theotime, 2026-11-24/25. 130 runs (29 sweep + 101 random), 0 failed, ~25 GPU-hours
-(job 5393 + start of job 6015). **Snapshot:** job 6015 was still running when this was
-uploaded; ~10-15 more random runs will follow in the same folder.
+Theotime, 2026-11-24/25. 140 runs (29 sweep + 111 random), 0 failed, ~27 GPU-hours
+(job 5393: sweep + random, job 6015: more random).
 
 Same scripts, flag catalog and model as `gb10-clang-*` (see `GB10_CLANG_README.md` and
 `clang-cuda/README.md`), but on x86 with a desktop Blackwell GPU. This is the second hardware
@@ -27,15 +26,15 @@ where our flags also reach the GPU code.
 | Folder | What | Runs |
 |---|---|---|
 | `5060ti-clang-sweep` | `sweep`: one value changed at a time, GPU flags included | 29 |
-| `5060ti-clang-random` | `random --count 400 --min-flags 1 --threads 3` (harmonic sampler, seed 20261021), stopped by the job time limit | 101 |
+| `5060ti-clang-random` | `random --count 400 --min-flags 1 --threads 3` (harmonic sampler, seed 20261021), stopped by the job time limits (jobs 5393 + 6015) | 111 |
 
 Files per run as in `gb10-clang-*`: `source.yml`, `system.json`, `build.json`,
 `benchmark.json`, `benchmark.log`, `build.log.gz`.
 
-- Changed flags per random build: k=1-3: 55, 4-6: 17, 7+: 29.
-- 101 runs are 91 different builds (the sampler drew 10 a second time); `ml/load.py` averages them.
-- `--count 400` is only an upper limit; the run stops at the job time limit. One build that
-  was cut off by the limit is left out.
+- Changed flags per random build: k=1-3: 59, 4-6: 21, 7+: 31.
+- 111 runs are 101 different builds (the sampler drew 10 a second time); `ml/load.py` averages them.
+- `--count 400` is only an upper limit; the run stops at the job time limit. Job 6015 resumed
+  job 5393's plan (same settings). Two builds cut off by the limits are left out.
 - The sweep's first run is the reference build with `GGML_OPENMP=ON`; all other sweep runs
   and the random baseline have `GGML_OPENMP=OFF`.
 
@@ -54,7 +53,7 @@ GB10 runs were not affected: the job owns the whole node (20 threads = 20 cores)
 
 | | GB10 clang | 5060 Ti clang |
 |---|---|---|
-| pp512, typical build (median) | 5262 tok/s | 5892 tok/s (+12 %) |
+| pp512, typical build (median) | 5262 tok/s | 5886 tok/s (+12 %) |
 | tg128, typical build (median) | 93.4 tok/s | 158.5 tok/s (+70 %) |
 | pp512 slowest / fastest | x9.8 | x10.2 |
 | tg128 slowest / fastest | x1.8 | x2.3 |
@@ -78,13 +77,13 @@ The same flags matter on both GPUs; the size of the effect differs. CPU ISA flag
 ## Noise
 
 - Within a build, the 3 samples are 0.3 % apart (median).
-- 17 of 101 random builds have a **low first pp512 sample** (e.g. 4575 / 5973 / 5978), probably
+- 18 of 111 random builds have a **low first pp512 sample** (e.g. 4575 / 5973 / 5978), probably
   because the GPU clocks down during the ~10 min build and llama-bench's warm-up is too short.
   tg128 is not affected. The team metric (`ml/load_llama.py`, mean time of pp + tg) changes by
   < 1 %, because tg128 is ~90 % of the time. **For pp512-only analysis use the median sample.**
 
 ## Build time
 
-Median 621 s per random build (max 3170 s, LTO), 485 s in the sweep (many incremental builds):
+Median 620 s per random build (max 3170 s, LTO), 485 s in the sweep (many incremental builds):
 3 Broadwell cores compile everything, including all CUDA kernels. The benchmark itself takes
-~15 s. That is why 25 GPU-hours give ~130 runs here vs 322 on GB10.
+~15 s. That is why ~27 GPU-hours give 140 runs here vs 322 on GB10.
